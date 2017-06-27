@@ -18,52 +18,52 @@ package repositories
 
 import javax.inject.{Inject, Singleton}
 
-import models.SchemaModel
+import models.DataModel
 import play.modules.reactivemongo.MongoDbConnection
 import reactivemongo.api.commands._
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SchemaRepository @Inject()() extends MongoDbConnection {
+class DataRepository @Inject()() extends MongoDbConnection {
 
-  lazy val repository = new SchemaRepositoryBase() {
+  lazy val repository = new StubbedDataRepositoryBase() {
 
     override def removeAll()(implicit ec: ExecutionContext): Future[Unit] = {
       removeAll(WriteConcern.Acknowledged).map { _ => }
     }
 
-    override def removeBy(schemaId: String)(implicit ec: ExecutionContext): Future[Unit] = {
-      remove("schemaId" -> schemaId).map { _ => }
+    override def removeBy(url: String)(implicit ec: ExecutionContext): Future[Unit] = {
+      remove("_id" -> url).map { _ => }
     }
 
-    override def addEntry(document: SchemaModel)(implicit ec: ExecutionContext): Future[Unit] = {
+    override def addEntry(document: DataModel)(implicit ec: ExecutionContext): Future[Unit] = {
       insert(document).map { _ => }
     }
 
-    override def addEntries(entries: Seq[SchemaModel])(implicit ec: ExecutionContext): Future[Unit] = {
+    override def addEntries(entries: Seq[DataModel])(implicit ec: ExecutionContext): Future[Unit] = {
       entries.foreach {
         addEntry
       }
       Future.successful({})
     }
 
-    override def findLatestVersionBy(schemaId: String)(implicit ec: ExecutionContext): Future[List[SchemaModel]] = {
-      findAllVersionsBy(schemaId).map {
+    override def findLatestVersionBy(url: String)(implicit ec: ExecutionContext): Future[List[DataModel]] = {
+      findAllVersionsBy(url).map {
         _.values.toList.map {
           _.last
         }
       }
     }
 
-    override def findAllVersionsBy(schemaId: String)
-                                  (implicit ec: ExecutionContext): Future[Map[String, List[SchemaModel]]] = {
-      find("_id" -> schemaId).map {
-        schemas =>
-          schemas.groupBy(_._id)
+    override def findAllVersionsBy(url: String)
+                                  (implicit ec: ExecutionContext): Future[Map[String, List[DataModel]]] = {
+      find("_id" -> url).map {
+        responses =>
+          responses.groupBy(_._id)
       }
     }
   }
 
-  def apply(): DynamicStubRepository[SchemaModel, String] = repository
+  def apply(): DynamicStubRepository[DataModel, String] = repository
 }

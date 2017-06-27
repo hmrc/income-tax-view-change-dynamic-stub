@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package controllers.tests
+package controllers
 
 import javax.inject.{Inject, Singleton}
 
 import models.SchemaModel
-import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent}
 import repositories.SchemaRepository
 import uk.gov.hmrc.play.microservice.controller.BaseController
@@ -29,32 +28,43 @@ import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 @Singleton
-class SchemaTestController @Inject()(repository: SchemaRepository) extends BaseController {
+class SetupSchemaController @Inject()(schemaRepository: SchemaRepository) extends BaseController {
 
-  val addSchema: String => Action[AnyContent] = { routeId =>
-    Action.async { implicit request =>
-        Try {
-          val body = request.body.asJson
-          val document = body.get.as[JsValue]
-          val model = SchemaModel(routeId, document)
-
-          repository().addEntry(model)
-        } match {
-          case Success(_) => Future.successful(Ok("Success"))
-          case Failure(_) => Future.successful(BadRequest("Could not store data"))
-        }
-    }
+  val addSchema: Action[AnyContent] = Action.async { implicit request =>
+    Future.successful(request.body.asJson.fold(BadRequest("Empty Json Body")) {
+      json =>
+        json.validate[SchemaModel].fold(
+          invalid =>
+            BadRequest("Json Parse Error, Invalid Schema Request."),
+          valid =>
+            Try {
+              schemaRepository().addEntry(valid)
+            } match {
+              case Success(_) => Ok("Success")
+              case Failure(_) => BadRequest("Could not store data")
+            }
+        )
+    })
   }
 
-  val removeSchema: String => Action[AnyContent] = { routeId =>
+  val removeSchema: String => Action[AnyContent] = { id =>
     Action.async { implicit request =>
       Try {
-        repository().removeBy(routeId)
+        schemaRepository().removeBy(id)
       } match {
         case Success(_) => Future.successful(Ok("Success"))
         case Failure(ex) => ex.printStackTrace()
           Future.successful(BadRequest("Could not delete data"))
       }
+    }
+  }
+
+  val removeAll = Action.async { implicit request =>
+    Try {
+      schemaRepository().removeAll()
+    } match {
+      case Success(_) => Future.successful(Ok("Removed All Schemas"))
+      case Failure(_) => Future.successful(InternalServerError("Unexpected Error Clearing MongoDB."))
     }
   }
 }
