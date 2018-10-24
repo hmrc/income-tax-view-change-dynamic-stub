@@ -14,7 +14,6 @@ val compile: Seq[ModuleID] = Seq(
   "uk.gov.hmrc" %% "play-reactivemongo" % "6.2.0",
   ws,
   "uk.gov.hmrc" %% "bootstrap-play-25" % "3.13.0",
-  "uk.gov.hmrc" %% "play-url-binders" % "2.1.0",
   "com.github.fge" % "json-schema-validator" % "2.2.6"
 )
 
