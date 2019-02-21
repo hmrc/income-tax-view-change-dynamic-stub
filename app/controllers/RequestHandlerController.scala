@@ -19,7 +19,7 @@ package controllers
 import javax.inject.{Inject, Singleton}
 
 import models.HttpMethod._
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, MessagesControllerComponents}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.SchemaValidation
@@ -28,7 +28,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class RequestHandlerController @Inject()(schemaValidation: SchemaValidation, dataRepository: DataRepository) extends BaseController {
+class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
+                                         dataRepository: DataRepository,
+                                         cc: ControllerComponents) extends BaseController(cc) {
 
   def getRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {
