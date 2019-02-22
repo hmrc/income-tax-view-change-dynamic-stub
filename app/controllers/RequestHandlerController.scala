@@ -19,7 +19,7 @@ package controllers
 import javax.inject.{Inject, Singleton}
 
 import models.HttpMethod._
-import play.api.mvc.{Action, AnyContent, ControllerComponents, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import utils.SchemaValidation
