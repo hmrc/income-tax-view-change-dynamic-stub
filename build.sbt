@@ -13,7 +13,7 @@ val appName = "income-tax-view-change-dynamic-stub"
 val compile: Seq[ModuleID] = Seq(
   "uk.gov.hmrc" %% "simple-reactivemongo" % "7.3.0-play-26",
   ws,
-  "uk.gov.hmrc" %% "bootstrap-play-26" % "0.34.0",
+  "uk.gov.hmrc" %% "bootstrap-play-26" % "0.36.0",
   "com.github.fge" % "json-schema-validator" % "2.2.6"
 )
 
@@ -24,7 +24,7 @@ def test(scope: String = "test,it"): Seq[ModuleID] = Seq(
   "org.pegdown" % "pegdown" % "1.6.0" % scope,
   "org.jsoup" % "jsoup" % "1.8.3" % scope,
   "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
-  "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.0" % scope,
+  "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.0" % scope,
   "org.mockito" % "mockito-core" % "2.7.17" % "test"
 )
 
@@ -54,8 +54,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     libraryDependencies ++= appDependencies,
     retrieveManaged := true,
-    evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
-    routesGenerator := StaticRoutesGenerator
+    evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
   )
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)

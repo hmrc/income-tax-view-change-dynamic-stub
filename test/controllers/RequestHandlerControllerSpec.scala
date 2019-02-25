@@ -19,13 +19,10 @@ package controllers
 import mocks.{MockDataRepository, MockSchemaValidation}
 import models.{DataModel, SchemaModel}
 import play.api.libs.json.Json
-import play.api.mvc.{Action, Result}
 import play.api.test.{FakeHeaders, FakeRequest}
 import play.mvc.Http.Status
 import testUtils.TestSupport
 import play.api.test.Helpers.stubControllerComponents
-
-import scala.concurrent.Future
 
 class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository {
   lazy val mockCC = stubControllerComponents()
