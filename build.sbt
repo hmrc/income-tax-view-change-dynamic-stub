@@ -11,7 +11,7 @@ import uk.gov.hmrc.SbtArtifactory
 val appName = "income-tax-view-change-dynamic-stub"
 
 val compile: Seq[ModuleID] = Seq(
-  "uk.gov.hmrc" %% "simple-reactivemongo" % "7.3.0-play-26",
+  "uk.gov.hmrc" %% "simple-reactivemongo" % "7.12.0-play-26",
   ws,
   "uk.gov.hmrc" %% "bootstrap-play-26" % "0.36.0",
   "com.github.fge" % "json-schema-validator" % "2.2.6"
