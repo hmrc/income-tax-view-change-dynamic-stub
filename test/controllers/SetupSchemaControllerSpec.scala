@@ -22,13 +22,16 @@ import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.FakeRequest
+import play.api.test.Helpers.stubControllerComponents
 import testUtils.TestSupport
 
 import scala.concurrent.Future
 
 class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
+  lazy val mockCC = stubControllerComponents()
 
-  object TestSetupSchemaController extends SetupSchemaController(mockSchemaRepository)
+  object TestSetupSchemaController extends SetupSchemaController(mockSchemaRepository,
+                                                                  mockCC)
 
   "The SetupSchemaController" when {
 

@@ -25,11 +25,14 @@ import play.api.test.FakeRequest
 import scala.concurrent.Future
 import mocks.{MockDataRepository, MockSchemaValidation}
 import play.api.Application
+import play.api.test.Helpers.stubControllerComponents
 import testUtils.TestSupport
 
 class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository{
-
-    object TestSetupDataController extends SetupDataController(mockSchemaValidation, mockDataRepository)
+    lazy val mockCC = stubControllerComponents()
+    object TestSetupDataController extends SetupDataController(mockSchemaValidation,
+                                                                mockDataRepository,
+                                                                mockCC)
 
     "SetupDataController.addData" when {
 
