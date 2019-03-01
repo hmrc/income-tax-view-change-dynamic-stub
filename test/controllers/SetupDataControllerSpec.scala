@@ -16,160 +16,180 @@
 
 package controllers
 
-import play.api.libs.json.Json
-import play.mvc.Http.Status
-import models.DataModel
-import play.api.mvc.Result
-import play.api.test.FakeRequest
-
-import scala.concurrent.Future
+import com.typesafe.config.Config
 import mocks.{MockDataRepository, MockSchemaValidation}
-import play.api.Application
+import models.DataModel
+import play.api.libs.json.Json
+import play.api.test.FakeRequest
 import play.api.test.Helpers.stubControllerComponents
+import play.mvc.Http.Status
 import testUtils.TestSupport
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 
-class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository{
-    lazy val mockCC = stubControllerComponents()
-    object TestSetupDataController extends SetupDataController(mockSchemaValidation,
-                                                                mockDataRepository,
-                                                                mockCC)
+class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository {
 
-    "SetupDataController.addData" when {
+  class Setup(configResult: Boolean = true) {
 
-        "validateUrlMatch returns 'true'" should {
+    val mockConfig: Config = mock[Config]
+    when(mockConfig.getBoolean(any())).thenReturn(configResult)
 
-            val model: DataModel = DataModel(
-                _id = "1234",
-                schemaId = "2345",
-                method = "GET",
-                response = Some(Json.parse("{}")),
-                status = Status.OK)
+    val mockCC = stubControllerComponents()
 
-            "when validateResponseJson returns 'true'" should {
+    val controller = new SetupDataController(
+      mockSchemaValidation,
+      mockDataRepository,
+      mockCC,
+      mockConfig
+    )
+  }
+
+  "SetupDataController.addData" when {
+
+    "validateUrlMatch returns 'true'" should {
+
+      val model: DataModel = DataModel(
+        _id = "1234",
+        schemaId = "2345",
+        method = "GET",
+        response = Some(Json.parse("{}")),
+        status = Status.OK)
+
+      "when validateResponseJson returns 'true'" should {
 
 
-                "return Status OK (200) if data successfully added to stub" in {
-                    lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
-                    lazy val result = TestSetupDataController.addData(request)
+        "return Status OK (200) if data successfully added to stub" in new Setup {
+          lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
+          lazy val result = controller.addData(request)
 
-                    mockValidateUrlMatch("2345", "1234")(response = true)
-                    mockValidateResponseJson("2345", Some(Json.parse("{}")))(response = true)
-                    mockAddEntry(model)(successWriteResult)
-                    status(result) shouldBe Status.OK
-                }
-                "return Status InternalServerError (500) if unable to add data to the stub" in {
-                    lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
-                    lazy val result = TestSetupDataController.addData(request)
+          mockValidateUrlMatch("2345", "1234")(response = true)
+          mockValidateResponseJson("2345", Some(Json.parse("{}")))(response = true)
+          mockAddEntry(model)(successWriteResult)
+          status(result) shouldBe Status.OK
+        }
+        "return Status InternalServerError (500) if unable to add data to the stub" in new Setup {
+          lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
+          lazy val result = controller.addData(request)
 
-                    mockValidateUrlMatch("2345", "1234")(response = true)
-                    mockValidateResponseJson("2345", Some(Json.parse("{}")))(response = true)
-                    mockAddEntry(model)(errorWriteResult)
-                    status(result) shouldBe Status.INTERNAL_SERVER_ERROR
-                }
-
-            }
-
-            "return Status BadRequest (400) when validateResponseJson returns 'false'" in {
-                lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
-                lazy val result = TestSetupDataController.addData(request)
-
-                mockValidateUrlMatch("2345", "1234")(response = true)
-                mockValidateResponseJson("2345", Some(Json.parse("""{}""")))(response = false)
-                status(result) shouldBe Status.BAD_REQUEST
-            }
-
-            "return Status InternalServerError (500) when validateResponseJson returns 'false'" in {
-                lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
-                lazy val result = TestSetupDataController.addData(request)
-
-                mockValidateUrlMatch("2345", "1234")(response = true)
-                mockValidateResponseJson("2346", Some(Json.parse("""{}""")))(response = false)
-                status(result) shouldBe Status.INTERNAL_SERVER_ERROR
-            }
+          mockValidateUrlMatch("2345", "1234")(response = true)
+          mockValidateResponseJson("2345", Some(Json.parse("{}")))(response = true)
+          mockAddEntry(model)(errorWriteResult)
+          status(result) shouldBe Status.INTERNAL_SERVER_ERROR
         }
 
-        "validateUrlMatch returns 'false'" should {
+      }
 
-            val model: DataModel = DataModel(
-                _id = "1234",
-                schemaId = "2345",
-                method = "GET",
-                response = Some(Json.parse("{}")),
-                status = Status.OK)
+      "return Status BadRequest (400) when validateResponseJson returns 'false'" in new Setup {
+        lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
+        lazy val result = controller.addData(request)
 
-            "return Status BadRequest (400)" in {
-                lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
-                lazy val result = TestSetupDataController.addData(request)
+        mockValidateUrlMatch("2345", "1234")(response = true)
+        mockValidateResponseJson("2345", Some(Json.parse("""{}""")))(response = false)
+        status(result) shouldBe Status.BAD_REQUEST
+      }
 
-                mockValidateUrlMatch("2345", "1234")(response = false)
-                mockLoadUrlRegex("2345")(response = "w")
-                status(result) shouldBe Status.BAD_REQUEST
-            }
+      "return Status when validateResponseJson returns 'false'" in new Setup(false) {
+        lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
+        lazy val result = controller.addData(request)
 
-        }
+        mockValidateUrlMatch("2345", "1234")(response = true)
+        mockValidateResponseJson("2345", Some(Json.parse("""{}""")))(response = true)
+        mockAddEntry(model)(successWriteResult)
+        status(result) shouldBe Status.OK
+      }
 
-        "not a GET request" should {
+      "return Status InternalServerError (500) when validateResponseJson returns 'false'" in new Setup {
+        lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
+        lazy val result = controller.addData(request)
 
-            val model: DataModel = DataModel(
-                _id = "1234",
-                schemaId = "2345",
-                method = "BLOB",
-                response = Some(Json.parse("{}")),
-                status = Status.OK)
+        mockValidateUrlMatch("2345", "1234")(response = true)
+        mockValidateResponseJson("2346", Some(Json.parse("""{}""")))(response = false)
+        status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+      }
+    }
 
-            "return Status BadRequest (400)" in {
-                lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
-                lazy val result = TestSetupDataController.addData(request)
+    "validateUrlMatch returns 'false'" should {
 
-                status(result) shouldBe Status.BAD_REQUEST
-            }
+      val model: DataModel = DataModel(
+        _id = "1234",
+        schemaId = "2345",
+        method = "GET",
+        response = Some(Json.parse("{}")),
+        status = Status.OK)
 
-        }
+      "return Status BadRequest (400)" in new Setup {
+        lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
+        lazy val result = controller.addData(request)
+
+        mockValidateUrlMatch("2345", "1234")(response = false)
+        mockLoadUrlRegex("2345")(response = "w")
+        status(result) shouldBe Status.BAD_REQUEST
+      }
 
     }
 
-    "SetupDataController.removeData" should {
+    "not a GET request" should {
 
-        "return Status OK (200) on successful removal of data from the stub" in {
-            lazy val request = FakeRequest()
-            lazy val result = TestSetupDataController.removeData("someUrl")(request)
+      val model: DataModel = DataModel(
+        _id = "1234",
+        schemaId = "2345",
+        method = "BLOB",
+        response = Some(Json.parse("{}")),
+        status = Status.OK)
 
-            mockRemoveById("someUrl")(successWriteResult)
+      "return Status BadRequest (400)" in new Setup {
+        lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
+        lazy val result = controller.addData(request)
 
-            status(result) shouldBe Status.OK
-        }
-
-        "return Status InternalServerError (500) on unsuccessful removal of data from the stub" in {
-            lazy val request = FakeRequest()
-            lazy val result = TestSetupDataController.removeData("someUrl")(request)
-
-            mockRemoveById("someUrl")(errorWriteResult)
-
-            status(result) shouldBe Status.INTERNAL_SERVER_ERROR
-        }
+        status(result) shouldBe Status.BAD_REQUEST
+      }
 
     }
 
-    "SetupDataController.removeAllData" should {
+  }
 
-        "return Status OK (200) on successful removal of all stubbed data" in {
-            lazy val request = FakeRequest()
-            lazy val result = TestSetupDataController.removeAll()(request)
+  "SetupDataController.removeData" should {
 
-            mockRemoveAll()(successWriteResult)
+    "return Status OK (200) on successful removal of data from the stub" in new Setup {
+      lazy val request = FakeRequest()
+      lazy val result = controller.removeData("someUrl")(request)
 
-            status(result) shouldBe Status.OK
-        }
+      mockRemoveById("someUrl")(successWriteResult)
 
-        "return Status InternalServerError (500) on successful removal of all stubbed data" in {
-            lazy val request = FakeRequest()
-            lazy val result = TestSetupDataController.removeAll()(request)
-
-            mockRemoveAll()(errorWriteResult)
-
-            status(result) shouldBe Status.INTERNAL_SERVER_ERROR
-        }
-
+      status(result) shouldBe Status.OK
     }
+
+    "return Status InternalServerError (500) on unsuccessful removal of data from the stub" in new Setup {
+      lazy val request = FakeRequest()
+      lazy val result = controller.removeData("someUrl")(request)
+
+      mockRemoveById("someUrl")(errorWriteResult)
+
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+    }
+
+  }
+
+  "SetupDataController.removeAllData" should {
+
+    "return Status OK (200) on successful removal of all stubbed data" in new Setup {
+      lazy val request = FakeRequest()
+      lazy val result = controller.removeAll()(request)
+
+      mockRemoveAll()(successWriteResult)
+
+      status(result) shouldBe Status.OK
+    }
+
+    "return Status InternalServerError (500) on successful removal of all stubbed data" in new Setup {
+      lazy val request = FakeRequest()
+      lazy val result = controller.removeAll()(request)
+
+      mockRemoveAll()(errorWriteResult)
+
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
+    }
+
+  }
 
 }
