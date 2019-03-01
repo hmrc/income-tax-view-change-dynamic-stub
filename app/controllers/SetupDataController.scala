@@ -18,6 +18,7 @@ package controllers
 
 import javax.inject.{Inject, Singleton}
 
+import com.typesafe.config.Config
 import models.DataModel
 import models.HttpMethod._
 import play.api.libs.json.{JsValue, Json}
@@ -30,29 +31,36 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class SetupDataController @Inject()(schemaValidation: SchemaValidation, dataRepository: DataRepository,
-                                    cc: ControllerComponents) extends BaseController(cc) {
+class SetupDataController @Inject()(
+                                     schemaValidation: SchemaValidation,
+                                     dataRepository: DataRepository,
+                                     cc: ControllerComponents,
+                                     applicationConfig: Config
+                                   ) extends BaseController(cc) {
+
+  val ignoreJsonValidation: Boolean = applicationConfig.getBoolean("schemaValidation.ignoreJsonValidation")
 
   val addData: Action[JsValue] = Action.async(parse.json) {
-    implicit request => withJsonBody[DataModel](
-      json => json.method.toUpperCase match {
-        case GET | POST =>
-          schemaValidation.validateUrlMatch(json.schemaId, json._id) flatMap {
-            case true =>
-              schemaValidation.validateResponseJson(json.schemaId, json.response) flatMap {
-                case true => addStubDataToDB(json)
-                case false => Future.successful(BadRequest(s"The Json Body:\n\n${json.response.get} did not validate against the Schema Definition"))
-              }
-            case false =>
-              schemaValidation.loadUrlRegex(json.schemaId) map {
-                regex => BadRequest(s"URL ${json._id} did not match the Schema Definition Regex $regex")
-              }
-          }
-        case x => Future.successful(BadRequest(s"The method: $x is currently unsupported"))
+    implicit request =>
+      withJsonBody[DataModel](
+        json => json.method.toUpperCase match {
+          case GET | POST =>
+            schemaValidation.validateUrlMatch(json.schemaId, json._id) flatMap {
+              case true =>
+                schemaValidation.validateResponseJson(json.schemaId, json.response) flatMap {
+                  case true | `ignoreJsonValidation` => addStubDataToDB(json)
+                  case false => Future.successful(BadRequest(s"The Json Body:\n\n${json.response.get} did not validate against the Schema Definition"))
+                }
+              case false =>
+                schemaValidation.loadUrlRegex(json.schemaId) map {
+                  regex => BadRequest(s"URL ${json._id} did not match the Schema Definition Regex $regex")
+                }
+            }
+          case x => Future.successful(BadRequest(s"The method: $x is currently unsupported"))
+        }
+      ).recover {
+        case _ => InternalServerError("Error Parsing Json DataModel")
       }
-    ).recover {
-      case _ => InternalServerError("Error Parsing Json DataModel")
-    }
   }
 
   private def addStubDataToDB(json: DataModel): Future[Result] = {
