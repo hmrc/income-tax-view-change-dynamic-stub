@@ -54,9 +54,6 @@ class SchemaValidation @Inject()(repository: SchemaRepository) {
           schema =>
             val jsonParser = jsonFactory.createParser(response.toString)
             val jsonNode: JsonNode = jsonMapper.readTree(jsonParser)
-            if (!schema.validate(jsonNode).isSuccess) {
-              println(Console.RED + Console.BOLD + s"FAILED VALIDATION: ${schema.validate(jsonNode)}" + Console.RESET)
-            }
             schema.validate(jsonNode).isSuccess
         }
     }
