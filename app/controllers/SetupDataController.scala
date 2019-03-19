@@ -45,9 +45,9 @@ class SetupDataController @Inject()(
       withJsonBody[DataModel](
         json => json.method.toUpperCase match {
           case GET | POST =>
-            println(s"ignoreJsonValidation:$ignoreJsonValidation")
             schemaValidation.validateUrlMatch(json.schemaId, json._id) flatMap {
               case true =>
+                println(Console.RED + Console.BOLD + s"VALIDATING: ${json._id}" + Console.RESET)
                 schemaValidation.validateResponseJson(json.schemaId, json.response) flatMap {
                   case true | `ignoreJsonValidation` => addStubDataToDB(json)
                   case false => Future.successful(BadRequest(s"The Json Body:\n\n${json.response.get} did not validate against the Schema Definition"))
