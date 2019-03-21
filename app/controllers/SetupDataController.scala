@@ -45,7 +45,6 @@ class SetupDataController @Inject()(
       withJsonBody[DataModel](
         json => json.method.toUpperCase match {
           case GET | POST =>
-            println(s"ignoreJsonValidation:$ignoreJsonValidation")
             schemaValidation.validateUrlMatch(json.schemaId, json._id) flatMap {
               case true =>
                 schemaValidation.validateResponseJson(json.schemaId, json.response) flatMap {
