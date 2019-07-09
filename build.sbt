@@ -11,21 +11,21 @@ import uk.gov.hmrc.SbtArtifactory
 val appName = "income-tax-view-change-dynamic-stub"
 
 val compile: Seq[ModuleID] = Seq(
-  "uk.gov.hmrc" %% "simple-reactivemongo" % "7.12.0-play-26",
+  "uk.gov.hmrc" %% "simple-reactivemongo" % "7.20.0-play-26",
   ws,
-  "uk.gov.hmrc" %% "bootstrap-play-26" % "0.36.0",
+  "uk.gov.hmrc" %% "bootstrap-play-26" % "0.41.0",
   "com.github.fge" % "json-schema-validator" % "2.2.6"
 )
 
 def test(scope: String = "test,it"): Seq[ModuleID] = Seq(
-  "uk.gov.hmrc" %% "bootstrap-play-26" % "0.32.0" % scope,
-  "uk.gov.hmrc" %% "hmrctest" % "3.4.0-play-25" % scope,
-  "org.scalatest" %% "scalatest" % "3.0.5" % scope,
+  "uk.gov.hmrc" %% "bootstrap-play-26" % "0.41.0" % scope,
+  "uk.gov.hmrc" %% "hmrctest" % "3.9.0-play-26" % scope,
+  "org.scalatest" %% "scalatest" % "3.0.8" % scope,
   "org.pegdown" % "pegdown" % "1.6.0" % scope,
-  "org.jsoup" % "jsoup" % "1.8.3" % scope,
+  "org.jsoup" % "jsoup" % "1.12.1" % scope,
   "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
-  "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.0" % scope,
-  "org.mockito" % "mockito-core" % "2.7.17" % "test"
+  "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % scope,
+  "org.mockito" % "mockito-core" % "2.7.22" % "test"
 )
 
 lazy val appDependencies : Seq[ModuleID] = compile ++ test()
