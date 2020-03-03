@@ -16,11 +16,13 @@
 
 package controllers
 
-import javax.inject.{Inject, Singleton}
+import java.time.LocalDate
 
+import javax.inject.{Inject, Singleton}
 import com.typesafe.config.Config
 import models.DataModel
 import models.HttpMethod._
+import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import repositories.DataRepository
@@ -48,6 +50,7 @@ class SetupDataController @Inject()(
             schemaValidation.validateUrlMatch(json.schemaId, json._id) flatMap {
               case true =>
                 schemaValidation.validateResponseJson(json.schemaId, json.response) flatMap {
+                  case true if json.schemaId == "getDesObligations" => addStubDataToDB(updateObligationsWithDateParameters(json))
                   case true | `ignoreJsonValidation` => addStubDataToDB(json)
                   case false => Future.successful(BadRequest(s"The Json Body:\n\n${json.response.get} did not validate against the Schema Definition"))
                 }
@@ -61,6 +64,15 @@ class SetupDataController @Inject()(
       ).recover {
         case _ => InternalServerError("Error Parsing Json DataModel")
       }
+  }
+
+  private def updateObligationsWithDateParameters(data: DataModel) = {
+    val fulfilledObligations: Boolean = data._id.split("[?]").last.split("[&]").contains("status=F")
+    val toDate: LocalDate = LocalDate.now()
+    val fromDate: LocalDate = toDate.minusDays(365)
+
+    if (fulfilledObligations) data.copy(_id = data._id + s"&from=$fromDate&to=$toDate")
+    else data
   }
 
   private def addStubDataToDB(json: DataModel): Future[Result] = {
