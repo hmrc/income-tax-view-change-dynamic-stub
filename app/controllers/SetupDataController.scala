@@ -18,15 +18,14 @@ package controllers
 
 import java.time.LocalDate
 
-import javax.inject.{Inject, Singleton}
 import com.typesafe.config.Config
+import javax.inject.{Inject, Singleton}
 import models.DataModel
 import models.HttpMethod._
-import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import repositories.DataRepository
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.SchemaValidation
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,7 +37,7 @@ class SetupDataController @Inject()(
                                      dataRepository: DataRepository,
                                      cc: ControllerComponents,
                                      applicationConfig: Config
-                                   ) extends BaseController(cc) {
+                                   ) extends BackendController(cc) {
 
   val ignoreJsonValidation: Boolean = applicationConfig.getBoolean("schemaValidation.ignoreJsonValidation")
 
