@@ -72,11 +72,11 @@ class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation
       await(bodyOf(result)) shouldBe s"${successWithBodyModel.response.get}"
     }
 
-    "return a 400 status when the endpoint cannot be found" in {
+    "return a 404 status when the endpoint cannot be found" in {
       lazy val result = TestRequestHandlerController.getRequestHandler("/test")(FakeRequest())
 
       mockFind(List())
-      status(result) shouldBe Status.BAD_REQUEST
+      status(result) shouldBe Status.NOT_FOUND
     }
   }
 
@@ -110,12 +110,12 @@ class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation
       await(bodyOf(result)) shouldBe s"The Json Body:\n\nNone did not validate against the Schema Definition"
     }
 
-    "return a 400 status if the endpoint specified in the POST request can't be found" in {
+    "return a 404 status if the endpoint specified in the POST request can't be found" in {
       lazy val result = TestRequestHandlerController.postRequestHandler("/test")(FakeRequest())
 
       mockFind(List())
 
-      status(result) shouldBe Status.BAD_REQUEST
+      status(result) shouldBe Status.NOT_FOUND
       await(bodyOf(result)) shouldBe s"Could not find endpoint in Dynamic Stub matching the URI: /"
     }
   }
