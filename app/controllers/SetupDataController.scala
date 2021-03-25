@@ -67,10 +67,11 @@ class SetupDataController @Inject()(
 
   private def updateObligationsWithDateParameters(data: DataModel) = {
     val fulfilledObligations: Boolean = data._id.split("[?]").last.split("[&]").contains("status=F")
-    val toDate: LocalDate = LocalDate.now()
+		val datesSet: Boolean = data._id.contains("&from=") && data._id.contains("&to=")
+		val toDate: LocalDate = LocalDate.now()
     val fromDate: LocalDate = toDate.minusDays(365)
 
-    if (fulfilledObligations) data.copy(_id = data._id + s"&from=$fromDate&to=$toDate")
+    if (fulfilledObligations && !datesSet) data.copy(_id = data._id + s"&from=$fromDate&to=$toDate")
     else data
   }
 
