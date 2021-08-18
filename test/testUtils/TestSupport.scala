@@ -20,7 +20,6 @@ import com.typesafe.config.Config
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext
 import uk.gov.hmrc.http.HeaderCarrier

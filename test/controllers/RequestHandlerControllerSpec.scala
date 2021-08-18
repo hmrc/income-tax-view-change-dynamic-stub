@@ -18,10 +18,10 @@ package controllers
 
 import mocks.{MockDataRepository, MockSchemaValidation}
 import models.{DataModel, SchemaModel}
+import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers.stubControllerComponents
-import play.mvc.Http.Status
+import play.api.test.Helpers._
 import testUtils.TestSupport
 
 class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository {
@@ -69,7 +69,7 @@ class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation
 
       mockFind(List(successWithBodyModel))
       status(result) shouldBe Status.OK
-      await(bodyOf(result)) shouldBe s"${successWithBodyModel.response.get}"
+      contentAsJson(result) shouldBe successWithBodyModel.response.get
     }
 
     "return a 404 status when the endpoint cannot be found" in {
@@ -88,7 +88,7 @@ class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation
       mockFind(List(successWithBodyModel))
       mockValidateRequestJson(successWithBodyModel.schemaId, successRequestSchema.requestSchema)(response = true)
 
-      await(bodyOf(result)) shouldBe s"${successWithBodyModel.response.get}"
+      contentAsJson(result) shouldBe successWithBodyModel.response.get
     }
 
     "return a response status when there is no stubbed response body for an incoming POST request" in {
@@ -107,7 +107,7 @@ class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation
       mockValidateRequestJson(successWithBodyModel.schemaId, None)(response = false)
 
       status(result) shouldBe Status.BAD_REQUEST
-      await(bodyOf(result)) shouldBe s"The Json Body:\n\nNone did not validate against the Schema Definition"
+      contentAsString(result) shouldBe s"The Json Body:\n\nNone did not validate against the Schema Definition"
     }
 
     "return a 404 status if the endpoint specified in the POST request can't be found" in {
@@ -116,7 +116,7 @@ class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation
       mockFind(List())
 
       status(result) shouldBe Status.NOT_FOUND
-      await(bodyOf(result)) shouldBe s"Could not find endpoint in Dynamic Stub matching the URI: /"
+      contentAsString(result) shouldBe s"Could not find endpoint in Dynamic Stub matching the URI: /"
     }
   }
 

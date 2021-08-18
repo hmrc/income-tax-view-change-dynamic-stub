@@ -22,7 +22,7 @@ import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.play.test.UnitSpec
+import testUtils.UnitSpec
 import utils.SchemaValidation
 
 import scala.concurrent.Future
@@ -58,7 +58,7 @@ trait MockSchemaValidation extends UnitSpec with MockitoSugar with BeforeAndAfte
 
   def mockLoadRequestSchema(requestSchema: JsValue)(response: JsonSchema): Unit = {
     when(mockSchemaValidation.loadRequestSchema(ArgumentMatchers.eq(requestSchema)))
-      .thenReturn(Future.successful(response))
+      .thenReturn(response)
   }
 
   def mockValidateRequestJson(schemaId: String, json: Option[JsValue])(response: Boolean): Unit = {

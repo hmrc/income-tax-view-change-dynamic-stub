@@ -1,26 +1,25 @@
+import play.core.PlayVersion
+import play.sbt.routes.RoutesKeys
 import sbt._
 import uk.gov.hmrc.DefaultBuildSettings._
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
-import play.core.PlayVersion
 import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 
 val appName = "income-tax-view-change-dynamic-stub"
 
 val compile: Seq[ModuleID] = Seq(
-  "uk.gov.hmrc" %% "simple-reactivemongo" % "7.26.0-play-26",
+  "uk.gov.hmrc" %% "simple-reactivemongo" % "8.0.0-play-27",
   ws,
-  "uk.gov.hmrc" %% "bootstrap-backend-play-26" % "5.12.0",
+  "uk.gov.hmrc" %% "bootstrap-backend-play-27" % "5.12.0",
   "com.github.fge" % "json-schema-validator" % "2.2.6"
 )
 
 def test(scope: String = "test,it"): Seq[ModuleID] = Seq(
-  "uk.gov.hmrc" %% "bootstrap-backend-play-26" % "5.12.0" % scope,
-  "uk.gov.hmrc" %% "hmrctest" % "3.9.0-play-26" % scope,
-  "org.scalatest" %% "scalatest" % "3.0.8" % scope,
+  "uk.gov.hmrc" %% "bootstrap-backend-play-27" % "5.12.0" % scope,
   "org.pegdown" % "pegdown" % "1.6.0" % scope,
   "org.jsoup" % "jsoup" % "1.11.3" % scope,
   "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
-  "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % scope,
+  "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.3" % scope,
   "org.mockito" % "mockito-core" % "2.7.22" % "test"
 )
 
@@ -48,6 +47,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(scoverageSettings: _*)
   .settings(defaultSettings(): _*)
   .settings(majorVersion := 0)
+  .settings(RoutesKeys.routesImport -= "controllers.Assets.Asset")
   .settings(
     libraryDependencies ++= appDependencies,
     retrieveManaged := true

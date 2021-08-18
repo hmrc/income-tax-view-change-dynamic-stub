@@ -21,6 +21,7 @@ import models.SchemaModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import play.api.libs.json.Json
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import repositories.{DynamicStubRepository, SchemaRepository}
 import testUtils.TestSupport
 
@@ -155,7 +156,7 @@ class SchemaValidationSpec extends TestSupport {
 
       "return a json schema" in {
         lazy val result = validation.loadRequestSchema(postSchema)
-        await(result).isInstanceOf[JsonSchema]
+        result.isInstanceOf[JsonSchema]
       }
     }
   }
