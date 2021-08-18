@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,10 +37,10 @@ trait DynamicStubRepository[T, O] extends ReactiveRepository[T, BSONObjectID] {
 }
 
 
-abstract class SchemaRepositoryBase(implicit mongo: () => DB, formats: Format[SchemaModel], manifest: Manifest[SchemaModel])
+abstract class SchemaRepositoryBase(implicit mongo: () => DB, formats: Format[SchemaModel])
   extends ReactiveRepository[SchemaModel, BSONObjectID]("schemas", mongo, formats)
     with DynamicStubRepository[SchemaModel, String]
 
-abstract class StubbedDataRepositoryBase(implicit mongo: () => DB, formats: Format[DataModel], manifest: Manifest[DataModel])
+abstract class StubbedDataRepositoryBase(implicit mongo: () => DB, formats: Format[DataModel])
   extends ReactiveRepository[DataModel, BSONObjectID]("data", mongo, formats)
     with DynamicStubRepository[DataModel, String]

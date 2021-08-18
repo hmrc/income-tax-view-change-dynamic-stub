@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,10 @@ package controllers
 import mocks.{MockDataRepository, MockSchemaValidation}
 import models.{DataModel, SchemaModel}
 import play.api.libs.json.Json
-import play.api.test.{FakeHeaders, FakeRequest}
+import play.api.test.FakeRequest
+import play.api.test.Helpers.stubControllerComponents
 import play.mvc.Http.Status
 import testUtils.TestSupport
-import play.api.test.Helpers.stubControllerComponents
 
 class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository {
   lazy val mockCC = stubControllerComponents()

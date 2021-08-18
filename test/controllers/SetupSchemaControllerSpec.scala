@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,12 +66,12 @@ class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
         responseSchema = Json.parse("{}")
       )
 
-      lazy val errorModel = SchemaModel(
-        _id = "test",
-        url = "/test",
-        method = "GET",
-        responseSchema = Json.parse("{}")
-      )
+//      lazy val errorModel = SchemaModel(
+//        _id = "test",
+//        url = "/test",
+//        method = "GET",
+//        responseSchema = Json.parse("{}")
+//      )
 
       lazy val request = FakeRequest().withBody(Json.toJson(successModel)).withHeaders(("Content-Type","application/json"))
       lazy val result = TestSetupSchemaController.addSchema(request)
