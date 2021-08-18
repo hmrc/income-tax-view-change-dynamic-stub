@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@ package controllers
 import com.typesafe.config.Config
 import mocks.{MockDataRepository, MockSchemaValidation}
 import models.DataModel
-import play.api.libs.json.Json
-import play.api.test.FakeRequest
-import play.api.test.Helpers.stubControllerComponents
-import play.mvc.Http.Status
-import testUtils.TestSupport
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
+import play.api.http.Status
+import play.api.libs.json.Json
+import play.api.test.FakeRequest
+import play.api.test.Helpers._
+import testUtils.TestSupport
 
 class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository {
 

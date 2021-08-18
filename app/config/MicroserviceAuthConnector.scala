@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,14 @@
 
 package config
 
+import uk.gov.hmrc.auth.core.PlayAuthConnector
+import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
 import javax.inject.{Inject, Singleton}
 
-import play.api.Mode.Mode
-import play.api.{Configuration, Environment}
-import uk.gov.hmrc.auth.core.PlayAuthConnector
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
-
 @Singleton
-class MicroserviceAuthConnector @Inject()(val environment: Environment,
-                                          val conf: Configuration,
-                                          val servicesConfig: ServicesConfig,
-                                          val WSHttp: HttpClient) extends PlayAuthConnector {
-  protected def runModeConfiguration: Configuration = conf
-  protected def mode: Mode = environment.mode
-  lazy val serviceUrl = servicesConfig.baseUrl("auth")
-  lazy val http = WSHttp
+class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
+                                          val http: HttpClient) extends PlayAuthConnector {
+  override val serviceUrl: String = servicesConfig.baseUrl("auth")
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,13 @@ import models.SchemaModel
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.SchemaRepository
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class SetupSchemaController @Inject()(schemaRepository: SchemaRepository, cc: ControllerComponents)
-  extends BaseController(cc) {
+  extends BackendController(cc) {
 
   val addSchema: Action[JsValue] = Action.async(parse.json) {
     implicit request => withJsonBody[SchemaModel](
@@ -44,18 +44,16 @@ class SetupSchemaController @Inject()(schemaRepository: SchemaRepository, cc: Co
   }
 
   val removeSchema: String => Action[AnyContent] = id => Action.async {
-    implicit request =>
-      schemaRepository().removeById(id).map(_.ok match {
-        case true => Ok("Success")
-        case _ => InternalServerError("Could not delete data")
-      })
+    schemaRepository().removeById(id).map(_.ok match {
+      case true => Ok("Success")
+      case _ => InternalServerError("Could not delete data")
+    })
   }
 
   val removeAll: Action[AnyContent] = Action.async {
-    implicit request =>
-      schemaRepository().removeAll().map(_.ok match {
-        case true => Ok("Removed All Schemas")
-        case _ => InternalServerError("Unexpected Error Clearing MongoDB.")
-      })
+    schemaRepository().removeAll().map(_.ok match {
+      case true => Ok("Removed All Schemas")
+      case _ => InternalServerError("Unexpected Error Clearing MongoDB.")
+    })
   }
 }

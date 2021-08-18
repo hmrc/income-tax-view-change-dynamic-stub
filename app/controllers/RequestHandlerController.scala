@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import javax.inject.{Inject, Singleton}
 import models.HttpMethod._
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.DataRepository
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.SchemaValidation
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -30,7 +30,7 @@ import scala.concurrent.Future
 @Singleton
 class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
                                          dataRepository: DataRepository,
-                                         cc: ControllerComponents) extends BaseController(cc) {
+                                         cc: ControllerComponents) extends BackendController(cc) {
 
   def getRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {
