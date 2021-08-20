@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package models
+package testUtils
 
-object HttpMethod {
-  val GET: String = "GET"
-  val POST: String = "POST"
-}
+import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+
+trait UnitSpec extends WordSpecLike with Matchers with OptionValues

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import models.HttpMethod._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import repositories.DataRepository
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.SchemaValidation
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -67,9 +67,10 @@ class SetupDataController @Inject()(
 
   private def updateObligationsWithDateParameters(data: DataModel) = {
     val fulfilledObligations: Boolean = data._id.split("[?]").last.split("[&]").contains("status=F")
-		val datesSet: Boolean = data._id.contains("&from=") && data._id.contains("&to=")
-		val toDate: LocalDate = LocalDate.now()
-    val fromDate: LocalDate = toDate.minusDays(365)
+    val datesSet: Boolean = data._id.contains("&from=") && data._id.contains("&to=")
+    val toDate: LocalDate = LocalDate.now()
+    val days365 = 365
+    val fromDate: LocalDate = toDate.minusDays(days365)
 
     if (fulfilledObligations && !datesSet) data.copy(_id = data._id + s"&from=$fromDate&to=$toDate")
     else data
@@ -83,18 +84,16 @@ class SetupDataController @Inject()(
   }
 
   val removeData: String => Action[AnyContent] = url => Action.async {
-    implicit request =>
-      dataRepository().removeById(url).map(_.ok match {
-        case true => Ok("Success")
-        case _ => InternalServerError("Could not delete data")
-      })
+    dataRepository().removeById(url).map(_.ok match {
+      case true => Ok("Success")
+      case _ => InternalServerError("Could not delete data")
+    })
   }
 
   val removeAll: Action[AnyContent] = Action.async {
-    implicit request =>
-      dataRepository().removeAll().map(_.ok match {
-        case true => Ok("Removed All Stubbed Data")
-        case _ => InternalServerError("Unexpected Error Clearing MongoDB.")
-      })
+    dataRepository().removeAll().map(_.ok match {
+      case true => Ok("Removed All Stubbed Data")
+      case _ => InternalServerError("Unexpected Error Clearing MongoDB.")
+    })
   }
 }
