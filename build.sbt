@@ -20,7 +20,7 @@ def test(scope: String = "test,it"): Seq[ModuleID] = Seq(
   "org.jsoup" % "jsoup" % "1.11.3" % scope,
   "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
   "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % scope,
-  "org.scalatestplus" %% "mockito-3-4" % "3.2.9.0" % scope,
+  "org.scalatestplus" %% "mockito-3-2" % "3.1.1.0" % scope,
   "com.vladsch.flexmark" % "flexmark-all" % "0.35.10" % scope
 )
 
