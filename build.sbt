@@ -8,19 +8,20 @@ import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 val appName = "income-tax-view-change-dynamic-stub"
 
 val compile: Seq[ModuleID] = Seq(
-  "uk.gov.hmrc" %% "simple-reactivemongo" % "8.0.0-play-27",
+  "uk.gov.hmrc" %% "simple-reactivemongo" % "8.0.0-play-28",
   ws,
-  "uk.gov.hmrc" %% "bootstrap-backend-play-27" % "5.12.0",
+  "uk.gov.hmrc" %% "bootstrap-backend-play-28" %  "5.13.0",
   "com.github.fge" % "json-schema-validator" % "2.2.6"
 )
 
 def test(scope: String = "test,it"): Seq[ModuleID] = Seq(
-  "uk.gov.hmrc" %% "bootstrap-backend-play-27" % "5.12.0" % scope,
+  "uk.gov.hmrc" %% "bootstrap-backend-play-28" % "5.13.0" % scope,
   "org.pegdown" % "pegdown" % "1.6.0" % scope,
   "org.jsoup" % "jsoup" % "1.11.3" % scope,
   "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
-  "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.3" % scope,
-  "org.mockito" % "mockito-core" % "2.7.22" % "test"
+  "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % scope,
+  "org.scalatestplus" %% "mockito-3-2" % "3.1.1.0" % scope,
+  "com.vladsch.flexmark" % "flexmark-all" % "0.35.10" % scope
 )
 
 lazy val appDependencies: Seq[ModuleID] = compile ++ test()
