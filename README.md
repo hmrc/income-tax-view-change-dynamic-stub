@@ -1,4 +1,4 @@
-# income-tax-view-change-dynamic-stub
+## income-tax-view-change-dynamic-stub
 
 [![Build Status](https://travis-ci.org/hmrc/income-tax-view-change-dynamic-stub.svg)](https://travis-ci.org/hmrc/income-tax-view-change-dynamic-stub) [ ![Download](https://api.bintray.com/packages/hmrc/releases/income-tax-view-change-dynamic-stub/images/download.svg) ](https://bintray.com/hmrc/releases/income-tax-view-change-dynamic-stub/_latestVersion)
 
