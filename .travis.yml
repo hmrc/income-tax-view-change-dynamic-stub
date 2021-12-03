@@ -10,7 +10,7 @@ cache:
     - '$HOME/.ivy2/cache'
 branches:
   except:
-    - master
+    - main
     services:
 - mongodb
 addons:
