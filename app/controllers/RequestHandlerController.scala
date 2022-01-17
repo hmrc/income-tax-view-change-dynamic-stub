@@ -34,7 +34,7 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
 
   def getRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {
-      dataRepository().find("_id" -> s"""${request.uri}""", "method" -> GET).map {
+      dataRepository().find("_id" -> s"""${getRequestUri(request.uri)}""", "method" -> GET).map {
         stubData => if (stubData.nonEmpty) {
           if (stubData.head.response.isEmpty) {
             Status(stubData.head.status)
@@ -45,6 +45,14 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
           NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}")
         }
       }
+    }
+  }
+
+  def getRequestUri(uri: String): String = {
+    if(uri.contains("list-of-calculation-results")) {
+      uri.split('?').headOption.getOrElse("")
+    } else {
+      uri
     }
   }
 
