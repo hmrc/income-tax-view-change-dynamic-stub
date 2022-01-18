@@ -50,7 +50,7 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
 
   def getRequestUri(uri: String): String = {
     if(uri.contains("list-of-calculation-results")) {
-      uri.split('?').headOption.getOrElse("")
+      uri.split('?').headOption.getOrElse(uri)
     } else {
       uri
     }
