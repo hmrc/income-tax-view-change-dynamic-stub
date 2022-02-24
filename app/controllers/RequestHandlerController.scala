@@ -35,21 +35,22 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
   def getRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {
       dataRepository().find("_id" -> s"""${getRequestUri(request.uri)}""", "method" -> GET).map {
-        stubData => if (stubData.nonEmpty) {
-          if (stubData.head.response.isEmpty) {
-            Status(stubData.head.status)
+        stubData =>
+          if (stubData.nonEmpty) {
+            if (stubData.head.response.isEmpty) {
+              Status(stubData.head.status)
+            } else {
+              Status(stubData.head.status)(stubData.head.response.get)
+            }
           } else {
-            Status(stubData.head.status)(stubData.head.response.get)
+            NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}")
           }
-        } else {
-          NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}")
-        }
       }
     }
   }
 
   def getRequestUri(uri: String): String = {
-    if(uri.contains("list-of-calculation-results")) {
+    if (uri.contains("list-of-calculation-results")) {
       uri.split('?').headOption.getOrElse(uri)
     } else {
       uri
@@ -59,20 +60,21 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
   def postRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {
       dataRepository().find("_id" -> s"""${request.uri}""", "method" -> POST).flatMap {
-        stubData => if (stubData.nonEmpty) {
-          schemaValidation.validateRequestJson(stubData.head.schemaId, request.body.asJson) map {
-            case true => if (stubData.head.response.isEmpty) {
-              Status(stubData.head.status)
-            } else {
-              Status(stubData.head.status)(stubData.head.response.get)
+        stubData =>
+          if (stubData.nonEmpty) {
+            schemaValidation.validateRequestJson(stubData.head.schemaId, request.body.asJson) map {
+              case true => if (stubData.head.response.isEmpty) {
+                Status(stubData.head.status)
+              } else {
+                Status(stubData.head.status)(stubData.head.response.get)
+              }
+              case false => {
+                BadRequest(s"The Json Body:\n\n${request.body.asJson} did not validate against the Schema Definition")
+              }
             }
-            case false => {
-              BadRequest(s"The Json Body:\n\n${request.body.asJson} did not validate against the Schema Definition")
-            }
+          } else {
+            Future(NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}"))
           }
-        } else {
-          Future(NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}"))
-        }
       }
     }
   }

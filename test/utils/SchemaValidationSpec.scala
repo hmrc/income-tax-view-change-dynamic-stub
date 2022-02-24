@@ -53,7 +53,8 @@ class SchemaValidationSpec extends TestSupport {
     new SchemaValidation(mockConnection)
   }
 
-  val schema = Json.parse("""{
+  val schema = Json.parse(
+    """{
                             	"title": "Person",
                             	"type": "object",
                             	"properties": {
@@ -70,7 +71,7 @@ class SchemaValidationSpec extends TestSupport {
   "Calling .loadResponseSchema" should {
 
     "with a matching schema in mongo" should {
-      lazy val validation = setupMocks(SchemaModel("testSchema","/test","GET", responseSchema = schema))
+      lazy val validation = setupMocks(SchemaModel("testSchema", "/test", "GET", responseSchema = schema))
 
       "return a json schema" in {
         lazy val result = validation.loadResponseSchema("testSchema")
@@ -81,7 +82,7 @@ class SchemaValidationSpec extends TestSupport {
     "without a matching schema in mongo" should {
 
       "throw an exception" in {
-        val validation = setupFutureFailedMocks(SchemaModel("testSchema","/test","GET", responseSchema = schema))
+        val validation = setupFutureFailedMocks(SchemaModel("testSchema", "/test", "GET", responseSchema = schema))
 
         val ex = intercept[RuntimeException] {
           await(validation.loadResponseSchema("testSchema"))
@@ -96,7 +97,7 @@ class SchemaValidationSpec extends TestSupport {
     "with a valid json body" should {
 
       "return true" in {
-        val validation = setupMocks(SchemaModel("testSchema","/test","GET", responseSchema = schema))
+        val validation = setupMocks(SchemaModel("testSchema", "/test", "GET", responseSchema = schema))
         val json = Json.parse("""{ "firstName" : "Bob", "lastName" : "Bobson" }""")
         val result = validation.validateResponseJson("testSchema", Some(json))
         await(result) shouldEqual true
@@ -105,7 +106,7 @@ class SchemaValidationSpec extends TestSupport {
 
     "with an invalid json body" should {
 
-      lazy val validation = setupMocks(SchemaModel("testSchema","/test","GET", responseSchema = schema))
+      lazy val validation = setupMocks(SchemaModel("testSchema", "/test", "GET", responseSchema = schema))
       val json = Json.parse("""{ "firstName" : "Bob" }""")
 
       lazy val result = validation.validateResponseJson("testSchema", Some(json))
@@ -117,7 +118,7 @@ class SchemaValidationSpec extends TestSupport {
   }
 
   "Calling .loadUrlRegex" should {
-    lazy val validation = setupMocks(SchemaModel("testSchema","/test","GET", responseSchema = schema))
+    lazy val validation = setupMocks(SchemaModel("testSchema", "/test", "GET", responseSchema = schema))
 
     "return the url of the SchemaModel" in {
       lazy val result = validation.loadUrlRegex("testSchema")
@@ -126,7 +127,7 @@ class SchemaValidationSpec extends TestSupport {
   }
 
   "Calling .validateUrlMatch" should {
-    lazy val validation = setupMocks(SchemaModel("testSchema","/test","GET", responseSchema = schema))
+    lazy val validation = setupMocks(SchemaModel("testSchema", "/test", "GET", responseSchema = schema))
     "return 'true' if the urls match" in {
       lazy val result = validation.validateUrlMatch("testSchema", "/test")
       await(result) shouldEqual true
@@ -135,8 +136,8 @@ class SchemaValidationSpec extends TestSupport {
   }
 
 
-
-  val postSchema = Json.parse("""{
+  val postSchema = Json.parse(
+    """{
                             	"title": "Person",
                             	"type": "object",
                             	"properties": {
@@ -152,7 +153,7 @@ class SchemaValidationSpec extends TestSupport {
 
   "Calling .loadRequestSchema" should {
     "with a matching schema in mongo" should {
-      lazy val validation = setupMocks(SchemaModel("testSchema","/test","GET", responseSchema = schema, requestSchema = Some(postSchema)))
+      lazy val validation = setupMocks(SchemaModel("testSchema", "/test", "GET", responseSchema = schema, requestSchema = Some(postSchema)))
 
       "return a json schema" in {
         lazy val result = validation.loadRequestSchema(postSchema)
@@ -166,7 +167,7 @@ class SchemaValidationSpec extends TestSupport {
     "with a valid json body" should {
 
       "return true" in {
-        val validation = setupMocks(SchemaModel("testSchema","/test","GET", responseSchema = schema, requestSchema = Some(postSchema)))
+        val validation = setupMocks(SchemaModel("testSchema", "/test", "GET", responseSchema = schema, requestSchema = Some(postSchema)))
         val json = Json.parse("""{ "firstName" : "Bob", "lastName" : "Bobson" }""")
         val result = validation.validateRequestJson("testSchema", Some(json))
         await(result) shouldEqual true
@@ -175,7 +176,7 @@ class SchemaValidationSpec extends TestSupport {
 
     "with an invalid json body" should {
 
-      lazy val validation = setupMocks(SchemaModel("testSchema","/test","GET", responseSchema = schema, requestSchema = Some(postSchema)))
+      lazy val validation = setupMocks(SchemaModel("testSchema", "/test", "GET", responseSchema = schema, requestSchema = Some(postSchema)))
       val json = Json.parse("""{ "firstName" : "Bob" }""")
 
       lazy val result = validation.validateRequestJson("testSchema", Some(json))

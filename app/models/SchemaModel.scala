@@ -24,7 +24,7 @@ case class SchemaModel(
                         method: String,
                         responseSchema: JsValue,
                         requestSchema: Option[JsValue] = None
-                       )
+                      )
 
 object SchemaModel {
   implicit val formats: OFormat[SchemaModel] = Json.format[SchemaModel]
