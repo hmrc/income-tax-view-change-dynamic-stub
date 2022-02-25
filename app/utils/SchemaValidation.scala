@@ -66,7 +66,7 @@ class SchemaValidation @Inject()(repository: SchemaRepository) {
 
   def validateRequestJson(schemaId: String, json: Option[JsValue]): Future[Boolean] = {
     repository().findById(schemaId).map { schema =>
-      if(schema.requestSchema.isDefined) {
+      if (schema.requestSchema.isDefined) {
         json.fold(true) {
           response =>
             val jsonParser = jsonFactory.createParser(response.toString)

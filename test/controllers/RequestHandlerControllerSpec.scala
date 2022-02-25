@@ -28,8 +28,8 @@ class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation
   lazy val mockCC = stubControllerComponents()
 
   object TestRequestHandlerController extends RequestHandlerController(mockSchemaValidation,
-                                                                      mockDataRepository,
-                                                                      mockCC)
+    mockDataRepository,
+    mockCC)
 
   lazy val successModel = DataModel(
     _id = "test",

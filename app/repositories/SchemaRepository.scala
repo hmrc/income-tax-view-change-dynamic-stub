@@ -27,7 +27,7 @@ import uk.gov.hmrc.mongo.MongoConnector
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SchemaRepository @Inject()(mongoComponent: ReactiveMongoComponent){
+class SchemaRepository @Inject()(mongoComponent: ReactiveMongoComponent) {
 
   lazy val mongoConnector: MongoConnector = mongoComponent.mongoConnector
 

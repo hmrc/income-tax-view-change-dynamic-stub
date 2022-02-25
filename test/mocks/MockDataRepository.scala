@@ -27,11 +27,11 @@ import testUtils.TestSupport
 
 import scala.concurrent.Future
 
-trait MockDataRepository extends TestSupport{
+trait MockDataRepository extends TestSupport {
 
   val successWriteResult = DefaultWriteResult(ok = true, n = 1, writeErrors = Seq(), None, None, None)
-  val errorWriteResult = DefaultWriteResult(ok = false, n = 1, writeErrors = Seq(WriteError(1,1,"Error")), None, None, None)
-  val mockReactiveMongoComponent : ReactiveMongoComponent = mock[ReactiveMongoComponent]
+  val errorWriteResult = DefaultWriteResult(ok = false, n = 1, writeErrors = Seq(WriteError(1, 1, "Error")), None, None, None)
+  val mockReactiveMongoComponent: ReactiveMongoComponent = mock[ReactiveMongoComponent]
 
   lazy val mockDataRepository: DataRepository = new DataRepository(mockReactiveMongoComponent) {
     override lazy val repository: StubbedDataRepositoryBase = mock[StubbedDataRepositoryBase]

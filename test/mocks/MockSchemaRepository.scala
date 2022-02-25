@@ -30,8 +30,8 @@ import scala.concurrent.Future
 trait MockSchemaRepository extends TestSupport {
 
   val successWriteResult = DefaultWriteResult(ok = true, n = 1, writeErrors = Seq(), None, None, None)
-  val errorWriteResult = DefaultWriteResult(ok = false, n = 1, writeErrors = Seq(WriteError(1,1,"Error")), None, None, None)
-  val mockReactiveMongoComponent : ReactiveMongoComponent = mock[ReactiveMongoComponent]
+  val errorWriteResult = DefaultWriteResult(ok = false, n = 1, writeErrors = Seq(WriteError(1, 1, "Error")), None, None, None)
+  val mockReactiveMongoComponent: ReactiveMongoComponent = mock[ReactiveMongoComponent]
 
 
   lazy val mockSchemaRepository: SchemaRepository = new SchemaRepository(mockReactiveMongoComponent) {

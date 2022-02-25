@@ -31,16 +31,17 @@ class SetupSchemaController @Inject()(schemaRepository: SchemaRepository, cc: Co
   extends BackendController(cc) {
 
   val addSchema: Action[JsValue] = Action.async(parse.json) {
-    implicit request => withJsonBody[SchemaModel](
-      json => {
-        schemaRepository().addEntry(json).map(_.ok match {
-          case true => Ok(s"Successfully added Schema: ${request.body}")
-          case _ => InternalServerError("Could not store data")
-        })
+    implicit request =>
+      withJsonBody[SchemaModel](
+        json => {
+          schemaRepository().addEntry(json).map(_.ok match {
+            case true => Ok(s"Successfully added Schema: ${request.body}")
+            case _ => InternalServerError("Could not store data")
+          })
+        }
+      ).recover {
+        case _ => BadRequest("Error Parsing Json SchemaModel")
       }
-    ).recover {
-      case _ => BadRequest("Error Parsing Json SchemaModel")
-    }
   }
 
   val removeSchema: String => Action[AnyContent] = id => Action.async {
