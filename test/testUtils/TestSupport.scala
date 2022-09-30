@@ -17,19 +17,21 @@
 package testUtils
 
 import com.mongodb.client.result.{DeleteResult, InsertOneResult}
+import com.typesafe.config.Config
 import org.bson.BsonBoolean
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.test.Helpers.stubControllerComponents
 import uk.gov.hmrc.http.HeaderCarrier
+
 import scala.concurrent.ExecutionContext
 
 trait TestSupport extends UnitSpec with GuiceOneServerPerSuite with MockitoSugar with BeforeAndAfterAll with BeforeAndAfterEach with MaterializerSupport {
 
   implicit val ec: ExecutionContext = stubControllerComponents().executionContext
   implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-  implicit val config = app.configuration.underlying
+  implicit val config: Config = app.configuration.underlying
 
   val successInsertOneResult: InsertOneResult = InsertOneResult.acknowledged(BsonBoolean.TRUE)
   val failedInsertOneResult: InsertOneResult = InsertOneResult.unacknowledged()
