@@ -16,40 +16,34 @@
 
 package mocks
 
+import com.mongodb.client.result.{DeleteResult, InsertOneResult}
 import models.SchemaModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.{DefaultWriteResult, WriteError, WriteResult}
-import repositories.{SchemaRepository, SchemaRepositoryBase}
+import org.scalatestplus.mockito.MockitoSugar
+import repositories.SchemaRepository
 import testUtils.TestSupport
+
 
 import scala.concurrent.Future
 
-trait MockSchemaRepository extends TestSupport {
-
-  val successWriteResult = DefaultWriteResult(ok = true, n = 1, writeErrors = Seq(), None, None, None)
-  val errorWriteResult = DefaultWriteResult(ok = false, n = 1, writeErrors = Seq(WriteError(1, 1, "Error")), None, None, None)
-  val mockReactiveMongoComponent: ReactiveMongoComponent = mock[ReactiveMongoComponent]
-
-
-  lazy val mockSchemaRepository: SchemaRepository = new SchemaRepository(mockReactiveMongoComponent) {
-    override lazy val repository: SchemaRepositoryBase = mock[SchemaRepositoryBase]
-  }
+trait MockSchemaRepository extends TestSupport with MockitoSugar {
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(mockSchemaRepository.repository)
+    reset(mockSchemaRepository)
   }
 
-  def setupMockAddSchema(model: SchemaModel)(response: WriteResult): OngoingStubbing[Future[WriteResult]] =
-    when(mockSchemaRepository.repository.addEntry(ArgumentMatchers.any())(ArgumentMatchers.any())).thenReturn(Future.successful(response))
+  lazy val mockSchemaRepository: SchemaRepository = mock[SchemaRepository]
 
-  def setupMockRemoveSchema(id: String)(response: WriteResult): OngoingStubbing[Future[WriteResult]] =
-    when(mockSchemaRepository.repository.removeById(ArgumentMatchers.eq(id))(ArgumentMatchers.any())).thenReturn(Future.successful(response))
+  def setupMockAddSchema(model: SchemaModel)(response: InsertOneResult): OngoingStubbing[Future[InsertOneResult]] =
+    when(mockSchemaRepository.addEntry(ArgumentMatchers.eq(model))).thenReturn(Future.successful(response))
 
-  def setupMockRemoveAllSchemas(response: WriteResult): OngoingStubbing[Future[WriteResult]] =
-    when(mockSchemaRepository.repository.removeAll()(ArgumentMatchers.any())).thenReturn(Future.successful(response))
+  def setupMockRemoveSchema(id: String)(response: DeleteResult): OngoingStubbing[Future[DeleteResult]] =
+    when(mockSchemaRepository.removeById(ArgumentMatchers.eq(id))).thenReturn(Future.successful(response))
+
+  def setupMockRemoveAllSchemas(response: DeleteResult): OngoingStubbing[Future[DeleteResult]] =
+    when(mockSchemaRepository.removeAll()).thenReturn(Future.successful(response))
 
 }

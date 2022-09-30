@@ -35,7 +35,7 @@ class SchemaValidation @Inject()(repository: SchemaRepository) {
   def loadResponseSchema(schemaId: String): Future[JsonSchema] = {
     val schemaMapper = new ObjectMapper()
     val factory = schemaMapper.getFactory
-    repository().findById(schemaId).map { response =>
+    repository.findById(schemaId).map { response =>
       val schemaParser: JsonParser = factory.createParser(response.responseSchema.toString)
       val schemaJson: JsonNode = schemaMapper.readTree(schemaParser)
       JsonSchemaFactory.byDefault().getJsonSchema(schemaJson)
@@ -65,7 +65,7 @@ class SchemaValidation @Inject()(repository: SchemaRepository) {
   }
 
   def validateRequestJson(schemaId: String, json: Option[JsValue]): Future[Boolean] = {
-    repository().findById(schemaId).map { schema =>
+    repository.findById(schemaId).map { schema =>
       if (schema.requestSchema.isDefined) {
         json.fold(true) {
           response =>
@@ -82,7 +82,7 @@ class SchemaValidation @Inject()(repository: SchemaRepository) {
   }
 
   def loadUrlRegex(schemaId: String): Future[String] =
-    repository().findById(schemaId).map(_.url)
+    repository.findById(schemaId).map(_.url)
 
   def validateUrlMatch(schemaId: String, url: String): Future[Boolean] =
     loadUrlRegex(schemaId).map(regex => url.matches(regex))

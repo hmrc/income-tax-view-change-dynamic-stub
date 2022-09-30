@@ -20,7 +20,7 @@ import mocks.MockSchemaRepository
 import models.SchemaModel
 import play.api.http.Status
 import play.api.libs.json.Json
-import play.api.mvc.Result
+import play.api.mvc.{ControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import testUtils.TestSupport
@@ -28,7 +28,7 @@ import testUtils.TestSupport
 import scala.concurrent.Future
 
 class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
-  lazy val mockCC = stubControllerComponents()
+  lazy val mockCC: ControllerComponents = stubControllerComponents()
 
   object TestSetupSchemaController extends SetupSchemaController(mockSchemaRepository,
     mockCC)
@@ -47,12 +47,12 @@ class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
       lazy val result: Future[Result] = TestSetupSchemaController.addSchema(request)
 
       "Return a status 200 (OK)" in {
-        setupMockAddSchema(successModel)(successWriteResult)
+        setupMockAddSchema(successModel)(successInsertOneResult)
         status(result) shouldBe Status.OK
       }
 
       s"Result Body 'Successfully added Schema: ${Json.toJson(successModel)}'" in {
-        setupMockAddSchema(successModel)(successWriteResult)
+        setupMockAddSchema(successModel)(successInsertOneResult)
         contentAsString(result) shouldBe s"Successfully added Schema: ${Json.toJson(successModel)}"
       }
     }
@@ -77,12 +77,12 @@ class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
       lazy val result = TestSetupSchemaController.addSchema(request)
 
       "Return a status 500 (ISE)" in {
-        setupMockAddSchema(successModel)(errorWriteResult)
+        setupMockAddSchema(successModel)(failedInsertOneResult)
         status(result) shouldBe Status.INTERNAL_SERVER_ERROR
       }
 
       s"Result Body 'Could not store data'" in {
-        setupMockAddSchema(successModel)(errorWriteResult)
+        setupMockAddSchema(successModel)(failedInsertOneResult)
         contentAsString(result) shouldBe "Could not store data"
       }
 
@@ -99,7 +99,7 @@ class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
         lazy val request = FakeRequest()
         lazy val result = TestSetupSchemaController.removeSchema("someId")(request)
 
-        setupMockRemoveSchema("someId")(successWriteResult)
+        setupMockRemoveSchema("someId")(successDeleteResult)
         status(result) shouldBe Status.OK
       }
     }
@@ -109,7 +109,7 @@ class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
         lazy val request = FakeRequest()
         lazy val result = TestSetupSchemaController.removeSchema("someId")(request)
 
-        setupMockRemoveSchema("someId")(errorWriteResult)
+        setupMockRemoveSchema("someId")(failedDeleteResult)
         status(result) shouldBe Status.INTERNAL_SERVER_ERROR
       }
     }
@@ -119,7 +119,7 @@ class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
         lazy val request = FakeRequest()
         lazy val result = TestSetupSchemaController.removeAll()(request)
 
-        setupMockRemoveAllSchemas(successWriteResult)
+        setupMockRemoveAllSchemas(successDeleteResult)
         status(result) shouldBe Status.OK
       }
     }
@@ -129,7 +129,7 @@ class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
         lazy val request = FakeRequest()
         lazy val result = TestSetupSchemaController.removeAll()(request)
 
-        setupMockRemoveAllSchemas(errorWriteResult)
+        setupMockRemoveAllSchemas(failedDeleteResult)
         status(result) shouldBe Status.INTERNAL_SERVER_ERROR
       }
     }

@@ -20,18 +20,19 @@ import mocks.{MockDataRepository, MockSchemaValidation}
 import models.{DataModel, SchemaModel}
 import play.api.http.Status
 import play.api.libs.json.Json
+import play.api.mvc.ControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import testUtils.TestSupport
 
 class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository {
-  lazy val mockCC = stubControllerComponents()
+  lazy val mockCC: ControllerComponents = stubControllerComponents()
 
   object TestRequestHandlerController extends RequestHandlerController(mockSchemaValidation,
     mockDataRepository,
     mockCC)
 
-  lazy val successModel = DataModel(
+  lazy val successModel: DataModel = DataModel(
     _id = "test",
     schemaId = "testID1",
     method = "GET",
@@ -39,17 +40,17 @@ class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation
     response = None
   )
 
-  lazy val successWithBodyModel = DataModel(
+  lazy val successWithBodyModel: DataModel = DataModel(
     _id = "test",
     schemaId = "testID2",
     method = "GET",
     status = Status.OK,
-    response = Some(Json.parse("""{"something" : "hello"}"""))
+    response = Some(Json.parse("""{"Something" : "hello"}"""))
   )
 
-  lazy val successRequestSchema = SchemaModel(
+  lazy val successRequestSchema: SchemaModel = SchemaModel(
     _id = "testRequest",
-    url = "someURL",
+    url = "SomeURL",
     method = "POST",
     responseSchema = Json.parse("""{"response" : "sup"}"""),
     requestSchema = Some(Json.parse("""{"request" : "jaffa cakes"}"""))
@@ -60,14 +61,14 @@ class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation
     "return the status code specified in the model" in {
       lazy val result = TestRequestHandlerController.getRequestHandler("/test")(FakeRequest())
 
-      mockFind(List(successModel))
+      mockFind(Some(successModel))
       status(result) shouldBe Status.OK
     }
 
     "return the status and body" in {
       lazy val result = TestRequestHandlerController.getRequestHandler("/test")(FakeRequest())
 
-      mockFind(List(successWithBodyModel))
+      mockFind(Some(successWithBodyModel))
       status(result) shouldBe Status.OK
       contentAsJson(result) shouldBe successWithBodyModel.response.get
     }
@@ -75,7 +76,7 @@ class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation
     "return a 404 status when the endpoint cannot be found" in {
       lazy val result = TestRequestHandlerController.getRequestHandler("/test")(FakeRequest())
 
-      mockFind(List())
+      mockFind(None)
       status(result) shouldBe Status.NOT_FOUND
     }
   }
@@ -85,7 +86,7 @@ class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation
     "return the corresponding response of an incoming POST request" in {
       lazy val result = TestRequestHandlerController.postRequestHandler("/test")(FakeRequest())
 
-      mockFind(List(successWithBodyModel))
+      mockFind(Some(successWithBodyModel))
       mockValidateRequestJson(successWithBodyModel.schemaId, successRequestSchema.requestSchema)(response = true)
 
       contentAsJson(result) shouldBe successWithBodyModel.response.get
@@ -94,7 +95,7 @@ class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation
     "return a response status when there is no stubbed response body for an incoming POST request" in {
       lazy val result = TestRequestHandlerController.postRequestHandler("/test")(FakeRequest())
 
-      mockFind(List(successModel))
+      mockFind(Some(successModel))
       mockValidateRequestJson(successModel.schemaId, successRequestSchema.requestSchema)(response = true)
 
       status(result) shouldBe Status.OK
@@ -103,7 +104,7 @@ class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation
     "return a 400 status if the request body doesn't validate against the stub" in {
       lazy val result = TestRequestHandlerController.postRequestHandler("/test")(FakeRequest())
 
-      mockFind(List(successWithBodyModel))
+      mockFind(Some(successWithBodyModel))
       mockValidateRequestJson(successWithBodyModel.schemaId, None)(response = false)
 
       status(result) shouldBe Status.BAD_REQUEST
@@ -113,7 +114,7 @@ class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation
     "return a 404 status if the endpoint specified in the POST request can't be found" in {
       lazy val result = TestRequestHandlerController.postRequestHandler("/test")(FakeRequest())
 
-      mockFind(List())
+      mockFind(None)
 
       status(result) shouldBe Status.NOT_FOUND
       contentAsString(result) shouldBe s"Could not find endpoint in Dynamic Stub matching the URI: /"

@@ -34,7 +34,7 @@ class SetupSchemaController @Inject()(schemaRepository: SchemaRepository, cc: Co
     implicit request =>
       withJsonBody[SchemaModel](
         json => {
-          schemaRepository().addEntry(json).map(_.ok match {
+          schemaRepository.addEntry(json).map(_.wasAcknowledged() match {
             case true => Ok(s"Successfully added Schema: ${request.body}")
             case _ => InternalServerError("Could not store data")
           })
@@ -45,14 +45,14 @@ class SetupSchemaController @Inject()(schemaRepository: SchemaRepository, cc: Co
   }
 
   val removeSchema: String => Action[AnyContent] = id => Action.async {
-    schemaRepository().removeById(id).map(_.ok match {
+    schemaRepository.removeById(id).map(_.wasAcknowledged() match {
       case true => Ok("Success")
       case _ => InternalServerError("Could not delete data")
     })
   }
 
   val removeAll: Action[AnyContent] = Action.async {
-    schemaRepository().removeAll().map(_.ok match {
+    schemaRepository.removeAll().map(_.wasAcknowledged() match {
       case true => Ok("Removed All Schemas")
       case _ => InternalServerError("Unexpected Error Clearing MongoDB.")
     })

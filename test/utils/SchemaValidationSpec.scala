@@ -17,40 +17,30 @@
 package utils
 
 import com.github.fge.jsonschema.main.JsonSchema
+import mocks.MockSchemaRepository
 import models.SchemaModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import repositories.{DynamicStubRepository, SchemaRepository}
 import testUtils.TestSupport
 
 import scala.concurrent.Future
 
-class SchemaValidationSpec extends TestSupport {
+class SchemaValidationSpec extends TestSupport with MockSchemaRepository {
 
   def setupMocks(schemaModel: SchemaModel): SchemaValidation = {
-    val mockCollection = mock[DynamicStubRepository[SchemaModel, String]]
-    val mockConnection = mock[SchemaRepository]
-
-    when(mockConnection.apply()).thenReturn(mockCollection)
-
-    when(mockCollection.findById(ArgumentMatchers.eq(schemaModel._id))(ArgumentMatchers.any()))
+    when(mockSchemaRepository.findById(ArgumentMatchers.eq(schemaModel._id)))
       .thenReturn(Future.successful(schemaModel))
 
-    new SchemaValidation(mockConnection)
+    new SchemaValidation(mockSchemaRepository)
   }
 
   def setupFutureFailedMocks(schemaModel: SchemaModel): SchemaValidation = {
-    val mockCollection = mock[DynamicStubRepository[SchemaModel, String]]
-    val mockConnection = mock[SchemaRepository]
-
-    when(mockConnection.apply()).thenReturn(mockCollection)
-
-    when(mockCollection.findById(ArgumentMatchers.eq(schemaModel._id))(ArgumentMatchers.any()))
+    when(mockSchemaRepository.findById(ArgumentMatchers.eq(schemaModel._id)))
       .thenThrow(new RuntimeException("Schema could not be retrieved/found in MongoDB"))
 
-    new SchemaValidation(mockConnection)
+    new SchemaValidation(mockSchemaRepository)
   }
 
   val schema = Json.parse(

@@ -16,37 +16,23 @@
 
 package repositories
 
-import javax.inject.{Inject, Singleton}
-
 import models.SchemaModel
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.DefaultDB
-import reactivemongo.api.commands._
-import uk.gov.hmrc.mongo.MongoConnector
-
-import scala.concurrent.{ExecutionContext, Future}
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.result.{DeleteResult, InsertOneResult}
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.Future
 
 @Singleton
-class SchemaRepository @Inject()(mongoComponent: ReactiveMongoComponent) {
+class SchemaRepository @Inject()(repository: SchemaRepositoryBase) {
 
-  lazy val mongoConnector: MongoConnector = mongoComponent.mongoConnector
+  def findById(schemaId: String): Future[SchemaModel] =
+    repository.collection.find(equal("_id", schemaId)).head()
 
-  implicit lazy val db: () => DefaultDB = mongoConnector.db
+  def removeById(schemaId: String): Future[DeleteResult] =
+    repository.collection.deleteOne(equal("_id", schemaId)).toFuture()
 
-  lazy val repository = new SchemaRepositoryBase() {
+  def removeAll(): Future[DeleteResult] = repository.collection.deleteMany(empty()).toFuture()
 
-    override def findById(schemaId: String)(implicit ec: ExecutionContext): Future[SchemaModel] =
-      find("_id" -> schemaId).map(_.last)
+  def addEntry(document: SchemaModel): Future[InsertOneResult] = repository.collection.insertOne(document).toFuture()
 
-    override def removeById(schemaId: String)(implicit ec: ExecutionContext): Future[WriteResult] =
-      remove("_id" -> schemaId)
-
-    override def removeAll()(implicit ec: ExecutionContext): Future[WriteResult] =
-      removeAll(WriteConcern.Acknowledged)
-
-    override def addEntry(document: SchemaModel)(implicit ec: ExecutionContext): Future[WriteResult] =
-      insert(document)
-  }
-
-  def apply(): DynamicStubRepository[SchemaModel, String] = repository
 }
