@@ -17,12 +17,12 @@
 package controllers
 
 import javax.inject.{Inject, Singleton}
-
 import models.HttpMethod._
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.SchemaValidation
+import org.mongodb.scala.model.Filters._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -34,7 +34,7 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
 
   def getRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {
-      dataRepository().find("_id" -> s"""${getRequestUri(request.uri)}""", "method" -> GET).map {
+      dataRepository.find(equal("_id", s"""${getRequestUri(request.uri)}"""), equal("method", GET)).map {
         stubData =>
           if (stubData.nonEmpty) {
             if (stubData.head.response.isEmpty) {
@@ -59,7 +59,7 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
 
   def postRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {
-      dataRepository().find("_id" -> s"""${request.uri}""", "method" -> POST).flatMap {
+      dataRepository.find(equal("_id", s"""${request.uri}"""), equal("method", POST)).flatMap {
         stubData =>
           if (stubData.nonEmpty) {
             schemaValidation.validateRequestJson(stubData.head.schemaId, request.body.asJson) map {
@@ -68,12 +68,15 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
               } else {
                 Status(stubData.head.status)(stubData.head.response.get)
               }
-              case false => {
-                BadRequest(s"The Json Body:\n\n${request.body.asJson} did not validate against the Schema Definition")
-              }
+              case false =>
+                BadRequest(s"The Json Body:\n\n${
+                  request.body.asJson
+                } did not validate against the Schema Definition")
             }
           } else {
-            Future(NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}"))
+            Future(NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${
+              request.uri
+            }"))
           }
       }
     }

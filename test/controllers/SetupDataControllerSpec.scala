@@ -22,10 +22,13 @@ import models.DataModel
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import play.api.http.Status
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import testUtils.TestSupport
+
+import scala.concurrent.Future
 
 class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository {
 
@@ -59,12 +62,12 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
 
 
         "return Status OK (200) if data successfully added to stub" in new Setup {
-          lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
-          lazy val result = controller.addData(request)
+          lazy val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
+          lazy val result: Future[Result] = controller.addData(request)
 
           mockValidateUrlMatch("2345", "1234")(response = true)
           mockValidateResponseJson("2345", Some(Json.parse("{}")))(response = true)
-          mockAddEntry(model)(successWriteResult)
+          mockAddEntry(model)(successInsertOneResult)
           status(result) shouldBe Status.OK
         }
         "return Status InternalServerError (500) if unable to add data to the stub" in new Setup {
@@ -73,7 +76,7 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
 
           mockValidateUrlMatch("2345", "1234")(response = true)
           mockValidateResponseJson("2345", Some(Json.parse("{}")))(response = true)
-          mockAddEntry(model)(errorWriteResult)
+          mockAddEntry(model)(failedInsertOneResult)
           status(result) shouldBe Status.INTERNAL_SERVER_ERROR
         }
 
@@ -94,7 +97,7 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
 
         mockValidateUrlMatch("2345", "1234")(response = true)
         mockValidateResponseJson("2345", Some(Json.parse("""{}""")))(response = true)
-        mockAddEntry(model)(successWriteResult)
+        mockAddEntry(model)(successInsertOneResult)
         status(result) shouldBe Status.OK
       }
 
@@ -154,7 +157,7 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
       lazy val request = FakeRequest()
       lazy val result = controller.removeData("someUrl")(request)
 
-      mockRemoveById("someUrl")(successWriteResult)
+      mockRemoveById("someUrl")(successDeleteResult)
 
       status(result) shouldBe Status.OK
     }
@@ -163,7 +166,7 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
       lazy val request = FakeRequest()
       lazy val result = controller.removeData("someUrl")(request)
 
-      mockRemoveById("someUrl")(errorWriteResult)
+      mockRemoveById("someUrl")(failedDeleteResult)
 
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
@@ -176,7 +179,7 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
       lazy val request = FakeRequest()
       lazy val result = controller.removeAll()(request)
 
-      mockRemoveAll()(successWriteResult)
+      mockRemoveAll()(successDeleteResult)
 
       status(result) shouldBe Status.OK
     }
@@ -185,11 +188,10 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
       lazy val request = FakeRequest()
       lazy val result = controller.removeAll()(request)
 
-      mockRemoveAll()(errorWriteResult)
+      mockRemoveAll()(failedDeleteResult)
 
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
 
   }
-
 }

@@ -16,31 +16,24 @@
 
 package repositories
 
-import models._
-import play.api.libs.json.Format
-import reactivemongo.api.DB
-import reactivemongo.api.commands.WriteResult
-import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.mongo.ReactiveRepository
+import models.{DataModel, SchemaModel}
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import javax.inject.Inject
+import scala.concurrent.ExecutionContext.Implicits.global
 
-import scala.concurrent.{ExecutionContext, Future}
+class DataRepositoryBase @Inject()(implicit mongo: MongoComponent)
+  extends PlayMongoRepository[DataModel](
+    mongoComponent = mongo,
+    collectionName = "data",
+    domainFormat = DataModel.formats,
+    indexes = Seq()
+  )
 
-trait DynamicStubRepository[T, O] extends ReactiveRepository[T, BSONObjectID] {
-
-  def findById(o: O)(implicit ec: ExecutionContext): Future[T]
-
-  def removeById(o: O)(implicit ec: ExecutionContext): Future[WriteResult]
-
-  def removeAll()(implicit ec: ExecutionContext): Future[WriteResult]
-
-  def addEntry(t: T)(implicit ec: ExecutionContext): Future[WriteResult]
-}
-
-
-abstract class SchemaRepositoryBase(implicit mongo: () => DB, formats: Format[SchemaModel])
-  extends ReactiveRepository[SchemaModel, BSONObjectID]("schemas", mongo, formats)
-    with DynamicStubRepository[SchemaModel, String]
-
-abstract class StubbedDataRepositoryBase(implicit mongo: () => DB, formats: Format[DataModel])
-  extends ReactiveRepository[DataModel, BSONObjectID]("data", mongo, formats)
-    with DynamicStubRepository[DataModel, String]
+class SchemaRepositoryBase @Inject()(implicit mongo: MongoComponent)
+  extends PlayMongoRepository[SchemaModel](
+    mongoComponent = mongo,
+    collectionName = "schemas",
+    domainFormat = SchemaModel.formats,
+    indexes = Seq()
+  )

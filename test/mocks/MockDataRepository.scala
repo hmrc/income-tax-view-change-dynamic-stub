@@ -20,42 +20,36 @@ import models.DataModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.{reset, when}
 import org.mockito.stubbing.OngoingStubbing
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.{DefaultWriteResult, WriteError, WriteResult}
-import repositories.{DataRepository, StubbedDataRepositoryBase}
+import org.mongodb.scala.result.{DeleteResult, InsertOneResult}
+import org.scalatestplus.mockito.MockitoSugar
+import repositories.DataRepository
 import testUtils.TestSupport
 
 import scala.concurrent.Future
 
-trait MockDataRepository extends TestSupport {
+trait MockDataRepository extends TestSupport with MockitoSugar {
 
-  val successWriteResult = DefaultWriteResult(ok = true, n = 1, writeErrors = Seq(), None, None, None)
-  val errorWriteResult = DefaultWriteResult(ok = false, n = 1, writeErrors = Seq(WriteError(1, 1, "Error")), None, None, None)
-  val mockReactiveMongoComponent: ReactiveMongoComponent = mock[ReactiveMongoComponent]
-
-  lazy val mockDataRepository: DataRepository = new DataRepository(mockReactiveMongoComponent) {
-    override lazy val repository: StubbedDataRepositoryBase = mock[StubbedDataRepositoryBase]
-  }
+  lazy val mockDataRepository: DataRepository = mock[DataRepository]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(mockDataRepository.repository)
+    reset(mockDataRepository)
   }
 
-  def mockAddEntry(document: DataModel)(response: WriteResult): OngoingStubbing[Future[WriteResult]] = {
-    when(mockDataRepository.repository.addEntry(ArgumentMatchers.eq(document))(ArgumentMatchers.any())).thenReturn(Future.successful(response))
+  def mockAddEntry(document: DataModel)(response: InsertOneResult): OngoingStubbing[Future[InsertOneResult]] = {
+    when(mockDataRepository.addEntry(ArgumentMatchers.eq(document))).thenReturn(Future.successful(response))
   }
 
-  def mockRemoveById(url: String)(response: WriteResult): OngoingStubbing[Future[WriteResult]] = {
-    when(mockDataRepository.repository.removeById(ArgumentMatchers.eq(url))(ArgumentMatchers.any())).thenReturn(Future.successful(response))
+  def mockRemoveById(url: String)(response: DeleteResult): OngoingStubbing[Future[DeleteResult]] = {
+    when(mockDataRepository.removeById(ArgumentMatchers.eq(url))).thenReturn(Future.successful(response))
   }
 
-  def mockRemoveAll()(response: WriteResult): OngoingStubbing[Future[WriteResult]] = {
-    when(mockDataRepository.repository.removeAll()(ArgumentMatchers.any())).thenReturn(Future.successful(response))
+  def mockRemoveAll()(response: DeleteResult): OngoingStubbing[Future[DeleteResult]] = {
+    when(mockDataRepository.removeAll()).thenReturn(Future.successful(response))
   }
 
-  def mockFind(response: List[DataModel]): OngoingStubbing[Future[List[DataModel]]] = {
-    when(mockDataRepository.repository.find(ArgumentMatchers.any())(ArgumentMatchers.any())).thenReturn(Future.successful(response))
+  def mockFind(response: Option[DataModel]): OngoingStubbing[Future[Option[DataModel]]] = {
+    when(mockDataRepository.find(ArgumentMatchers.any())).thenReturn(Future.successful(response))
   }
 
 }

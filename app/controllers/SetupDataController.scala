@@ -77,21 +77,21 @@ class SetupDataController @Inject()(
   }
 
   private def addStubDataToDB(json: DataModel): Future[Result] = {
-    dataRepository().addEntry(json).map(_.ok match {
+    dataRepository.addEntry(json).map(_.wasAcknowledged() match {
       case true => Ok(s"The following JSON was added to the stub: \n\n${Json.toJson(json)}")
       case _ => InternalServerError(s"Failed to add data to Stub.")
     })
   }
 
   val removeData: String => Action[AnyContent] = url => Action.async {
-    dataRepository().removeById(url).map(_.ok match {
+    dataRepository.removeById(url).map(_.wasAcknowledged() match {
       case true => Ok("Success")
       case _ => InternalServerError("Could not delete data")
     })
   }
 
   val removeAll: Action[AnyContent] = Action.async {
-    dataRepository().removeAll().map(_.ok match {
+    dataRepository.removeAll().map(_.wasAcknowledged() match {
       case true => Ok("Removed All Stubbed Data")
       case _ => InternalServerError("Unexpected Error Clearing MongoDB.")
     })
