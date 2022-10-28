@@ -10,12 +10,12 @@ val appName = "income-tax-view-change-dynamic-stub"
 val compile: Seq[ModuleID] = Seq(
   "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28" % "0.73.0",
   ws,
-  "uk.gov.hmrc" %% "bootstrap-backend-play-28" % "5.13.0",
+  "uk.gov.hmrc" %% "bootstrap-backend-play-28" % "7.4.0",
   "com.github.fge" % "json-schema-validator" % "2.2.6"
 )
 
 def test(scope: String = "test,it"): Seq[ModuleID] = Seq(
-  "uk.gov.hmrc" %% "bootstrap-backend-play-28" % "5.13.0" % scope,
+  "uk.gov.hmrc" %% "bootstrap-backend-play-28" % "7.4.0" % scope,
   "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-28" % "0.73.0" % scope,
   "org.pegdown" % "pegdown" % "1.6.0" % scope,
   "org.jsoup" % "jsoup" % "1.11.3" % scope,
@@ -45,7 +45,7 @@ lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .settings(playSettings: _*)
   .settings(scalaSettings: _*)
-  .settings(scalaVersion := "2.12.12")
+  .settings(scalaVersion := "2.13.8")
   .settings(publishingSettings: _*)
   .settings(scoverageSettings: _*)
   .settings(defaultSettings(): _*)
