@@ -10,12 +10,12 @@ val appName = "income-tax-view-change-dynamic-stub"
 val compile: Seq[ModuleID] = Seq(
   "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28" % "0.73.0",
   ws,
-  "uk.gov.hmrc" %% "bootstrap-backend-play-28" % "7.4.0",
+  "uk.gov.hmrc" %% "bootstrap-backend-play-28" % "7.3.0",
   "com.github.fge" % "json-schema-validator" % "2.2.6"
 )
 
 def test(scope: String = "test,it"): Seq[ModuleID] = Seq(
-  "uk.gov.hmrc" %% "bootstrap-backend-play-28" % "7.4.0" % scope,
+  "uk.gov.hmrc" %% "bootstrap-backend-play-28" % "7.3.0" % scope,
   "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-28" % "0.73.0" % scope,
   "org.pegdown" % "pegdown" % "1.6.0" % scope,
   "org.jsoup" % "jsoup" % "1.11.3" % scope,
