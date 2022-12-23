@@ -17,9 +17,12 @@
 package controllers
 
 
+import models.HttpMethod.GET
+import org.mongodb.scala.model.Filters.equal
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.GetCalculationDetailsUtils.getCalculationDetailsSuccessResponse
 import utils.GetCalculationListUtils.{getCalculationListSuccessResponse, ninoMatchCharacters}
@@ -29,23 +32,33 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 class CalculationController @Inject()(
                                        cc: ControllerComponents,
-                                     ) extends BackendController(cc) with Logging {
+                                       dataRepository: DataRepository,
+                                     ) extends BackendController(cc)  {
 
   def generateCalculationListFor23To24(nino: String): Action[AnyContent] = Action.async { _ =>
-    logger.info(s"Generating calculation list for nino: $nino,")
+//    logger.info(s"Generating calculation list for nino: $nino,")
 
     Future(Ok(Json.parse(getCalculationListSuccessResponse(ninoMatchCharacters(nino), Some(2024), true))))
   }
 
-  def getCalculationDetails(nino: String, calculationId: String, taxYear: String): Action[AnyContent] = Action.async { _ =>
-    taxYear match {
-      case "23-24" =>
-        logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
-        val calcResponseStr = getCalculationDetailsSuccessResponse(ninoMatchCharacters(nino), Some(2024))
-        Future(Ok(Json.parse(calcResponseStr)))
-      case taxYear =>
-        logger.error(s"Not yet supported taxYear: $taxYear")
-        Future(NotFound(s"Not supported taxYear: $taxYear"))
-    }
+  def getCalculationDetails(nino: String, calculationId: String): Action[AnyContent] = Action.async { _ =>
+        val id = s"/income-tax/view/calculations/liability/23-24/$nino/${calculationId.toLowerCase()}"
+//        logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId $id")
+        dataRepository.find(equal("_id", id), equal("method", GET)).map {
+          stubData =>
+            if (stubData.nonEmpty) {
+              println(s"Not empty")
+              if (stubData.head.response.isEmpty) {
+                Status(stubData.head.status)
+              } else {
+                Status(stubData.head.status)(stubData.head.response.get)
+              }
+            } else {
+              NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: $id")
+            }
+        }
+
+
+
   }
 }
