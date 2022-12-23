@@ -17,7 +17,7 @@
 package modules
 
 import com.google.inject.AbstractModule
-import controllers.{RequestHandlerController, SetupDataController, SetupSchemaController}
+import controllers.{CalculationController, RequestHandlerController, SetupDataController, SetupSchemaController}
 import repositories._
 
 class AppModule extends AbstractModule {
@@ -27,6 +27,7 @@ class AppModule extends AbstractModule {
     bind(classOf[SetupSchemaController]).asEagerSingleton()
     bind(classOf[DataRepository]).asEagerSingleton()
     bind(classOf[SchemaRepository]).asEagerSingleton()
+    bind(classOf[CalculationController]).asEagerSingleton()
   }
 
 }
