@@ -26,10 +26,11 @@ import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.GetCalculationListUtils.{getCalculationListSuccessResponse, ninoMatchCharacters}
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+@Singleton
 class CalculationController @Inject()(
                                        cc: ControllerComponents,
                                        dataRepository: DataRepository,
