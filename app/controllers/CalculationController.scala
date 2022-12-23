@@ -19,6 +19,7 @@ package controllers
 
 import models.HttpMethod.GET
 import org.mongodb.scala.model.Filters.equal
+import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.DataRepository
@@ -28,34 +29,32 @@ import utils.GetCalculationListUtils.{getCalculationListSuccessResponse, ninoMat
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+
 class CalculationController @Inject()(
                                        cc: ControllerComponents,
                                        dataRepository: DataRepository,
-                                     ) extends BackendController(cc)  {
+                                     ) extends BackendController(cc) with Logging {
 
   def generateCalculationListFor23To24(nino: String): Action[AnyContent] = Action.async { _ =>
-//    logger.info(s"Generating calculation list for nino: $nino,")
-
+    logger.info(s"Generating calculation list for nino: $nino,")
     Future(Ok(Json.parse(getCalculationListSuccessResponse(ninoMatchCharacters(nino), Some(2024), true))))
   }
 
   def getCalculationDetails(nino: String, calculationId: String): Action[AnyContent] = Action.async { _ =>
-        val id = s"/income-tax/view/calculations/liability/23-24/$nino/${calculationId.toLowerCase()}"
-//        logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId $id")
-        dataRepository.find(equal("_id", id), equal("method", GET)).map {
-          stubData =>
-            if (stubData.nonEmpty) {
-              println(s"Not empty")
-              if (stubData.head.response.isEmpty) {
-                Status(stubData.head.status)
-              } else {
-                Status(stubData.head.status)(stubData.head.response.get)
-              }
-            } else {
-              NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: $id")
-            }
+    logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
+    val id = s"/income-tax/view/calculations/liability/23-24/$nino/${calculationId.toLowerCase()}"
+    dataRepository.find(equal("_id", id), equal("method", GET)).map {
+      stubData =>
+        if (stubData.nonEmpty) {
+          if (stubData.head.response.isEmpty) {
+            Status(stubData.head.status)
+          } else {
+            Status(stubData.head.status)(stubData.head.response.get)
+          }
+        } else {
+          NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: $id")
         }
-
+    }
 
 
   }
