@@ -19,12 +19,10 @@ package controllers
 
 import models.HttpMethod.GET
 import org.mongodb.scala.model.Filters.equal
-import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import utils.GetCalculationDetailsUtils.getCalculationDetailsSuccessResponse
 import utils.GetCalculationListUtils.{getCalculationListSuccessResponse, ninoMatchCharacters}
 
 import javax.inject.Inject
