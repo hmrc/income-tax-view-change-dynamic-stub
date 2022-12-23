@@ -31,14 +31,19 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class CalculationController @Inject()(
-                                       cc: ControllerComponents,
-                                       dataRepository: DataRepository,
+class CalculationController @Inject()(cc: ControllerComponents,
+                                       dataRepository: DataRepository
                                      ) extends BackendController(cc) with Logging {
 
   def generateCalculationList(nino: String): Action[AnyContent] = Action.async { _ =>
-    logger.info(s"Generating calculation list for nino: $nino,")
-    Future(Ok(Json.parse(getCalculationListSuccessResponse(ninoMatchCharacters(nino), Some(2024), true))))
+    logger.info(s"Generating calculation list for nino: $nino")
+    Future{
+      Ok(
+        Json.parse(
+          getCalculationListSuccessResponse(ninoMatchCharacters(nino), Some(2024), crystallised = true)
+        )
+      )
+    }
   }
 
   def getCalculationDetails(nino: String, calculationId: String): Action[AnyContent] = Action.async { _ =>
@@ -56,7 +61,7 @@ class CalculationController @Inject()(
           NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: $id")
         }
     }
-
-
   }
+
+
 }

@@ -18,7 +18,9 @@ package utils
 
 object GetCalculationListUtils {
 
-  def ninoMatchCharacters = (nino: String) => s"${nino.charAt(0)}${nino.charAt(7)}"
+  def ninoMatchCharacters(nino: String): String = {
+    s"${nino.charAt(0)}${nino.charAt(7)}"
+  }
 
   def calculationId(lastTwoChars: String, taxYearOpt: Option[Int]): String = {
     taxYearOpt.map(taxYear => {
