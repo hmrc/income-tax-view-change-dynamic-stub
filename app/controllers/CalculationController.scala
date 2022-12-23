@@ -36,7 +36,7 @@ class CalculationController @Inject()(
                                        dataRepository: DataRepository,
                                      ) extends BackendController(cc) with Logging {
 
-  def generateCalculationListFor23To24(nino: String): Action[AnyContent] = Action.async { _ =>
+  def generateCalculationList(nino: String): Action[AnyContent] = Action.async { _ =>
     logger.info(s"Generating calculation list for nino: $nino,")
     Future(Ok(Json.parse(getCalculationListSuccessResponse(ninoMatchCharacters(nino), Some(2024), true))))
   }

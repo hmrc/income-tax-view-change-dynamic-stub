@@ -1,7 +1,7 @@
 # Stub Response Routes
 
 ### IF  #1896 - v9.0.0 ###
-GET    /income-tax/view/calculations/liability/23-24/:nino                      controllers.CalculationController.generateCalculationListFor23To24(nino:String)
+GET    /income-tax/view/calculations/liability/23-24/:nino                      controllers.CalculationController.generateCalculationList(nino:String)
 
 ### IF #1885 - v9.1.0 ###
 GET    /income-tax/view/calculations/liability/23-24/:nino/:calculationId    controllers.CalculationController.getCalculationDetails(nino:String, calculationId:String)
