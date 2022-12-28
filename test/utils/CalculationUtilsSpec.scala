@@ -28,14 +28,15 @@ class CalculationUtilsSpec extends  TestSupport{
     "create calcResponse model" in {
       val calcResponse = createCalResponseModel("AAAA11YY", Some(taxYear), true).toOption
       calcResponse.isDefined shouldBe true
-      calcResponse.get.calculationId shouldBe "041f7e4d-87d9-4d4a-a296-3cfbdf2024AY"
-      calcResponse.get.calculationTimestamp shouldBe "2018-07-13T12:13:48.763Z"
-      calcResponse.get.calculationType shouldBe "inYear"
-      calcResponse.get.requestedBy shouldBe "customer"
-      calcResponse.get.totalIncomeTaxAndNicsDue shouldBe BigDecimal("1250.00")
-      calcResponse.get.intentToCrystallise shouldBe false
-      calcResponse.get.crystallised shouldBe true
-      calcResponse.get.year shouldBe taxYear
+      calcResponse.get.size shouldBe 1
+      calcResponse.get.head.calculationId shouldBe "041f7e4d-87d9-4d4a-a296-3cfbdf2024ay"
+      calcResponse.get.head.calculationTimestamp shouldBe "2018-07-13T12:13:48.763Z"
+      calcResponse.get.head.calculationType shouldBe "inYear"
+      calcResponse.get.head.requestedBy shouldBe "customer"
+      calcResponse.get.head.totalIncomeTaxAndNicsDue shouldBe BigDecimal("1250.00")
+      calcResponse.get.head.intentToCrystallise shouldBe false
+      calcResponse.get.head.crystallised shouldBe true
+      calcResponse.get.head.year shouldBe taxYear
     }
 
     "fail when nino too small" in {
