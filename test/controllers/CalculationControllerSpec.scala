@@ -34,47 +34,40 @@ class CalculationControllerSpec extends TestSupport with MockSchemaValidation wi
   implicit val calcSuccessReponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
   object CalcControllerUnderTest extends CalculationController(mockCC, mockDataRepository)
 
-  val calcResponse = CalcSuccessReponse(
-    calculationId = "041f7e4d-87d9-4d4a-a296-3cfbdf",
-    calculationTimestamp = "2018-07-13T12:13:48.763Z",
-    calculationType = "inYear",
-    requestedBy = "customer",
-    year = 2019,
-    fromDate = "2018-04-06",
-    toDate = "2019-04-05",
-    totalIncomeTaxAndNicsDue = BigDecimal("1250.00"),
-    intentToCrystallise = false,
-    crystallised = true
-  )
-
-  val calcResponseJson = Json.toJson(calcResponse).toString()
-
-  lazy val successWithBodyModel: DataModel = DataModel(
-    _id = "test",
-    schemaId = "testID2",
-    method = "GET",
-    status = Status.OK,
-    response = Some(Json.parse(calcResponseJson))
-  )
+//  val calcResponse = CalcSuccessReponse(
+//    calculationId = "041f7e4d-87d9-4d4a-a296-3cfbdf",
+//    calculationTimestamp = "2018-07-13T12:13:48.763Z",
+//    calculationType = "inYear",
+//    requestedBy = "customer",
+//    year = 2019,
+//    fromDate = "2018-04-06",
+//    toDate = "2019-04-05",
+//    totalIncomeTaxAndNicsDue = BigDecimal("1250.00"),
+//    intentToCrystallise = false,
+//    crystallised = true
+//  )
+//  val calcResponseJson = Json.toJson(calcResponse).toString()
+//  lazy val successWithBodyModel: DataModel = DataModel(
+//    _id = "test",
+//    schemaId = "testID2",
+//    method = "GET",
+//    status = Status.OK,
+//    response = Some(Json.parse(calcResponseJson))
+//  )
 
   "generateCalculationList" should {
-    "expected list of ids" in {
-      //mockFind(Some(successWithBodyModel))
+
+    "return status OK" in {
       lazy val result = CalcControllerUnderTest.generateCalculationListFor2023_24("1111AAAA")(FakeRequest())
-
-      println(result.futureValue)
-
-
-      status(result) shouldBe Status.OK
+      status(result) shouldBe OK
     }
 
-//    "return empty list of ids" in {
-//    }
+    "return status BadRequest when internal error" in {
+      lazy val result = CalcControllerUnderTest.generateCalculationListFor2023_24("111AAAA")(FakeRequest())
+      status(result) shouldBe BAD_REQUEST
+    }
+
   }
 
-//  "generateCalculationList" should {
-//    "return calc details" in {
-//    }
-//  }
 
 }

@@ -46,7 +46,7 @@ class CalculationController @Inject()(cc: ControllerComponents,
           val jsonReponse = Json.toJson(responseModel).toString()
           Ok(Json.parse(jsonReponse))
         case Left(error) =>
-          Ok(s"Failed with error: $error")
+          BadRequest(s"Failed with error: $error")
       }
     }
   }
