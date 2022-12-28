@@ -17,14 +17,15 @@
 package controllers
 
 
+import models.CalcSuccessReponse
 import models.HttpMethod.GET
 import org.mongodb.scala.model.Filters.equal
 import play.api.Logging
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, OWrites}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import utils.GetCalculationListUtils.{getCalculationListSuccessResponse, ninoMatchCharacters}
+import utils.CalculationUtils.createCalResponseModel
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,21 +33,25 @@ import scala.concurrent.Future
 
 @Singleton
 class CalculationController @Inject()(cc: ControllerComponents,
-                                       dataRepository: DataRepository
+                                      dataRepository: DataRepository
                                      ) extends BackendController(cc) with Logging {
 
-  def generateCalculationList(nino: String): Action[AnyContent] = Action.async { _ =>
+  implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
+
+  def generateCalculationListFor2023_24(nino: String): Action[AnyContent] = Action.async { _ =>
     logger.info(s"Generating calculation list for nino: $nino")
-    Future{
-      Ok(
-        Json.parse(
-          getCalculationListSuccessResponse(ninoMatchCharacters(nino), Some(2024), crystallised = true)
-        )
-      )
+    Future {
+      createCalResponseModel(nino, Some(2024), crystallised = true) match {
+        case Right(responseModel) =>
+          val jsonReponse = Json.toJson(responseModel).toString()
+          Ok(Json.parse(jsonReponse))
+        case Left(error) =>
+          Ok(s"Failed with error: $error")
+      }
     }
   }
 
-  def getCalculationDetails(nino: String, calculationId: String): Action[AnyContent] = Action.async { _ =>
+  def getCalculationDetailsFor2023_24(nino: String, calculationId: String): Action[AnyContent] = Action.async { _ =>
     logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
     val id = s"/income-tax/view/calculations/liability/23-24/$nino/${calculationId.toLowerCase()}"
     dataRepository.find(equal("_id", id), equal("method", GET)).map {
