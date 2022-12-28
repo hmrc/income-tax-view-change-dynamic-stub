@@ -34,28 +34,28 @@ class CalculationControllerSpec extends TestSupport with MockSchemaValidation wi
   implicit val calcSuccessReponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
   object CalcControllerUnderTest extends CalculationController(mockCC, mockDataRepository)
 
-//  val calcResponse = CalcSuccessReponse(
-//    calculationId = "041f7e4d-87d9-4d4a-a296-3cfbdf",
-//    calculationTimestamp = "2018-07-13T12:13:48.763Z",
-//    calculationType = "inYear",
-//    requestedBy = "customer",
-//    year = 2019,
-//    fromDate = "2018-04-06",
-//    toDate = "2019-04-05",
-//    totalIncomeTaxAndNicsDue = BigDecimal("1250.00"),
-//    intentToCrystallise = false,
-//    crystallised = true
-//  )
-//  val calcResponseJson = Json.toJson(calcResponse).toString()
-//  lazy val successWithBodyModel: DataModel = DataModel(
-//    _id = "test",
-//    schemaId = "testID2",
-//    method = "GET",
-//    status = Status.OK,
-//    response = Some(Json.parse(calcResponseJson))
-//  )
+  val calcResponse = CalcSuccessReponse(
+    calculationId = "041f7e4d-87d9-4d4a-a296-3cfbdf",
+    calculationTimestamp = "2018-07-13T12:13:48.763Z",
+    calculationType = "inYear",
+    requestedBy = "customer",
+    year = 2019,
+    fromDate = "2018-04-06",
+    toDate = "2019-04-05",
+    totalIncomeTaxAndNicsDue = BigDecimal("1250.00"),
+    intentToCrystallise = false,
+    crystallised = true
+  )
+  val calcResponseJson = Json.toJson(calcResponse).toString()
+  lazy val successWithBodyModel: DataModel = DataModel(
+    _id = "test",
+    schemaId = "testID2",
+    method = "GET",
+    status = Status.OK,
+    response = Some(Json.parse(calcResponseJson))
+  )
 
-  "generateCalculationList" should {
+  "generateCalculationListFor2023_24" should {
 
     "return status OK" in {
       lazy val result = CalcControllerUnderTest.generateCalculationListFor2023_24("1111AAAA")(FakeRequest())
@@ -69,5 +69,21 @@ class CalculationControllerSpec extends TestSupport with MockSchemaValidation wi
 
   }
 
+  "getCalculationDetailsFor2023_24" should {
+    "data for given Nino and TaxYear exists: return OK" in {
+      mockFind(Some(successWithBodyModel))
+      lazy val result = CalcControllerUnderTest
+        .getCalculationDetailsFor2023_24(nino = "1111AAAA", calculationId = "041f7e4d-87d9-4d4a-a296-3cfbdf")(FakeRequest())
+      status(result) shouldBe OK
+    }
+
+    "no data for given Nino and TaxYear: return NotFound" in {
+      mockFind(None)
+      lazy val result = CalcControllerUnderTest
+        .getCalculationDetailsFor2023_24(nino = "1111AAAA", calculationId = "041f7e4d-87d9-4d4a-a296-3cfbdf")(FakeRequest())
+      status(result) shouldBe NOT_FOUND
+    }
+
+  }
 
 }
