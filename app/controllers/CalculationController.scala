@@ -54,17 +54,19 @@ class CalculationController @Inject()(cc: ControllerComponents,
   def getCalculationDetailsFor2023_24(nino: String, calculationId: String): Action[AnyContent] = Action.async { _ =>
     logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
     val id = s"/income-tax/view/calculations/liability/23-24/$nino/${calculationId.toLowerCase()}"
-    dataRepository.find(equal("_id", id), equal("method", GET)).map {
-      stubData =>
-        if (stubData.nonEmpty) {
-          if (stubData.head.response.isEmpty) {
-            Status(stubData.head.status)
-          } else {
+    dataRepository
+      .find(equal("_id", id), equal("method", GET))
+      .map { stubData =>
+        (stubData.nonEmpty, stubData.head.response.isEmpty) match {
+          case (true, false) =>
             Status(stubData.head.status)(stubData.head.response.get)
-          }
-        } else {
-          NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: $id")
+          case _ =>
+            NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: $id")
         }
+      }.recoverWith {
+      case _ => Future {
+        BadRequest(s"Unable to find record: $id")
+      }
     }
   }
 

@@ -16,6 +16,7 @@
 
 package controllers
 
+import controllers.helpers.DataHelper
 import mocks.{MockDataRepository, MockSchemaValidation}
 import models.{CalcSuccessReponse, DataModel}
 import org.scalatest.concurrent.ScalaFutures
@@ -29,61 +30,43 @@ import testUtils.TestSupport
 import play.api.test.Helpers._
 
 
-class CalculationControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository with ScalaFutures {
-  lazy val mockCC: ControllerComponents = stubControllerComponents()
-  implicit val calcSuccessReponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
+class CalculationControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository with ScalaFutures with DataHelper {
   object CalcControllerUnderTest extends CalculationController(mockCC, mockDataRepository)
-
-  val calcResponse = CalcSuccessReponse(
-    calculationId = "041f7e4d-87d9-4d4a-a296-3cfbdf",
-    calculationTimestamp = "2018-07-13T12:13:48.763Z",
-    calculationType = "inYear",
-    requestedBy = "customer",
-    year = 2019,
-    fromDate = "2018-04-06",
-    toDate = "2019-04-05",
-    totalIncomeTaxAndNicsDue = BigDecimal("1250.00"),
-    intentToCrystallise = false,
-    crystallised = true
-  )
-  val calcResponseJson = Json.toJson(calcResponse).toString()
-  lazy val successWithBodyModel: DataModel = DataModel(
-    _id = "test",
-    schemaId = "testID2",
-    method = "GET",
-    status = Status.OK,
-    response = Some(Json.parse(calcResponseJson))
-  )
 
   "generateCalculationListFor2023_24" should {
 
     "return status OK" in {
-      lazy val result = CalcControllerUnderTest.generateCalculationListFor2023_24("1111AAAA")(FakeRequest())
+      val result = CalcControllerUnderTest.generateCalculationListFor2023_24(ninoTest)(FakeRequest())
       status(result) shouldBe OK
     }
 
     "return status BadRequest when internal error" in {
-      lazy val result = CalcControllerUnderTest.generateCalculationListFor2023_24("111AAAA")(FakeRequest())
+      val result = CalcControllerUnderTest.generateCalculationListFor2023_24(ninoWithWrongFormat)(FakeRequest())
       status(result) shouldBe BAD_REQUEST
     }
-
   }
 
   "getCalculationDetailsFor2023_24" should {
     "data for given Nino and TaxYear exists: return OK" in {
       mockFind(Some(successWithBodyModel))
-      lazy val result = CalcControllerUnderTest
-        .getCalculationDetailsFor2023_24(nino = "1111AAAA", calculationId = "041f7e4d-87d9-4d4a-a296-3cfbdf")(FakeRequest())
+      val result = CalcControllerUnderTest
+        .getCalculationDetailsFor2023_24(nino = ninoTest, calculationId = calculationIdTest)(FakeRequest())
       status(result) shouldBe OK
     }
 
     "no data for given Nino and TaxYear: return NotFound" in {
       mockFind(None)
-      lazy val result = CalcControllerUnderTest
-        .getCalculationDetailsFor2023_24(nino = "1111AAAA", calculationId = "041f7e4d-87d9-4d4a-a296-3cfbdf")(FakeRequest())
-      status(result) shouldBe NOT_FOUND
+      val result = CalcControllerUnderTest
+        .getCalculationDetailsFor2023_24(nino = "", calculationId = calculationIdTest)(FakeRequest())
+      status(result) shouldBe BAD_REQUEST
     }
 
+    "no data for given Nino and TaxYear: empty response" in {
+      mockFind(Some(successWithEmptyBody))
+      val result = CalcControllerUnderTest
+        .getCalculationDetailsFor2023_24(nino = ninoTest, calculationId = calculationIdTest)(FakeRequest())
+      status(result) shouldBe NOT_FOUND
+    }
   }
 
 }
