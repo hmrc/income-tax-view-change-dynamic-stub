@@ -33,20 +33,22 @@ object CalculationUtils {
   }
 
   def createCalResponseModel(nino: String, taxYear: Option[Int], crystallised:
-  Boolean = false): Either[Throwable, CalcSuccessReponse] = {
+  Boolean = false): Either[Throwable, List[CalcSuccessReponse]] = {
     Try {
       val lastTwoChars = ninoMatchCharacters(nino)
-      CalcSuccessReponse(
-        calculationId = s"${calculationId(lastTwoChars, taxYear)}",
-        calculationTimestamp = "2018-07-13T12:13:48.763Z",
-        calculationType = "inYear",
-        requestedBy = "customer",
-        year = taxYear.getOrElse(2018),
-        fromDate = "2018-04-06",
-        toDate = "2019-04-05",
-        totalIncomeTaxAndNicsDue = BigDecimal("1250.00"),
-        intentToCrystallise = false,
-        crystallised = crystallised
+      List(
+        CalcSuccessReponse(
+          calculationId = s"${calculationId(lastTwoChars, taxYear).toLowerCase()}",
+          calculationTimestamp = "2018-07-13T12:13:48.763Z",
+          calculationType = "inYear",
+          requestedBy = "customer",
+          year = taxYear.getOrElse(2018),
+          fromDate = "2018-04-06",
+          toDate = "2019-04-05",
+          totalIncomeTaxAndNicsDue = BigDecimal("1250.00"),
+          intentToCrystallise = false,
+          crystallised = crystallised
+        )
       )
     }.toEither
   }
