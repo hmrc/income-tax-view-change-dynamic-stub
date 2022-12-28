@@ -65,7 +65,7 @@ class CalculationController @Inject()(cc: ControllerComponents,
         }
       }.recoverWith {
       case _ => Future {
-        BadRequest(s"Unable to find record: $id")
+        BadRequest(s"Search operation failed: $id")
       }
     }
   }
