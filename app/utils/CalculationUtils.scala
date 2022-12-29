@@ -35,23 +35,8 @@ object CalculationUtils {
   def createCalResponseModel(nino: String, taxYear: Option[Int], crystallised:
   Boolean = false): Either[Throwable, List[CalcSuccessReponse]] = {
     Try {
-      nino match {
-        case "AA888888A" | "AY888881A" | "AY999991A" =>
-          val encodedNino = ninoMatchCharacters(nino)
-          List(getCalcResponse(taxYear, crystallised, encodedNino))
-        case _ if nino.charAt(7).isDigit =>
-          if (s"${nino.charAt(7)}".toInt > 0) {
-            val encodings = for {
-              counts <- 1 to s"${nino.charAt(7)}".toInt
-            } yield s"${nino.charAt(0)}$counts"
-            encodings.map(encodedNino => getCalcResponse(taxYear, crystallised, encodedNino)).toList
-          } else { // simulate empty list
-            List[CalcSuccessReponse]()
-          }
-        case _ =>
-          val encodedNino = ninoMatchCharacters(nino)
-          List(getCalcResponse(taxYear, crystallised, encodedNino))
-      }
+      val encodedNino = ninoMatchCharacters(nino)
+      List(getCalcResponse(taxYear, crystallised, encodedNino))
     }.toEither
   }
 

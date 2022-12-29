@@ -46,22 +46,6 @@ class CalculationUtilsSpec extends  TestSupport{
       }
     }
 
-    // Simulate CalcId array with multiple/or no items
-    "be empty calcIds array" in {
-      List("AA888880E", "S1888180R").foreach { nino =>
-        val calcResponse = createCalResponseModel(nino, Some(taxYear), true).toOption
-        calcResponse.get.size shouldBe 0
-      }
-    }
-
-    "be five calcIds in result" in {
-      List("AA888885E", "S1888185R").foreach { nino =>
-        val calcResponse = createCalResponseModel(nino, Some(taxYear), false).toOption
-        calcResponse.get.size shouldBe 5
-        calcResponse.get.forall(_.crystallised) shouldBe false
-      }
-    }
-
     "fail for nino in wrong format" in {
       val Left(error) = createCalResponseModel("AAAAYY", Some(taxYear), true)
       error.isInstanceOf[Throwable] shouldBe true
