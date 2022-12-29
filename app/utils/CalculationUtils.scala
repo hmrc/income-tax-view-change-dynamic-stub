@@ -35,22 +35,40 @@ object CalculationUtils {
   def createCalResponseModel(nino: String, taxYear: Option[Int], crystallised:
   Boolean = false): Either[Throwable, List[CalcSuccessReponse]] = {
     Try {
-      val lastTwoChars = ninoMatchCharacters(nino)
-      List(
-        CalcSuccessReponse(
-          calculationId = s"${calculationId(lastTwoChars, taxYear).toLowerCase()}",
-          calculationTimestamp = "2018-07-13T12:13:48.763Z",
-          calculationType = "inYear",
-          requestedBy = "customer",
-          year = taxYear.getOrElse(2018),
-          fromDate = "2018-04-06",
-          toDate = "2019-04-05",
-          totalIncomeTaxAndNicsDue = BigDecimal("1250.00"),
-          intentToCrystallise = false,
-          crystallised = crystallised
-        )
-      )
+      nino match {
+        case "AA888888A" | "AY888881A" | "AY999991A" =>
+          val encodedNino = ninoMatchCharacters(nino)
+          List(getCalcResponse(taxYear, crystallised, encodedNino))
+        case _ if nino.charAt(7).isDigit =>
+          if (s"${nino.charAt(7)}".toInt > 0) {
+            val encodings = for {
+              counts <- 1 to s"${nino.charAt(7)}".toInt
+            } yield s"${nino.charAt(0)}$counts"
+            encodings.map(encodedNino => getCalcResponse(taxYear, crystallised, encodedNino)).toList
+          } else { // simulate empty list
+            List[CalcSuccessReponse]()
+          }
+        case _ =>
+          val encodedNino = ninoMatchCharacters(nino)
+          List(getCalcResponse(taxYear, crystallised, encodedNino))
+      }
     }.toEither
+  }
+
+  private def getCalcResponse(taxYear: Option[Int],
+                              crystallised: Boolean, calcEncoding: String): CalcSuccessReponse = {
+    CalcSuccessReponse(
+      calculationId = s"${calculationId(calcEncoding, taxYear).toLowerCase()}",
+      calculationTimestamp = "2018-07-13T12:13:48.763Z",
+      calculationType = "inYear",
+      requestedBy = "customer",
+      year = taxYear.getOrElse(2018),
+      fromDate = "2018-04-06",
+      toDate = "2019-04-05",
+      totalIncomeTaxAndNicsDue = BigDecimal("1250.00"),
+      intentToCrystallise = false,
+      crystallised = crystallised
+    )
   }
 }
 

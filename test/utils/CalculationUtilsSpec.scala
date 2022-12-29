@@ -25,11 +25,11 @@ class CalculationUtilsSpec extends  TestSupport{
 
   "call getCalculationListSuccessResponse" should {
 
-    "create calcResponse model" in {
-      val calcResponse = createCalResponseModel("AAAA11YY", Some(taxYear), true).toOption
+    "create calcResponse model: AA888888A" in {
+      val calcResponse = createCalResponseModel("AA888888A", Some(taxYear), true).toOption
       calcResponse.isDefined shouldBe true
       calcResponse.get.size shouldBe 1
-      calcResponse.get.head.calculationId shouldBe "041f7e4d-87d9-4d4a-a296-3cfbdf2024ay"
+      calcResponse.get.head.calculationId shouldBe "041f7e4d-87d9-4d4a-a296-3cfbdf2024a8"
       calcResponse.get.head.calculationTimestamp shouldBe "2018-07-13T12:13:48.763Z"
       calcResponse.get.head.calculationType shouldBe "inYear"
       calcResponse.get.head.requestedBy shouldBe "customer"
@@ -39,7 +39,30 @@ class CalculationUtilsSpec extends  TestSupport{
       calcResponse.get.head.year shouldBe taxYear
     }
 
-    "fail when nino too small" in {
+    "be always single element" in {
+      List("AA888888A", "AY888881A", "AY999991A", "XXYYTTEEA").foreach { nino =>
+        val calcResponse = createCalResponseModel(nino, Some(taxYear), true).toOption
+        calcResponse.get.size shouldBe 1
+      }
+    }
+
+    // Simulate CalcId array with multiple/or no items
+    "be empty calcIds array" in {
+      List("AA888880E", "S1888180R").foreach { nino =>
+        val calcResponse = createCalResponseModel(nino, Some(taxYear), true).toOption
+        calcResponse.get.size shouldBe 0
+      }
+    }
+
+    "be five calcIds in result" in {
+      List("AA888885E", "S1888185R").foreach { nino =>
+        val calcResponse = createCalResponseModel(nino, Some(taxYear), false).toOption
+        calcResponse.get.size shouldBe 5
+        calcResponse.get.forall(_.crystallised) shouldBe false
+      }
+    }
+
+    "fail for nino in wrong format" in {
       val Left(error) = createCalResponseModel("AAAAYY", Some(taxYear), true)
       error.isInstanceOf[Throwable] shouldBe true
       error.getMessage shouldBe "String index out of range: 7"
