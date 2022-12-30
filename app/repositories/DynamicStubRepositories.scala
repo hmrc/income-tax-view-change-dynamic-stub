@@ -16,12 +16,15 @@
 
 package repositories
 
+import com.google.inject.Singleton
 import models.{DataModel, SchemaModel}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global
 
+@Singleton
 class DataRepositoryBase @Inject()(implicit mongo: MongoComponent)
   extends PlayMongoRepository[DataModel](
     mongoComponent = mongo,

@@ -16,13 +16,57 @@
 
 package controllers
 
+import controllers.helpers.DataHelper
 import mocks.{MockDataRepository, MockSchemaValidation}
+import models.{CalcSuccessReponse, DataModel}
+import org.scalatest.concurrent.ScalaFutures
+import play.api.http.Status
+import play.api.http.Status.OK
+import play.api.libs.json.{Json, OWrites}
 import play.api.mvc.ControllerComponents
-import play.api.test.Helpers.stubControllerComponents
+import play.api.test.FakeRequest
+import play.api.test.Helpers.{status, stubControllerComponents}
 import testUtils.TestSupport
+import play.api.test.Helpers._
 
 
-class CalculationControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository {
-  lazy val mockCC: ControllerComponents = stubControllerComponents()
+class CalculationControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository with ScalaFutures with DataHelper {
+  object CalcControllerUnderTest extends CalculationController(mockCC, mockDataRepository)
+
+  "generateCalculationListFor2023_24" should {
+
+    "return status OK" in {
+      val result = CalcControllerUnderTest.generateCalculationListFor2023_24(ninoTest)(FakeRequest())
+      status(result) shouldBe OK
+    }
+
+    "return status BadRequest when internal error" in {
+      val result = CalcControllerUnderTest.generateCalculationListFor2023_24(ninoWithWrongFormat)(FakeRequest())
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
+  "getCalculationDetailsFor2023_24" should {
+    "data for given Nino and TaxYear exists: return OK" in {
+      mockFind(Some(successWithBodyModel))
+      val result = CalcControllerUnderTest
+        .getCalculationDetailsFor2023_24(nino = ninoTest, calculationId = calculationIdTest)(FakeRequest())
+      status(result) shouldBe OK
+    }
+
+    "no data for given Nino and TaxYear: return NotFound" in {
+      mockFind(None)
+      val result = CalcControllerUnderTest
+        .getCalculationDetailsFor2023_24(nino = "", calculationId = calculationIdTest)(FakeRequest())
+      status(result) shouldBe BAD_REQUEST
+    }
+
+    "no data for given Nino and TaxYear: empty response" in {
+      mockFind(Some(successWithEmptyBody))
+      val result = CalcControllerUnderTest
+        .getCalculationDetailsFor2023_24(nino = ninoTest, calculationId = calculationIdTest)(FakeRequest())
+      status(result) shouldBe NOT_FOUND
+    }
+  }
 
 }
