@@ -24,6 +24,7 @@ import views.html.LoginPage
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
+
 @Singleton
 class HomeController @Inject()(mcc: MessagesControllerComponents,
                                loginPage: LoginPage
@@ -32,4 +33,5 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
   val getLogin: Action[AnyContent] = Action.async { implicit request =>
     Future.successful(Ok(loginPage()))
   }
+
 }
