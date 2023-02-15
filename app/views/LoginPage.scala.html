@@ -25,34 +25,31 @@
 
 @layout("Login Page") {
 
-@govukRadios(Radios(
-fieldset = Some(Fieldset(
-legend = Some(Legend(
-content = Text("Where do you live?"),
-classes = "govuk-fieldset__legend--l",
-isPageHeading = true))
-)),
-name = "where-do-you-live",
-items = Seq(
-RadioItem(
-content = Text("England"),
-value = Some("england")
-),
-RadioItem(
-content = Text("Scotland"),
-value = Some("scotland")
-),
-RadioItem(
-content = Text("Wales"),
-value = Some("wales")
-),
-RadioItem(
-content = Text("Northern Ireland"),
-value = Some("northern-ireland")
-)
-)
-))
-
+    @govukRadios(Radios(
+        fieldset = Some(Fieldset(
+            legend = Some(Legend(
+            content = Text("Where do you live?"),
+            classes = "govuk-fieldset__legend--l",
+            isPageHeading = true))
+        )),
+        name = "where-do-you-live",
+        items = Seq(
+            RadioItem(
+                content = Text("England"),
+                value = Some("england")
+            ),
+            RadioItem(
+                content = Text("Scotland"),
+                value = Some("scotland")
+            ),
+            RadioItem(
+                content = Text("Wales"),
+                value = Some("wales")
+            ),
+            RadioItem(
+                content = Text("Northern Ireland"),
+                value = Some("northern-ireland")
+            )
+        )
+    ))
 }
-
-
