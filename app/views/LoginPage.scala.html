@@ -20,22 +20,26 @@
     layout: Layout,
     govukRadios: GovukRadios,
     govukInput : GovukInput,
-    govukButton : GovukButton
+    govukButton : GovukButton,
+    govukSelect : GovukSelect
 )
 
-@()(implicit request : Request[_], messages: Messages)
+@(ninoList: Seq[String])(implicit request : Request[_], messages: Messages)
 
 @layout("Login Page") {
 
-    @govukInput(Input(
-        id = "nino",
-        name = "nino",
-        label = Label(
-            isPageHeading = true,
-            classes = "govuk-label--l",
-            content = Text("Nino")
+@govukSelect(Select(
+    id = "sort",
+    name = "sort",
+    items = ninoList.map{ nino =>
+        SelectItem(
+        value = Some(nino),
+        text = nino
         )
-    ))
+    },
+    label = Label(
+        content = Text("NINO"))
+))
 
     @govukRadios(Radios(
         fieldset = Some(Fieldset(

@@ -30,8 +30,42 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
                                loginPage: LoginPage
                               ) extends FrontendController(mcc) with Logging {
 
+  val ninoList = List(
+    "AA000000A",
+    "AA888888A",
+    "BB222222A",
+    "AA111111A",
+    "AY111111A",
+    "AY222222A",
+    "AY333333A",
+    "AY444444A",
+    "AY555555A",
+    "AY666666A",
+    "AY777777A",
+    "BS000000A",
+    "BS111111A",
+    "BS222222A",
+    "BS333333A",
+    "BS444444A",
+    "BS555555A",
+    "BS666666A",
+    "BS777777A",
+    "BS888888A",
+    "CC111111A",
+    "CC222222A",
+    "CC333333A",
+    "CC444444A",
+    "CC555555A",
+    "EC000000A",
+    "EC111111A",
+    "AY888881A",
+    "AY888882A",
+    "AY888883A",
+    "AY888884A"
+  )
+
   val getLogin: Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok(loginPage()))
+    Future.successful(Ok(loginPage(ninoList)))
   }
 
 }
