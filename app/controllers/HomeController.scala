@@ -24,6 +24,8 @@ import views.html.LoginPage
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
+import uk.gov.hmrc.hmrcfrontend.views.viewmodels.hmrcstandardpage
+
 @Singleton
 class HomeController @Inject()(mcc: MessagesControllerComponents,
                                loginPage: LoginPage
