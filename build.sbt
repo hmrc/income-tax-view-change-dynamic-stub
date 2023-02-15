@@ -6,7 +6,7 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 
 val appName = "income-tax-view-change-dynamic-stub"
-val playFrontendHMRCVersion = "3.15.0-play-28"
+val playFrontendHMRCVersion = "6.4.0-play-28"
 val bootstrapPlayVersion = "5.21.0"
 
 val compile: Seq[ModuleID] = Seq(
