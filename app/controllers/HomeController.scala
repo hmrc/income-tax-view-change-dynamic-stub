@@ -74,7 +74,7 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
       formWithErrors =>
         Future.successful(BadRequest(s"Invalid form submission: $formWithErrors")),
       user =>
-        Future.successful(Ok(s"Valid form submission: $user"))  // TODO: Pull ALL required details for the user from txt file here i.e. redirecturl, UTR etc and make the POST request here
+        Future.successful(Ok(s"Valid form submission: $user"))  // TODO: Pull ALL required details for the user from txt file here i.e. redirecturl, UTR etc and make the POST request to AUTH here
     )
   }
 }
