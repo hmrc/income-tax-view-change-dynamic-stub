@@ -21,7 +21,7 @@
 
 @this(hmrcStandardPage: HmrcStandardPage, standardBetaBanner: StandardBetaBanner)
 
-@(pageTitle: String)(contentBlock: Html)(implicit request: RequestHeader, messages: Messages)
+@(pageTitle: Option[String])(contentBlock: Html)(implicit request: RequestHeader, messages: Messages)
 
 @hmrcStandardPage(
     HmrcStandardPageParams(
@@ -30,8 +30,8 @@
             signOutUrl = None
         ),
         banners = Banners(phaseBanner = None),
-        serviceName = None,
-        pageTitle = None,
+        serviceName = Some("Manage your Income Tax updates"),
+        pageTitle = pageTitle,
         isWelshTranslationAvailable = false,
         cspNonce = CSPNonce.get
     )

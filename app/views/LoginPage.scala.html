@@ -26,8 +26,9 @@
 
 @(ninoList: Seq[String], accountForm: Form[_])(implicit request : Request[_], messages: Messages)
 
-@layout("Login Page") {
+@layout(pageTitle = Some("Login - Manage your Income Tax updates - GOV.UK")) {
 
+    <h1 class="govuk-heading-l">Log in to ITSA View and Change</h1>
 
     @form(routes.HomeController.postLogin()) {
 
