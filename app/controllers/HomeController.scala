@@ -20,6 +20,7 @@ import play.api.Logging
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import views.html.LoginPage
+import models.User
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
@@ -30,7 +31,7 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
                                loginPage: LoginPage
                               ) extends FrontendController(mcc) with Logging {
 
-  val ninoList = List(
+  val dummyNinoList = List(
     "AA000000A",
     "AA888888A",
     "BB222222A",
@@ -65,7 +66,15 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
   )
 
   val getLogin: Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok(loginPage(ninoList)))
+    Future.successful(Ok(loginPage(dummyNinoList, User.form.fill(User("", false)))))    // TODO: We will need to replace "dummyNinoList" with a list of ninos pulled from the text file
   }
 
+  val postLogin: Action[AnyContent] = Action.async { implicit request =>
+    User.form.bindFromRequest().fold(
+      formWithErrors =>
+        Future.successful(BadRequest(s"Invalid form submission: $formWithErrors")),
+      user =>
+        Future.successful(Ok(s"Valid form submission: $user"))  // TODO: Pull ALL required details for the user from txt file here i.e. redirecturl, UTR etc and make the POST request here
+    )
+  }
 }
