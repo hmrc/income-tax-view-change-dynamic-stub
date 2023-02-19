@@ -6,3 +6,5 @@ DELETE      /all-schemas                                            controllers.
 
 POST        /data                                                   controllers.SetupDataController.addData
 DELETE      /all-data                                               controllers.SetupDataController.removeAll
+POST        /login                                                  controllers.GovernmentGatewayLoginController.governmentGatewayLogin()
+GET         /login                                                  controllers.GovernmentGatewayLoginController.getLogin()
