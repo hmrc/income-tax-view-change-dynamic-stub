@@ -16,57 +16,30 @@
 
 package controllers
 
+import config.MicroserviceAuthConnector
+import models.User
 import play.api.Logging
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.http.TooManyRequestException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import utils.SessionBuilder
 import views.html.LoginPage
-import models.User
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
 @Singleton
 class HomeController @Inject()(mcc: MessagesControllerComponents,
-                               loginPage: LoginPage
+                               loginPage: LoginPage,
+                               microserviceAuthConnector: MicroserviceAuthConnector
                               ) extends FrontendController(mcc) with Logging {
 
-  val dummyNinoList = List(
-    "AA000000A",
-    "AA888888A",
-    "BB222222A",
-    "AA111111A",
-    "AY111111A",
-    "AY222222A",
-    "AY333333A",
-    "AY444444A",
-    "AY555555A",
-    "AY666666A",
-    "AY777777A",
-    "BS000000A",
-    "BS111111A",
-    "BS222222A",
-    "BS333333A",
-    "BS444444A",
-    "BS555555A",
-    "BS666666A",
-    "BS777777A",
-    "BS888888A",
-    "CC111111A",
-    "CC222222A",
-    "CC333333A",
-    "CC444444A",
-    "CC555555A",
-    "EC000000A",
-    "EC111111A",
-    "AY888881A",
-    "AY888882A",
-    "AY888883A",
-    "AY888884A"
-  )
+  val dummyNinoList: List[String] = List("CC333333A") //TODO: add more ninos to the list and details for those
 
   val getLogin: Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok(loginPage(dummyNinoList, User.form.fill(User("", false)))))    // TODO: We will need to replace "dummyNinoList" with a list of ninos pulled from the text file
+    Future.successful(Ok(loginPage(dummyNinoList))) // TODO: We will need to replace "dummyNinoList" with a list of ninos pulled from the text file
   }
 
   val postLogin: Action[AnyContent] = Action.async { implicit request =>
@@ -74,7 +47,18 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
       formWithErrors =>
         Future.successful(BadRequest(s"Invalid form submission: $formWithErrors")),
       user =>
-        Future.successful(Ok(s"Valid form submission: $user"))  // TODO: Pull ALL required details for the user from txt file here i.e. redirecturl, UTR etc and make the POST request to AUTH here
-    )
+        microserviceAuthConnector.login(nino = user.nino) map {
+          case (authExchange, _) =>
+            println("@@@" + SessionBuilder.buildGGSession(authExchange))
+            Redirect("http://localhost:9081/report-quarterly/income-and-expenses/view?origin=BTA")
+              .withSession(SessionBuilder.buildGGSession(authExchange))
+        }
+    ).recoverWith {
+      case exception: TooManyRequestException =>
+        Future.successful(TooManyRequests(exception.getMessage))
+      case exception: Exception =>
+        Future.successful(BadGateway(exception.getMessage))
+    }
   }
+
 }

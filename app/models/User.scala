@@ -16,16 +16,18 @@
 
 package models
 
-import play.api.data.Form
-import play.api.data.Forms.{boolean, mapping, nonEmptyText}
+import play.api.data.{Form, Mapping}
+import play.api.data.Forms.{boolean, mapping, nonEmptyText, text}
 
-case class User(nino: String, isAgent: Boolean)
+case class User(nino: Nino, isAgent: Boolean)
 
 object User {
+  val ninoNonEmptyMapping: Mapping[models.Nino] = text.verifying("You must supply a valid Nino", nino =>
+    models.Nino.isValid(nino)).transform[Nino](Nino(_), _.value)
   val form: Form[User] =
     Form(
       mapping(
-        "nino" -> nonEmptyText,
+        "nino" -> ninoNonEmptyMapping,
         "isAgent" -> boolean
       )(User.apply)(User.unapply)
     )
