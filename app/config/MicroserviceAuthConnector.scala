@@ -16,6 +16,7 @@
 
 package config
 
+import com.typesafe.config.Config
 import models.{DelegatedEnrolmentData, EnrolmentData, GovernmentGatewayToken, ItmpData}
 import play.api.data.Forms.{mapping, optional, text}
 import play.api.data.Mapping
@@ -24,6 +25,7 @@ import play.api.libs.json._
 import uk.gov.hmrc.auth.core.PlayAuthConnector
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, TooManyRequestException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import utils.FileUtil
 
 import javax.inject.{Inject, Singleton}
 import scala.collection.Seq
@@ -67,6 +69,7 @@ case class AuthExchange(bearerToken: String, sessionAuthorityUri: String)
 class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
                                           val http: HttpClient) extends PlayAuthConnector {
   override val serviceUrl: String = servicesConfig.baseUrl("auth")
+  val loginConfig: Config = FileUtil.getLoginConfig()
 
   def login(enrolments:          Seq[EnrolmentData] = Nil,
             delegatedEnrolments: Seq[DelegatedEnrolmentData] = Nil, gatewayToken:        Option[String] = None,
@@ -79,16 +82,16 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
            )(implicit hc: HeaderCarrier): Future[(AuthExchange, GovernmentGatewayToken)] = {
 
     val payload: JsValue = Json.obj(
-      "credId" -> "6528180096307862",
-      "affinityGroup" -> "Individual",
-      "confidenceLevel" -> 250,
-      "credentialStrength" -> "strong",
-      "credentialRole" -> "User",
+      "credId" -> loginConfig.getString(s"$nino.credId"),
+      "affinityGroup" -> loginConfig.getString(s"$nino.affinityGroup"),
+      "confidenceLevel" -> loginConfig.getInt(s"$nino.confidenceLevel"),
+      "credentialStrength" -> loginConfig.getString(s"$nino.credentialStrength"),
+      "credentialRole" -> loginConfig.getString(s"$nino.credentialRole"),
       "usersName" -> usersName,
       "enrolments" -> enrolments.map(toJson),
       "delegatedEnrolments" -> delegatedEnrolmentsJson(delegatedEnrolments)
     ) ++ removeEmptyValues(
-      "nino" -> Some( nino.value),
+      "nino" -> Some(nino.value),
       "groupIdentifier" -> groupIdentifier,
       "gatewayToken" -> gatewayToken,
       "agentId" -> agentId,

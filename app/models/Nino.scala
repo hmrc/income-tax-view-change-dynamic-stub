@@ -20,12 +20,15 @@ import play.api.libs.json.{Reads, Writes}
 import utils.{SimpleObjectReads, SimpleObjectWrites}
 
 case class Nino(nino: String) {
-  require(Nino.isValid(nino), s"$nino is not a valid nino.")
-  override def toString = nino
+  val ninoWithoutDescription: String = nino.split(" ").head
+
+  require(Nino.isValid(ninoWithoutDescription), s"$ninoWithoutDescription is not a valid nino.")
+
+  override def toString = ninoWithoutDescription
 
   private val LengthWithoutSuffix: Int = 8
 
-  def value = nino
+  def value = ninoWithoutDescription
 
   val name = "nino"
 
@@ -41,12 +44,12 @@ object Nino extends (String => Nino) {
   private val validNinoFormat = "[[A-Z]&&[^DFIQUV]][[A-Z]&&[^DFIQUVO]] ?\\d{2} ?\\d{2} ?\\d{2} ?[A-D]{1}"
   private val invalidPrefixes = List("BG", "GB", "NK", "KN", "TN", "NT", "ZZ")
 
-  private def hasValidPrefix(nino: String) = invalidPrefixes.find(nino.startsWith).isEmpty
+  private def hasValidPrefix(nino: String) = !invalidPrefixes.exists(nino.startsWith)
 
-  def isValid(nino: String) = nino != null && hasValidPrefix(nino) && nino.matches(validNinoFormat)
+  def isValid(nino: String): Boolean = nino != null && hasValidPrefix(nino) && nino.matches(validNinoFormat)
 
-  val validFirstCharacters = ('A' to 'Z').filterNot(List('D', 'F', 'I', 'Q', 'U', 'V').contains).map(_.toString)
-  val validSecondCharacters = ('A' to 'Z').filterNot(List('D', 'F', 'I', 'O', 'Q', 'U', 'V').contains).map(_.toString)
-  val validPrefixes = validFirstCharacters.flatMap(a => validSecondCharacters.map(a + _)).filterNot(invalidPrefixes.contains(_))
-  val validSuffixes = ('A' to 'D').map(_.toString)
+  val validFirstCharacters: Seq[String] = ('A' to 'Z').filterNot(List('D', 'F', 'I', 'Q', 'U', 'V').contains).map(_.toString)
+  val validSecondCharacters: Seq[String] = ('A' to 'Z').filterNot(List('D', 'F', 'I', 'O', 'Q', 'U', 'V').contains).map(_.toString)
+  val validPrefixes: Seq[String] = validFirstCharacters.flatMap(a => validSecondCharacters.map(a + _)).filterNot(invalidPrefixes.contains(_))
+  val validSuffixes: Seq[String] = ('A' to 'D').map(_.toString)
 }

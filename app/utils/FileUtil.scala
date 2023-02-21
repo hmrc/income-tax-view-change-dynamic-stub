@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-package models
+package utils
 
-import play.api.data.{Form, Mapping}
-import play.api.data.Forms.{boolean, mapping, nonEmptyText, text}
+import com.typesafe.config.{Config, ConfigFactory}
 
-case class User(nino: Nino, isAgent: Boolean)
+import scala.io.Source
 
-object User {
-  val ninoNonEmptyMapping: Mapping[models.Nino] = text.verifying("You must supply a valid Nino", nino =>
-    models.Nino.isValid(nino.split(" ").head)).transform[Nino](Nino(_), _.value)
-  val form: Form[User] =
-    Form(
-      mapping(
-        "nino" -> ninoNonEmptyMapping,
-        "isAgent" -> boolean
-      )(User.apply)(User.unapply)
-    )
+object FileUtil {
+
+  def readFromFile(path: String): List[String] = {
+    Source.fromFile(path).getLines().toList
+  }
+
+  def getLoginConfig(): Config = {
+    ConfigFactory.load("login-details.conf")
+  }
+
 }

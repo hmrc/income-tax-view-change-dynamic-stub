@@ -22,7 +22,7 @@ import play.api.Logging
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.http.TooManyRequestException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import utils.SessionBuilder
+import utils.{FileUtil, SessionBuilder}
 import views.html.LoginPage
 
 import javax.inject.{Inject, Singleton}
@@ -36,10 +36,12 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
                                microserviceAuthConnector: MicroserviceAuthConnector
                               ) extends FrontendController(mcc) with Logging {
 
-  val dummyNinoList: List[String] = List("CC333333A") //TODO: add more ninos to the list and details for those
+  val dummyNinoList: List[String] = FileUtil.readFromFile("conf/Ninos.txt")
+
+
 
   val getLogin: Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok(loginPage(dummyNinoList))) // TODO: We will need to replace "dummyNinoList" with a list of ninos pulled from the text file
+    Future.successful(Ok(loginPage(dummyNinoList)))
   }
 
   val postLogin: Action[AnyContent] = Action.async { implicit request =>
