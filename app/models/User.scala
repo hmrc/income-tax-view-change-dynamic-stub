@@ -16,16 +16,19 @@
 
 package models
 
-import play.api.libs.json.{JsValue, Json, OFormat}
+import play.api.data.{Form, Mapping}
+import play.api.data.Forms.{boolean, mapping, nonEmptyText, text}
 
-case class DataModel(
-                      _id: String, // URL of the Request
-                      schemaId: String, // Name/ID of the Schema to Validate Against
-                      method: String,
-                      status: Int,
-                      response: Option[JsValue]
-                    )
+case class User(nino: Nino, isAgent: Boolean)
 
-object DataModel {
-  implicit val formats: OFormat[DataModel] = Json.format[DataModel]
+object User {
+  val ninoNonEmptyMapping: Mapping[models.Nino] = text.verifying("You must supply a valid Nino", nino =>
+    models.Nino.isValid(nino.split(" ").head)).transform[Nino](Nino(_), _.value)
+  val form: Form[User] =
+    Form(
+      mapping(
+        "nino" -> ninoNonEmptyMapping,
+        "isAgent" -> boolean
+      )(User.apply)(User.unapply)
+    )
 }

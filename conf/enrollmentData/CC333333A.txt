@@ -1,0 +1,22 @@
+[
+  {
+    "key": "HMRC-MTD-IT",
+    "identifiers": [
+      {
+        "key": "MTDITID",
+        "value": "XCIT33333333333"
+      }
+    ],
+    "state": "Activated"
+  },
+  {
+    "key": "IR-SA",
+    "identifiers": [
+      {
+        "key": "UTR",
+        "value": "2222333333"
+      }
+    ],
+    "state": "Activated"
+  }
+]

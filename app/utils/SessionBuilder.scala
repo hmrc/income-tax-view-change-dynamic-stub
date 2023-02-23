@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package models
+package utils
 
-import play.api.libs.json.{JsValue, Json, OFormat}
+import models.AuthExchange
+import org.joda.time.DateTime
+import play.api.mvc.Session
+import uk.gov.hmrc.http.{SessionId, SessionKeys}
 
-case class DataModel(
-                      _id: String, // URL of the Request
-                      schemaId: String, // Name/ID of the Schema to Validate Against
-                      method: String,
-                      status: Int,
-                      response: Option[JsValue]
-                    )
+import java.util.UUID
 
-object DataModel {
-  implicit val formats: OFormat[DataModel] = Json.format[DataModel]
+object SessionBuilder {
+  def buildGGSession(authExchange: AuthExchange): Session = Session(Map(
+    SessionKeys.sessionId -> SessionId(s"session-${UUID.randomUUID}").value,
+    SessionKeys.authToken -> authExchange.bearerToken,
+    SessionKeys.lastRequestTimestamp -> DateTime.now.getMillis.toString
+  ))
+
 }

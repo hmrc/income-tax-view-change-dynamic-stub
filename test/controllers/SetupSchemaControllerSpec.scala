@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import mocks.MockSchemaRepository
 import models.SchemaModel
 import play.api.http.Status
 import play.api.libs.json.Json
-import play.api.mvc.{ControllerComponents, Result}
+import play.api.mvc.{MessagesControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import testUtils.TestSupport
@@ -28,7 +28,7 @@ import testUtils.TestSupport
 import scala.concurrent.Future
 
 class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
-  lazy val mockCC: ControllerComponents = stubControllerComponents()
+  lazy val mockCC: MessagesControllerComponents = stubMessagesControllerComponents()
 
   object TestSetupSchemaController extends SetupSchemaController(mockSchemaRepository,
     mockCC)

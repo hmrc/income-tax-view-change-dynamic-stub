@@ -6,12 +6,15 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 
 val appName = "income-tax-view-change-dynamic-stub"
+val playFrontendHMRCVersion = "6.4.0-play-28"
+val bootstrapPlayVersion = "5.21.0"
 
 val compile: Seq[ModuleID] = Seq(
   "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28" % "0.73.0",
   ws,
-  "uk.gov.hmrc" %% "bootstrap-backend-play-28" % "7.3.0",
-  "com.github.fge" % "json-schema-validator" % "2.2.6"
+  "com.github.fge" % "json-schema-validator" % "2.2.6",
+  "uk.gov.hmrc" %% "play-frontend-hmrc" % playFrontendHMRCVersion,
+  "uk.gov.hmrc" %% "bootstrap-frontend-play-28" % "7.3.0"
 )
 
 def test(scope: String = "test,it"): Seq[ModuleID] = Seq(
@@ -57,6 +60,12 @@ lazy val microservice = Project(appName, file("."))
   )
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
+  .settings(
+    TwirlKeys.templateImports ++= Seq(
+      "uk.gov.hmrc.govukfrontend.views.html.components._",
+      "uk.gov.hmrc.hmrcfrontend.views.html.components._"
+    )
+  )
   .settings(
     IntegrationTest / Keys.fork := true,
     IntegrationTest / unmanagedSourceDirectories := (IntegrationTest / baseDirectory) (base => Seq(base / "it")).value,
