@@ -1,5 +1,7 @@
 # Stub Response Routes
 
+->         /hmrc-frontend           hmrcfrontend.Routes
+
 ### IF  #1896 - v9.0.0 ###
 GET         /income-tax/view/calculations/liability/23-24/:nino                       controllers.CalculationController.generateCalculationListFor2023_24(nino:String)
 
@@ -11,5 +13,3 @@ POST        /login                                                              
 
 GET         /*url                                                                     controllers.RequestHandlerController.getRequestHandler(url)
 POST        /*url                                                                     controllers.RequestHandlerController.postRequestHandler(url)
-
-->         /hmrc-frontend           hmrcfrontend.Routes

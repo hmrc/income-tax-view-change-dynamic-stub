@@ -41,7 +41,6 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
 
 
   val getLogin: Action[AnyContent] = Action.async { implicit request =>
-    logger.info(s"\nROUTES: ${controllers.routes}\n")
     Future.successful(Ok(loginPage(controllers.routes.HomeController.postLogin(), dummyNinoList)))
   }
 
