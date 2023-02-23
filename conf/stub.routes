@@ -6,8 +6,8 @@ GET         /income-tax/view/calculations/liability/23-24/:nino                 
 ### IF #1885 - v9.1.0 ###
 GET         /income-tax/view/calculations/liability/23-24/:nino/:calculationId        controllers.CalculationController.getCalculationDetailsFor2023_24(nino:String, calculationId:String)
 
-GET         /login                                                                    controllers.HomeController.getLogin(request: Request)
-POST        /login                                                                   controllers.HomeController.postLogin(request: Request)
+GET         /login                                                                    controllers.HomeController.getLogin()
+POST        /login                                                                    controllers.HomeController.postLogin()
 
 GET         /*url                                                                     controllers.RequestHandlerController.getRequestHandler(url)
 POST        /*url                                                                     controllers.RequestHandlerController.postRequestHandler(url)

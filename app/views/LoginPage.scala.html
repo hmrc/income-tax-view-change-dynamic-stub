@@ -30,7 +30,7 @@
 
     <h1 class="govuk-heading-l">Select Nino/User</h1>
 
-    @form(action = routes.HomeController.postLogin) {
+    @form(action = controllers.routes.HomeController.postLogin()) {
 
         @govukSelect(Select(
             id = "nino",
