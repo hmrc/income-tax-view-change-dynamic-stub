@@ -24,13 +24,13 @@
     form: FormWithCSRF
 )
 
-@(postAction: Call, ninoList: Seq[String])(implicit request : Request[_], messages: Messages)
+@(ninoList: Seq[String])(implicit request : Request[_], messages: Messages)
 
 @layout(pageTitle = Some("Login - Manage your Income Tax updates - GOV.UK")) {
 
     <h1 class="govuk-heading-l">Select Nino/User</h1>
 
-    @form(postAction) {
+    @form(routes.HomeController.postLogin()) {
 
         @govukSelect(Select(
             id = "nino",

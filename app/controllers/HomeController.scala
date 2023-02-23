@@ -19,6 +19,7 @@ package controllers
 import config.MicroserviceAuthConnector
 import models.User
 import play.api.Logging
+import play.api.data.Form
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.http.TooManyRequestException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -38,14 +39,9 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
                               ) extends FrontendController(mcc) with Logging {
 
 
-
-
-  val getLogin: Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok(loginPage(controllers.routes.HomeController.postLogin(), dummyNinoList)))
-  }
-
   val postLogin: Action[AnyContent] = Action.async { implicit request =>
-    User.form.bindFromRequest().fold(
+    val userForm: Form[User] = User.form.bindFromRequest()
+    userForm.fold(
       formWithErrors =>
         Future.successful(BadRequest(s"Invalid form submission: $formWithErrors")),
       user =>
@@ -61,5 +57,13 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
         Future.successful(BadGateway(exception.getMessage))
     }
   }
+
+  val getLogin: Action[AnyContent] = Action.async { implicit request =>
+    Future.successful(
+      Ok(loginPage(dummyNinoList))
+    )
+  }
+
+
 
 }
