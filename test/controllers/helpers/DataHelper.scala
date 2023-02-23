@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,12 @@ package controllers.helpers
 import models.{CalcSuccessReponse, DataModel}
 import play.api.http.Status.{BAD_REQUEST, OK}
 import play.api.libs.json.{Json, OWrites}
-import play.api.mvc.ControllerComponents
-import play.api.mvc.Results.BadRequest
-import play.api.test.Helpers.stubControllerComponents
+import play.api.mvc.MessagesControllerComponents
+import play.api.test.Helpers.stubMessagesControllerComponents
 
 trait DataHelper {
 
-  lazy val mockCC: ControllerComponents = stubControllerComponents()
+  lazy val mockCC: MessagesControllerComponents = stubMessagesControllerComponents()
 
   implicit val calcSuccessReponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 
