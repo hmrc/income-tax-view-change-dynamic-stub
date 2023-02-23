@@ -16,70 +16,29 @@
 
 package config
 
-import com.typesafe.config.Config
-import models.{DelegatedEnrolmentData, EnrolmentData, GovernmentGatewayToken, ItmpData}
-import play.api.data.Forms.{mapping, optional, text}
-import play.api.data.Mapping
+import models.{AuthExchange, DelegatedEnrolmentData, EnrolmentData, GovernmentGatewayToken}
 import play.api.http.HeaderNames
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.PlayAuthConnector
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, TooManyRequestException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import utils.FileUtil
+import utils.LoginUtil.{enrolmentData, loginConfig}
 
 import javax.inject.{Inject, Singleton}
 import scala.collection.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class MdtpInformation(deviceId: String, sessionId: String)
-object MdtpInformation {
 
-  implicit val writes: OWrites[MdtpInformation] = Json.writes[MdtpInformation]
-
-  def mdtpMapping(): Mapping[Option[MdtpInformation]] =
-    optional(mapping(
-      "deviceId" -> text,
-      "sessionId" -> text
-    )(MdtpInformation.apply)(MdtpInformation.unapply))
-}
-case class OAuthTokens(accessToken: Option[String] = None, refreshToken: Option[String] = None, idToken: Option[String] = None)
-object OAuthTokens {
-
-  implicit val writes: OWrites[OAuthTokens] = Json.writes[OAuthTokens]
-
-  def oauthTokensMapping(): Mapping[Option[OAuthTokens]] =
-    optional(mapping(
-      "accessToken" -> optional(text),
-      "refreshToken" -> optional(text),
-      "idToken" -> optional(text)
-    )(OAuthTokens.apply)(OAuthTokens.unapply))
-
-}
-
-case class AdditionalInfo(
-                           profile:       Option[String]  = None,
-                           groupProfile:  Option[String]  = None,
-                           emailVerified: Option[Boolean] = None
-                         )
-case class AuthExchange(bearerToken: String, sessionAuthorityUri: String)
 
 
 @Singleton
 class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
                                           val http: HttpClient) extends PlayAuthConnector {
-  override val serviceUrl: String = servicesConfig.baseUrl("auth")
-  val loginConfig: Config = FileUtil.getLoginConfig()
+  override val serviceUrl: String = servicesConfig.baseUrl("auth-login")
 
-  def login(enrolments:          Seq[EnrolmentData] = Nil,
-            delegatedEnrolments: Seq[DelegatedEnrolmentData] = Nil, gatewayToken:        Option[String] = None,
-            groupIdentifier:     Option[String] = None, nino:                models.Nino,
-            usersName:           Option[String] = None, email:               Option[String] = None,
-            itmpData:            Option[ItmpData] = None, agentId:             Option[String] = None,
-            agentCode:           Option[String] = None, agentFriendlyName:   Option[String] = None,
-            unreadMessageCount:  Option[Int] = None, mdtpInformation:     Option[MdtpInformation] = None,
-            oauthTokens:         Option[OAuthTokens] = None
-           )(implicit hc: HeaderCarrier): Future[(AuthExchange, GovernmentGatewayToken)] = {
+
+  def login(nino: models.Nino)(implicit hc: HeaderCarrier): Future[(AuthExchange, GovernmentGatewayToken)] = {
 
     val payload: JsValue = Json.obj(
       "credId" -> loginConfig.getString(s"$nino.credId"),
@@ -87,27 +46,21 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
       "confidenceLevel" -> loginConfig.getInt(s"$nino.confidenceLevel"),
       "credentialStrength" -> loginConfig.getString(s"$nino.credentialStrength"),
       "credentialRole" -> loginConfig.getString(s"$nino.credentialRole"),
-      "usersName" -> usersName,
-      "enrolments" -> enrolments.map(toJson),
-      "delegatedEnrolments" -> delegatedEnrolmentsJson(delegatedEnrolments)
+      "usersName" -> "usersName",
+      "enrolments" -> enrolmentData(nino.value),
+      "delegatedEnrolments" -> delegatedEnrolmentsJson(Nil)
     ) ++ removeEmptyValues(
       "nino" -> Some(nino.value),
-      "groupIdentifier" -> groupIdentifier,
-      "gatewayToken" -> gatewayToken,
-      "agentId" -> agentId,
-      "agentCode" -> agentCode,
-      "agentFriendlyName" -> agentFriendlyName,
-      "email" -> email
-    ) ++
-      toJson(oauthTokens, "oauthTokens") ++
-      toJson(itmpData, "itmpData") ++
-      toJson(mdtpInformation, "mdtpInformation") ++
-      toJson(gatewayToken) ++
-      unreadMessageCount.map(i => Json.obj("unreadMessageCount" -> i)).getOrElse(Json.obj())
-
+      "groupIdentifier" -> Some("groupIdentifier"),
+      "gatewayToken" -> Some("gatewayToken"),
+      "agentId" -> Some("agentId"),
+      "agentCode" -> Some("agentCode"),
+      "agentFriendlyName" -> Some("agentFriendlyName"),
+      "email" -> Some("email")
+    )
 
     http.POST[JsValue, HttpResponse](s"$serviceUrl/government-gateway/session/login", payload) flatMap {
-      case response @ HttpResponse(201, _, _) =>
+      case response@HttpResponse(201, _, _) =>
         (
           response.header(HeaderNames.AUTHORIZATION),
           response.header(HeaderNames.LOCATION),
@@ -117,7 +70,7 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
             Future.successful((AuthExchange(token, sessionUri), GovernmentGatewayToken(receivedGatewayToken)))
           case _ => Future.failed(new RuntimeException("Internal Error, missing headers or gatewayToken in response from auth-login-api"))
         }
-      case response @ HttpResponse(429, _, _) =>
+      case response@HttpResponse(429, _, _) =>
         Future.failed(new TooManyRequestException(s"response from $serviceUrl/government-gateway/session/login was ${response.status}. Body ${response.body}"))
       case response =>
         Future.failed(new RuntimeException(s"response from $serviceUrl/government-gateway/session/login was ${response.status}. Body ${response.body}"))
@@ -136,16 +89,6 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
   private def validateDelegatedEnrolmentIdentifiers(delegatedEnrolment: DelegatedEnrolmentData) =
     delegatedEnrolment.taxIdentifier.forall(taxId => !(taxId.key.isEmpty || taxId.value.isEmpty))
 
-  private def toJson(enrolment: EnrolmentData): JsObject =
-    Json.obj(
-      "key" -> enrolment.name,
-      "identifiers" -> enrolment.taxIdentifier.map(taxId => Json.obj(
-        "key" -> taxId.key,
-        "value" -> taxId.value
-      )),
-      "state" -> enrolment.state
-    )
-
   private def toJson(enrolment: DelegatedEnrolmentData): JsObject =
     Json.obj(
       "key" -> enrolment.key,
@@ -156,14 +99,18 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
       "delegatedAuthRule" -> enrolment.delegatedAuthRule
     )
 
+  private def toJson(enrolment: EnrolmentData): JsObject =
+    Json.obj(
+      "key" -> enrolment.name,
+      "identifiers" -> enrolment.taxIdentifier.map(taxId => Json.obj(
+        "key" -> taxId.key,
+        "value" -> taxId.value
+      )),
+      "state" -> enrolment.state
+    )
+
   private def toJson[A: Writes](optData: Option[A], key: String): JsObject =
     optData.map(data => Json.obj(key -> Json.toJson(data))).getOrElse(Json.obj())
-
-  private def toJson(gatewayToken: Option[String]): JsObject = {
-    val ggToken = gatewayToken.map(token => "gatewayToken" -> Json.toJsFieldJsValueWrapper(token))
-
-    Json.obj("gatewayInformation" -> Json.obj(scala.Seq(ggToken).flatten: _*))
-  }
 
   private def removeEmptyValues(fields: (String, Option[String])*): JsObject = {
     val onlyDefinedFields = fields
@@ -171,6 +118,12 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
         case (key, Some(value)) => key -> Json.toJsFieldJsValueWrapper(value)
       }
     Json.obj(onlyDefinedFields: _*)
+  }
+
+  private def toJson(gatewayToken: Option[String]): JsObject = {
+    val ggToken = gatewayToken.map(token => "gatewayToken" -> Json.toJsFieldJsValueWrapper(token))
+
+    Json.obj("gatewayInformation" -> Json.obj(scala.Seq(ggToken).flatten: _*))
   }
 
 }

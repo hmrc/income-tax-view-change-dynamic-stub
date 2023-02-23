@@ -16,21 +16,21 @@
 
 package controllers
 
-import javax.inject.{Inject, Singleton}
 import models.HttpMethod._
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import repositories.DataRepository
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import utils.SchemaValidation
 import org.mongodb.scala.model.Filters._
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import repositories.DataRepository
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import utils.SchemaValidation
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
 class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
                                          dataRepository: DataRepository,
-                                         cc: ControllerComponents) extends BackendController(cc) {
+                                         cc: MessagesControllerComponents) extends FrontendController(cc) {
 
   def getRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {

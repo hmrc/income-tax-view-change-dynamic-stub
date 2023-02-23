@@ -22,7 +22,8 @@ import play.api.Logging
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.http.TooManyRequestException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import utils.{FileUtil, SessionBuilder}
+import utils.LoginUtil.{dummyNinoList, reDirectURL}
+import utils.SessionBuilder
 import views.html.LoginPage
 
 import javax.inject.{Inject, Singleton}
@@ -36,7 +37,6 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
                                microserviceAuthConnector: MicroserviceAuthConnector
                               ) extends FrontendController(mcc) with Logging {
 
-  val dummyNinoList: List[String] = FileUtil.readFromFile("conf/Ninos.txt")
 
 
 
@@ -51,8 +51,7 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
       user =>
         microserviceAuthConnector.login(nino = user.nino) map {
           case (authExchange, _) =>
-            println("@@@" + SessionBuilder.buildGGSession(authExchange))
-            Redirect("http://localhost:9081/report-quarterly/income-and-expenses/view?origin=BTA")
+            Redirect(reDirectURL)
               .withSession(SessionBuilder.buildGGSession(authExchange))
         }
     ).recoverWith {

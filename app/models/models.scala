@@ -30,12 +30,6 @@ object CredStrength {
   val values: Seq[String] = Seq("strong", "weak", "none")
 }
 
-case class AffinityGroup(value: String) extends AnyVal
-
-object AffinityGroup {
-  val values: Seq[String] = Seq("Individual", "Organisation", "Agent")
-}
-
 object CredentialRole {
   val values: Seq[String] = Seq("User", "Assistant")
 }
@@ -44,9 +38,21 @@ case class CredId(value: String) extends AnyVal
 
 case class EnrolmentData(name: String, state: String, taxIdentifier: scala.Seq[TaxIdentifierData])
 
+object EnrolmentData {
+  implicit val reads: Reads[EnrolmentData] = {
+    Json.reads[EnrolmentData]
+  }
+}
+
 case class DelegatedEnrolmentData(key: String, taxIdentifier: Seq[TaxIdentifierData], delegatedAuthRule: String)
 
 case class TaxIdentifierData(key: String, value: String)
+
+object TaxIdentifierData {
+  implicit val reads: Reads[TaxIdentifierData] = {
+    Json.reads[TaxIdentifierData]
+  }
+}
 
 case class GovernmentGatewayToken(gatewayToken: String)
 
@@ -55,3 +61,5 @@ object GovernmentGatewayToken {
     Json.reads[GovernmentGatewayToken]
   }
 }
+
+case class AuthExchange(bearerToken: String, sessionAuthorityUri: String)

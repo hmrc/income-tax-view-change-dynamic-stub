@@ -16,7 +16,7 @@
 
 package utils
 
-import config.AuthExchange
+import models.AuthExchange
 import org.joda.time.DateTime
 import play.api.mvc.Session
 import uk.gov.hmrc.http.{SessionId, SessionKeys}
