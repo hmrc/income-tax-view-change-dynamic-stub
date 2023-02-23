@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package controllers.routes
+package controllers
 
 import config.MicroserviceAuthConnector
 import models.User
