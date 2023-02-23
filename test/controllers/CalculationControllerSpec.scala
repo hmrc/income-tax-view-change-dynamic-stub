@@ -18,14 +18,10 @@ package controllers
 
 import controllers.helpers.DataHelper
 import mocks.{MockDataRepository, MockSchemaValidation}
-import models.{CalcSuccessReponse, DataModel}
 import org.scalatest.concurrent.ScalaFutures
-import play.api.http.Status
 import play.api.http.Status.OK
-import play.api.libs.json.{Json, OWrites}
-import play.api.mvc.ControllerComponents
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{status, stubControllerComponents}
+import play.api.test.Helpers.status
 import testUtils.TestSupport
 import play.api.test.Helpers._
 
