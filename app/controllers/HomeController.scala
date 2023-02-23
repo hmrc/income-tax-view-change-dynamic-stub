@@ -39,7 +39,7 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
                               ) extends FrontendController(mcc) with Logging {
 
 
-  val postLogin: Action[AnyContent] = Action.async { implicit request =>
+  def postLogin: Action[AnyContent] = Action.async { implicit request =>
     val userForm: Form[User] = User.form.bindFromRequest()
     userForm.fold(
       formWithErrors =>
