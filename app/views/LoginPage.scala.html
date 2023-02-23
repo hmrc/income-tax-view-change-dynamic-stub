@@ -28,7 +28,7 @@
 
 @layout(pageTitle = Some("Login - Manage your Income Tax updates - GOV.UK")) {
 
-    <h1 class="govuk-heading-l">Log in to ITSA View and Change</h1>
+    <h1 class="govuk-heading-l">Select Nino/User</h1>
 
     @form(postAction) {
 
@@ -50,17 +50,17 @@
                 legend = None
             )),
             hint = None,
-            name = "isAgent",
+            name = "Agent",
             items = Seq(
                 CheckboxItem(
-                    content = Text("Is Agent?"),
+                    content = Text("Agent"),
                     value = "true"
                 )
             )
         ))
 
         @govukButton(Button(
-            content = Text("Submit")
+            content = Text("Login")
         ))
     }
 }
