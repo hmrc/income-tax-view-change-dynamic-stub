@@ -2,12 +2,6 @@
 
 ->         /hmrc-frontend           hmrcfrontend.Routes
 
-# Play frontend hmrc route for Assets
-GET         /assets/*file                                                 controllers.Assets.versioned(path = "/public", file)
-
-# Assets
-GET         /assets/*file                                                 controllers.Assets.at(path="/public", file)
-
 ### IF  #1896 - v9.0.0 ###
 GET         /income-tax/view/calculations/liability/23-24/:nino                       controllers.CalculationController.generateCalculationListFor2023_24(nino:String)
 
