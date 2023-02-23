@@ -34,6 +34,6 @@ object SessionBuilder {
   def buildGGSession(authExchange: AuthExchange): Session = Session(Map(
     SessionKeys.sessionId -> SessionId(s"session-${UUID.randomUUID}").value,
     SessionKeys.authToken -> authExchange.bearerToken,
-    SessionKeys.lastRequestTimestamp -> DateTime.now.getMillis.toString,
+    SessionKeys.lastRequestTimestamp -> DateTime.now.getMillis.toString
   ))
 }
