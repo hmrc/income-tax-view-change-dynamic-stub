@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package controllers
+package controllers.routes
 
 import config.MicroserviceAuthConnector
 import models.User
@@ -41,7 +41,7 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
 
 
   val getLogin: Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok(loginPage(controllers.routes.HomeController.postLogin() ,dummyNinoList)))
+    Future.successful(Ok(loginPage(controllers.routes.HomeController.postLogin(), dummyNinoList)))
   }
 
   val postLogin: Action[AnyContent] = Action.async { implicit request =>
