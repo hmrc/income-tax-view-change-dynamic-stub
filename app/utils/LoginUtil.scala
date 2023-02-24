@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package models
+package utils
 
-import play.api.libs.json.{JsValue, Json, OFormat}
+import com.typesafe.config.Config
+import play.api.libs.json.{JsValue, Json}
 
-case class DataModel(
-                      _id: String, // URL of the Request
-                      schemaId: String, // Name/ID of the Schema to Validate Against
-                      method: String,
-                      status: Int,
-                      response: Option[JsValue]
-                    )
+import scala.io.Source
 
-object DataModel {
-  implicit val formats: OFormat[DataModel] = Json.format[DataModel]
+object LoginUtil {
+  val dummyNinoList: List[String] = FileUtil.readFromFile("conf/Ninos.txt")
+  val reDirectURL = "http://localhost:9081/report-quarterly/income-and-expenses/view?origin=BTA"
+  val loginConfig: Config = FileUtil.getLoginConfig()
+  val enrolmentData: String => JsValue = (nino: String) => Json.parse(Source.fromFile(s"conf/enrollmentData/$nino.txt").mkString.trim)
+
+
 }

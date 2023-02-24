@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,9 @@ import models.HttpMethod.GET
 import org.mongodb.scala.model.Filters.equal
 import play.api.Logging
 import play.api.libs.json.{Json, OWrites}
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import repositories.DataRepository
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.CalculationUtils.createCalResponseModel
 
 import javax.inject.{Inject, Singleton}
@@ -32,9 +32,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class CalculationController @Inject()(cc: ControllerComponents,
+class CalculationController @Inject()(cc: MessagesControllerComponents,
                                       dataRepository: DataRepository
-                                     ) extends BackendController(cc) with Logging {
+                                     ) extends FrontendController(cc) with Logging {
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 

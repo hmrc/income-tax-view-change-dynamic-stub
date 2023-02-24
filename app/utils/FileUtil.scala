@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package models
+package utils
 
-import play.api.libs.json.{JsValue, Json, OFormat}
+import com.typesafe.config.{Config, ConfigFactory}
 
-case class DataModel(
-                      _id: String, // URL of the Request
-                      schemaId: String, // Name/ID of the Schema to Validate Against
-                      method: String,
-                      status: Int,
-                      response: Option[JsValue]
-                    )
+import scala.io.Source
 
-object DataModel {
-  implicit val formats: OFormat[DataModel] = Json.format[DataModel]
+object FileUtil {
+
+  def readFromFile(path: String): List[String] = {
+    Source.fromFile(path).getLines().toList
+  }
+
+  def getLoginConfig(): Config = {
+    ConfigFactory.load("login-details.conf")
+  }
+
 }
