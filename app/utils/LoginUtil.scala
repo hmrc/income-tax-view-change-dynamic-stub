@@ -16,10 +16,8 @@
 
 package utils
 
-import com.typesafe.config.Config
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import scala.io.Source
 
 case class KVPair(key: String, value: String)
 case class Enrolment(key: String, identifiers: Seq[KVPair], state: String)
@@ -39,7 +37,6 @@ object LoginUtil {
 
 
   val reDirectURL = "http://localhost:9081/report-quarterly/income-and-expenses/view?origin=BTA"
-  val loginConfig: Config = FileUtil.getLoginConfig()
 
   val enrolmentData: String => JsValue = (nino: String) => {
     val es =

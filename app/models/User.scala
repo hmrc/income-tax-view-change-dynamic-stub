@@ -20,7 +20,7 @@ import play.api.data.{Form, Mapping}
 import play.api.data.Forms.{boolean, mapping, nonEmptyText, text}
 
 case class User(nino: Nino, isAgent: Boolean)
-
+case class UserRecord(nino: String, mtditid: String, utr: String, description: String)
 object User {
   val ninoNonEmptyMapping: Mapping[Nino] = {
 

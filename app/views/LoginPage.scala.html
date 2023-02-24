@@ -24,7 +24,7 @@
     form: FormWithCSRF
 )
 
-@(postAction: Call, ninoList: Seq[String])(implicit request : Request[_], messages: Messages)
+@(postAction: Call, users: Seq[UserRecord])(implicit request : Request[_], messages: Messages)
 
 @layout(pageTitle = Some("Login - Manage your Income Tax updates - GOV.UK")) {
 
@@ -35,10 +35,10 @@
         @govukSelect(Select(
             id = "nino",
             name = "nino",
-            items = ninoList.map{ nino =>
+            items = users.map{ user =>
                 SelectItem(
-                value = Some(nino),
-                text = nino
+                value = Some(user.nino),
+                text = s"${user.nino} - ${user.description}"
                 )
             },
             label = Label(

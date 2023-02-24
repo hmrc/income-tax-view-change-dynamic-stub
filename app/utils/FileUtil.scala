@@ -16,24 +16,42 @@
 
 package utils
 
-import com.typesafe.config.{Config, ConfigFactory}
-import play.api.libs.json.{JsValue, Json}
+import models.{Nino, UserCredentials, UserRecord}
 
 import scala.io.Source
 import scala.util.Try
 
 object FileUtil {
 
-
-
-  def readFromFile(path: String): Either[Throwable, List[String]] = {
+  def getUsersFromFile(path: String): Either[Throwable, List[UserRecord]] = {
     Try {
-      Source.fromFile(path).getLines().toList
+      val lines = Source.fromFile(path).getLines().toList
+      lines.map(line => {
+        Try {
+          val recs = line.split('$')
+          UserRecord(recs(0), recs(1), recs(2), recs(3))
+        }.toOption
+      }).flatten
     }.toEither
   }
 
-  def getLoginConfig(): Config = {
-    ConfigFactory.load("login-details.conf")
+  def getUserCredentials(nino: Nino): Either[Throwable, UserCredentials] = {
+    FileUtil.getUsersFromFile("conf/data/users.txt") match {
+      case Left(ex) => Left(ex)
+      case Right(records) =>
+        records.find(record => record.nino == nino.nino) match {
+          case None =>
+            Left(new RuntimeException("Can not fine user by nino"))
+          case Some(_) =>
+            Right(
+              UserCredentials(credId = "6528180096307862",
+                affinityGroup = "Individual",
+                confidenceLevel = 250,
+                credentialStrength = "strong",
+                Role = "User")
+            )
+        }
+    }
   }
 
 }

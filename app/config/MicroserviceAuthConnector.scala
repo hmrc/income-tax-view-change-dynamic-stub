@@ -23,7 +23,9 @@ import play.api.libs.json._
 import uk.gov.hmrc.auth.core.PlayAuthConnector
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, TooManyRequestException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import utils.LoginUtil.{enrolmentData, loginConfig}
+import utils.FileUtil.getUserCredentials
+import utils.LoginUtil.{enrolmentData}
+
 import javax.inject.{Inject, Singleton}
 import scala.collection.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -66,26 +68,30 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
   }
 
   private def createPayload(nino: Nino): Either[Throwable, JsValue] = {
-    Try {
-      Json.obj(
-        "credId" -> loginConfig.getString(s"$nino.credId"),
-        "affinityGroup" -> loginConfig.getString(s"$nino.affinityGroup"),
-        "confidenceLevel" -> loginConfig.getInt(s"$nino.confidenceLevel"),
-        "credentialStrength" -> loginConfig.getString(s"$nino.credentialStrength"),
-        "credentialRole" -> loginConfig.getString(s"$nino.credentialRole"),
-        "usersName" -> "usersName",
-        "enrolments" -> enrolmentData(nino.value),
-        "delegatedEnrolments" -> delegatedEnrolmentsJson(Nil)
-      ) ++ removeEmptyValues(
-        "nino" -> Some(nino.value),
-        "groupIdentifier" -> Some("groupIdentifier"),
-        "gatewayToken" -> Some("gatewayToken"),
-        "agentId" -> Some("agentId"),
-        "agentCode" -> Some("agentCode"),
-        "agentFriendlyName" -> Some("agentFriendlyName"),
-        "email" -> Some("email")
-      )
-    }.toEither
+    getUserCredentials(nino) match {
+      case Left(ex) => Left(ex)
+      case Right(userCredentials) =>
+        Right(
+          Json.obj(
+            "credId" -> userCredentials.credId,
+            "affinityGroup" -> userCredentials.affinityGroup,
+            "confidenceLevel" -> userCredentials.confidenceLevel,
+            "credentialStrength" -> userCredentials.credentialStrength,
+            "credentialRole" -> userCredentials.Role,
+            "usersName" -> "usersName",
+            "enrolments" -> enrolmentData(nino.value),
+            "delegatedEnrolments" -> delegatedEnrolmentsJson(Nil)
+          ) ++ removeEmptyValues(
+            "nino" -> Some(nino.value),
+            "groupIdentifier" -> Some("groupIdentifier"),
+            "gatewayToken" -> Some("gatewayToken"),
+            "agentId" -> Some("agentId"),
+            "agentCode" -> Some("agentCode"),
+            "agentFriendlyName" -> Some("agentFriendlyName"),
+            "email" -> Some("email")
+          )
+        )
+    }
   }
 
   private def delegatedEnrolmentsJson(delegatedEnrolments: Seq[DelegatedEnrolmentData]) =
