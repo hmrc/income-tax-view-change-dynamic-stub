@@ -1,0 +1,50 @@
+AA000000A$XAIT00000000000$0000000000$Scottish tax calc
+AA111111A$XAIT00000111111$0001111111$Crystallised
+AA333333A$XAIT00000333333$0003333333$Default
+AA888888A$XAIT00000888888$0008888888$Default
+AY111111A$XYIT11111111111$0000111111$First year - update submitted, not migrated
+AY222222A$XYIT22222222222$0000222222$First year - Migrated with previous outstanding balance - User has both CESA and POA/BCD charges
+AY333333A$XYIT33333333333$0000333333$First year - Migrated with previous outstanding balances and forecast calc
+AY444444A$XYIT44444444444$0000444444$First year - Not migrated with missing first quarter update
+AY555555A$XYIT55555555555$0000555555$First year - Migrated with BCD accruing interest
+AY666666A$XYIT66666666666$0000000000$First year - Signed up with no updates
+AY777777A$XYIT77777777777$0000777777$First year - Has unallocated credit from previous tax year
+BS000000A$XDIT00000000000$1111000000$Second year - has not cleared the generated balancing charge and POAs
+BS111111A$XDIT11111111111$1111111111$Second year - has cleared their generated balancing charge and POA1 but not the POA2
+BS222222A$XDIT22222222222$1111222222$Second year - has only part paid their balancing charge
+BS333333A$XDIT33333333333$1111333333$Second year - has cleared all charges
+BS444444A$XDIT44444444444$1111444444$Second year - has an overdue charge amount for the current tax year and the charge is under investigation (dunning lock present)
+BS555555A$XDIT55555555555$1111555555$Second year - has an overdue charge amount for the current tax year and has an Interest amount being investigated (Interest lock present)
+BS666666A$XDIT66666666666$1111666666$Second year - has paid an overdue charge in full in the current tax year and a Late Payment interest charge is created
+BS777777A$XDIT77777777777$1111777777$Second year - has  partially paid an overdue charge for the current tax year and the accruing interest is still accumulating in the the amount unpaid
+BS888888A$XDIT88888888888$1111888888$Second year - has a charge that is overdue for more than one tax year, therefore accruing interest will span more than one tax year
+BS999999A$XDIT99999999999$1111999999$Second year - has a charge that was paid 1 week late, has late payment interest that is being investigated (r7c lpiWithDunningLock)
+CC111111A$XCIT11111111111$2222111111$Coding out immediately rejected
+CC222222A$XCIT22222222222$2222222222$Coding out accepted then rejected part way through year
+CC333333A$XCIT33333333333$2222333333$Coding out partially collected
+CC444444A$XCIT44444444444$2222444444$Coding out fully collected
+CC555555A$XCIT55555555555$2222000000$Coding out requested and accepted
+AY888881A$XYIT88888888881$8888000001$Refund claimed for partial amount and claim is in a pending state
+AY888882A$XYIT88888888882$8888000002$Refund for full amount claimed and claim in a pending state
+AY888883A$XYIT88888888883$8888000003$Multiple credit items/payments
+AY888884A$XYIT88888888884$8888000004$???
+AY888885A$XYIT88888888885$8888000005$User with Single Payment (in credit?)
+AY888886A$XYIT88888888886$8888000006$One Cut over Credit
+AY999991A$XYIT99999999991$9999900001$User with calc data for year 2024
+AY999992A$XYIT99999999992$9999900002$User with calc data with all fields
+MA999991A$XAIT99999999991$9999000001$MFA -
+MA999992A$XAIT99999999992$9999000002$MFA - User with Single MFA Credit
+MA999993A$XAIT99999999993$9999000003$MFA -
+LA000064A$XVIT00000004142$1509862701$QA:QA user1
+LA000069A$XKIT00000004356$7342361730$QA:QA user2
+KY661788D$XEIT00000000746$6485258018$QA:QA user3
+PW892533A$XGIT00000565003$8087892533$QA:QA user4
+PA000000A$XPIT00000000001$0000000123$QA:Payment Allocations Test
+PW886433A$XQIT00000564945$8087886433$QA:MFA Debit/credit
+PW871233A$XYIT00000564781$0000000123$QA:QA test 5
+PW902133A$XCIT00000565094$0000000123$QA:QA MFA Credit Test
+PW950133A$XQIT00000565118$8087950133$QA:QA Coding Out Test
+PW898033A$XYIT00000565116$0000000123$QA:QA MFA Credit Test 2
+PW953333A$XMIT00000565122$0000000123$QA:QA Coding Test 2
+PW904033A$XJIT00000565111$0000000123$QA:MFA Credit Interest
+PW956933A$XNIT00000565204$8087956933$QA:QA CO Test3

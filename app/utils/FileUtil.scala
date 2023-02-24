@@ -16,18 +16,44 @@
 
 package utils
 
-import com.typesafe.config.{Config, ConfigFactory}
+import models.{Nino, UserCredentials, UserRecord}
 
 import scala.io.Source
+import scala.util.Try
 
 object FileUtil {
 
-  def readFromFile(path: String): List[String] = {
-    Source.fromFile(path).getLines().toList
+  def getUsersFromFile(path: String): Either[Throwable, List[UserRecord]] = {
+    Try {
+      val lines = Source.fromFile(path).getLines().toList
+      lines.map(line => {
+        Try {
+          val recs = line.split('$')
+          UserRecord(recs(0), recs(1), recs(2), recs(3))
+        }.toOption
+      }).flatten
+    }.toEither
   }
 
-  def getLoginConfig(): Config = {
-    ConfigFactory.load("login-details.conf")
+  def getUserCredentials(nino: Nino): Either[Throwable, UserCredentials] = {
+    FileUtil.getUsersFromFile("conf/data/users.txt") match {
+      case Left(ex) => Left(ex)
+      case Right(records) =>
+        records.find(record => record.nino == nino.nino) match {
+          case None =>
+            Left(new RuntimeException("Can not fine user by nino"))
+          case Some(record) =>
+            Right(
+              UserCredentials(credId = UserCredentials.credId,//"6528180096307862",
+                affinityGroup = "Individual",
+                confidenceLevel = 250,
+                credentialStrength = "strong",
+                Role = "User",
+                enrolmentData = EnrolmentValues(record.mtditid, record.utr)
+              )
+            )
+        }
+    }
   }
 
 }
