@@ -17,6 +17,7 @@
 package utils
 
 import models.{Nino, UserCredentials, UserRecord}
+import play.api.Play
 
 import scala.io.Source
 import scala.util.Try
@@ -25,7 +26,8 @@ object FileUtil {
 
   def getUsersFromFile(path: String): Either[Throwable, List[UserRecord]] = {
     Try {
-      val lines = Source.fromFile(path).getLines().toList
+      val resource = Play.getClass.getResourceAsStream(path)
+      val lines = scala.io.Source.fromInputStream(resource).mkString("").split("\n").toList
       lines.map(line => {
         Try {
           val recs = line.split('$')
@@ -36,7 +38,7 @@ object FileUtil {
   }
 
   def getUserCredentials(nino: Nino): Either[Throwable, UserCredentials] = {
-    FileUtil.getUsersFromFile("conf/data/users.txt") match {
+    FileUtil.getUsersFromFile("/data/users.txt") match {
       case Left(ex) => Left(ex)
       case Right(records) =>
         records.find(record => record.nino == nino.nino) match {

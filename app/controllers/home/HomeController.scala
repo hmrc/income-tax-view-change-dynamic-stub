@@ -41,7 +41,7 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
 
 
   val getLogin: Action[AnyContent] = Action.async { implicit request =>
-    FileUtil.getUsersFromFile("conf/data/users.txt") match {
+    FileUtil.getUsersFromFile("/data/users.txt") match {
       case Left(ex) =>
         Logger("application").error(s"[ITVC-Stub][getLogin] - Unable to read nino's: $ex")
         Future.successful(BadRequest(s"Unable to read nino's: $ex"))
