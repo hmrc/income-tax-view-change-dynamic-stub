@@ -44,7 +44,7 @@ object FileUtil {
             Left(new RuntimeException("Can not fine user by nino"))
           case Some(record) =>
             Right(
-              UserCredentials(credId = "6528180096307862",
+              UserCredentials(credId = UserCredentials.credId,//"6528180096307862",
                 affinityGroup = "Individual",
                 confidenceLevel = 250,
                 credentialStrength = "strong",

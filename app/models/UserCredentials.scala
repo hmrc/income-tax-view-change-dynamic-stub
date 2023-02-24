@@ -18,9 +18,15 @@ package models
 
 import utils.EnrolmentValues
 
+import scala.util.Random
+
 case class UserCredentials(credId: String,
                            affinityGroup: String,
                            confidenceLevel: Int,
                            credentialStrength: String,
                            Role: String,
                            enrolmentData : EnrolmentValues)
+
+object UserCredentials{
+  def credId: String = Random.alphanumeric.take(16).mkString("")
+}
