@@ -16,20 +16,19 @@
 
 package config
 
-import models.{AuthExchange, DelegatedEnrolmentData, EnrolmentData, GovernmentGatewayToken}
+import models._
 import play.api.http.HeaderNames
+import play.api.http.Status.{CREATED, TOO_MANY_REQUESTS}
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.PlayAuthConnector
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, TooManyRequestException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.LoginUtil.{enrolmentData, loginConfig}
-
 import javax.inject.{Inject, Singleton}
 import scala.collection.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-
-
+import scala.util.Try
 
 
 @Singleton
@@ -39,28 +38,17 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
 
 
   def login(nino: models.Nino)(implicit hc: HeaderCarrier): Future[(AuthExchange, GovernmentGatewayToken)] = {
+    createPayload(nino) match {
+      case Left(ex) =>
+        Future.failed(new RuntimeException(s"Internal Error: unable to create a payload: $ex"))
+      case Right(payload) =>
+        loginRequest(payload)
+    }
+  }
 
-    val payload: JsValue = Json.obj(
-      "credId" -> loginConfig.getString(s"$nino.credId"),
-      "affinityGroup" -> loginConfig.getString(s"$nino.affinityGroup"),
-      "confidenceLevel" -> loginConfig.getInt(s"$nino.confidenceLevel"),
-      "credentialStrength" -> loginConfig.getString(s"$nino.credentialStrength"),
-      "credentialRole" -> loginConfig.getString(s"$nino.credentialRole"),
-      "usersName" -> "usersName",
-      "enrolments" -> enrolmentData(nino.value),
-      "delegatedEnrolments" -> delegatedEnrolmentsJson(Nil)
-    ) ++ removeEmptyValues(
-      "nino" -> Some(nino.value),
-      "groupIdentifier" -> Some("groupIdentifier"),
-      "gatewayToken" -> Some("gatewayToken"),
-      "agentId" -> Some("agentId"),
-      "agentCode" -> Some("agentCode"),
-      "agentFriendlyName" -> Some("agentFriendlyName"),
-      "email" -> Some("email")
-    )
-
+  def loginRequest(payload: JsValue)(implicit hc: HeaderCarrier): Future[(AuthExchange, GovernmentGatewayToken)] = {
     http.POST[JsValue, HttpResponse](s"$serviceUrl/government-gateway/session/login", payload) flatMap {
-      case response@HttpResponse(201, _, _) =>
+      case response@HttpResponse(CREATED, _, _) =>
         (
           response.header(HeaderNames.AUTHORIZATION),
           response.header(HeaderNames.LOCATION),
@@ -70,11 +58,34 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
             Future.successful((AuthExchange(token, sessionUri), GovernmentGatewayToken(receivedGatewayToken)))
           case _ => Future.failed(new RuntimeException("Internal Error, missing headers or gatewayToken in response from auth-login-api"))
         }
-      case response@HttpResponse(429, _, _) =>
+      case response@HttpResponse(TOO_MANY_REQUESTS, _, _) =>
         Future.failed(new TooManyRequestException(s"response from $serviceUrl/government-gateway/session/login was ${response.status}. Body ${response.body}"))
       case response =>
         Future.failed(new RuntimeException(s"response from $serviceUrl/government-gateway/session/login was ${response.status}. Body ${response.body}"))
     }
+  }
+
+  private def createPayload(nino: Nino): Either[Throwable, JsValue] = {
+    Try {
+      Json.obj(
+        "credId" -> loginConfig.getString(s"$nino.credId"),
+        "affinityGroup" -> loginConfig.getString(s"$nino.affinityGroup"),
+        "confidenceLevel" -> loginConfig.getInt(s"$nino.confidenceLevel"),
+        "credentialStrength" -> loginConfig.getString(s"$nino.credentialStrength"),
+        "credentialRole" -> loginConfig.getString(s"$nino.credentialRole"),
+        "usersName" -> "usersName",
+        "enrolments" -> enrolmentData(nino.value),
+        "delegatedEnrolments" -> delegatedEnrolmentsJson(Nil)
+      ) ++ removeEmptyValues(
+        "nino" -> Some(nino.value),
+        "groupIdentifier" -> Some("groupIdentifier"),
+        "gatewayToken" -> Some("gatewayToken"),
+        "agentId" -> Some("agentId"),
+        "agentCode" -> Some("agentCode"),
+        "agentFriendlyName" -> Some("agentFriendlyName"),
+        "email" -> Some("email")
+      )
+    }.toEither
   }
 
   private def delegatedEnrolmentsJson(delegatedEnrolments: Seq[DelegatedEnrolmentData]) =
@@ -122,7 +133,6 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
 
   private def toJson(gatewayToken: Option[String]): JsObject = {
     val ggToken = gatewayToken.map(token => "gatewayToken" -> Json.toJsFieldJsValueWrapper(token))
-
     Json.obj("gatewayInformation" -> Json.obj(scala.Seq(ggToken).flatten: _*))
   }
 

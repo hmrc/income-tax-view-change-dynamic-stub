@@ -17,15 +17,41 @@
 package utils
 
 import com.typesafe.config.Config
-import play.api.libs.json.{JsValue, Json}
-
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
 import scala.io.Source
 
+case class KVPair(key: String, value: String)
+case class Enrolment(key: String, identifiers: Seq[KVPair], state: String)
+
 object LoginUtil {
-  val dummyNinoList: List[String] = FileUtil.readFromFile("conf/Ninos.txt")
+
+  implicit val kvPairWrites: Writes[KVPair] = (
+    (JsPath \ "key").write[String] and
+      (JsPath \ "value").write[String]
+    )(unlift(KVPair.unapply))
+
+  implicit val enrolmentWrites: Writes[Enrolment] = (
+    (JsPath \ "key").write[String] and
+      (JsPath \ "identifiers").write[Seq[KVPair]] and
+      (JsPath \ "state").write[String]
+    )(unlift(Enrolment.unapply))
+
+
   val reDirectURL = "http://localhost:9081/report-quarterly/income-and-expenses/view?origin=BTA"
   val loginConfig: Config = FileUtil.getLoginConfig()
-  val enrolmentData: String => JsValue = (nino: String) => Json.parse(Source.fromFile(s"conf/enrollmentData/$nino.txt").mkString.trim)
+
+  val enrolmentData: String => JsValue = (nino: String) => {
+    val es =
+      Seq(
+        Enrolment(key = "HMRC-MTD-IT", identifiers =
+          Seq(KVPair(key = "MTDITID", value = "XCIT33333333333")), state = "Activated"),
+        Enrolment(key = "IR-SA", identifiers =
+          Seq(KVPair(key = "UTR", value = "2222333333")), state = "Activated")
+      )
+    Json.toJson[Seq[Enrolment]](es)
+  }
+
 
 
 }

@@ -18,12 +18,12 @@ package controllers.home
 
 import config.MicroserviceAuthConnector
 import models.User
-import play.api.Logging
+import play.api.{Logger, Logging}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.http.TooManyRequestException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import utils.LoginUtil.{dummyNinoList, reDirectURL}
-import utils.SessionBuilder
+import utils.LoginUtil.{ reDirectURL}
+import utils.{FileUtil, SessionBuilder}
 import views.html.LoginPage
 
 import javax.inject.{Inject, Singleton}
@@ -41,7 +41,13 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
 
 
   val getLogin: Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok(loginPage(routes.HomeController.postLogin(), dummyNinoList)))
+    FileUtil.readFromFile("conf/Ninos.txt") match {
+      case Left(ex) =>
+        Logger("application").error(s"[ITVC-Stub][getLogin] - Unable to read nino's: $ex")
+        Future.successful(BadRequest(s"Unable to read nino's: $ex"))
+      case Right(dummyNinoList) =>
+        Future.successful(Ok(loginPage(routes.HomeController.postLogin(), dummyNinoList)))
+    }
   }
 
   val postLogin: Action[AnyContent] = Action.async { implicit request =>

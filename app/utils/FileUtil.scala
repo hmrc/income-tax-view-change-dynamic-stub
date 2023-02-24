@@ -17,13 +17,19 @@
 package utils
 
 import com.typesafe.config.{Config, ConfigFactory}
+import play.api.libs.json.{JsValue, Json}
 
 import scala.io.Source
+import scala.util.Try
 
 object FileUtil {
 
-  def readFromFile(path: String): List[String] = {
-    Source.fromFile(path).getLines().toList
+
+
+  def readFromFile(path: String): Either[Throwable, List[String]] = {
+    Try {
+      Source.fromFile(path).getLines().toList
+    }.toEither
   }
 
   def getLoginConfig(): Config = {
