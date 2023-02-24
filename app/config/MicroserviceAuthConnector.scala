@@ -23,8 +23,9 @@ import play.api.libs.json._
 import uk.gov.hmrc.auth.core.PlayAuthConnector
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, TooManyRequestException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import utils.EnrolmentValues
 import utils.FileUtil.getUserCredentials
-import utils.LoginUtil.{enrolmentData}
+import utils.LoginUtil.enrolmentData
 
 import javax.inject.{Inject, Singleton}
 import scala.collection.Seq
@@ -79,7 +80,7 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
             "credentialStrength" -> userCredentials.credentialStrength,
             "credentialRole" -> userCredentials.Role,
             "usersName" -> "usersName",
-            "enrolments" -> enrolmentData(nino.value),
+            "enrolments" -> enrolmentData(userCredentials.enrolmentData),
             "delegatedEnrolments" -> delegatedEnrolmentsJson(Nil)
           ) ++ removeEmptyValues(
             "nino" -> Some(nino.value),

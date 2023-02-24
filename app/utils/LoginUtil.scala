@@ -21,7 +21,7 @@ import play.api.libs.json._
 
 case class KVPair(key: String, value: String)
 case class Enrolment(key: String, identifiers: Seq[KVPair], state: String)
-
+case class EnrolmentValues(mtditid: String, utr: String)
 object LoginUtil {
 
   implicit val kvPairWrites: Writes[KVPair] = (
@@ -38,13 +38,13 @@ object LoginUtil {
 
   val reDirectURL = "http://localhost:9081/report-quarterly/income-and-expenses/view?origin=BTA"
 
-  val enrolmentData: String => JsValue = (nino: String) => {
+  val enrolmentData: EnrolmentValues => JsValue = (enrolment: EnrolmentValues) => {
     val es =
       Seq(
         Enrolment(key = "HMRC-MTD-IT", identifiers =
-          Seq(KVPair(key = "MTDITID", value = "XCIT33333333333")), state = "Activated"),
+          Seq(KVPair(key = "MTDITID", value = enrolment.mtditid)), state = "Activated"),
         Enrolment(key = "IR-SA", identifiers =
-          Seq(KVPair(key = "UTR", value = "2222333333")), state = "Activated")
+          Seq(KVPair(key = "UTR", value = enrolment.utr)), state = "Activated")
       )
     Json.toJson[Seq[Enrolment]](es)
   }

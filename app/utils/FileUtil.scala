@@ -42,13 +42,15 @@ object FileUtil {
         records.find(record => record.nino == nino.nino) match {
           case None =>
             Left(new RuntimeException("Can not fine user by nino"))
-          case Some(_) =>
+          case Some(record) =>
             Right(
               UserCredentials(credId = "6528180096307862",
                 affinityGroup = "Individual",
                 confidenceLevel = 250,
                 credentialStrength = "strong",
-                Role = "User")
+                Role = "User",
+                enrolmentData = EnrolmentValues(record.mtditid, record.utr)
+              )
             )
         }
     }

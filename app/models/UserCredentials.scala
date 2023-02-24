@@ -16,8 +16,11 @@
 
 package models
 
+import utils.EnrolmentValues
+
 case class UserCredentials(credId: String,
                            affinityGroup: String,
                            confidenceLevel: Int,
                            credentialStrength: String,
-                           Role: String)
+                           Role: String,
+                           enrolmentData : EnrolmentValues)
