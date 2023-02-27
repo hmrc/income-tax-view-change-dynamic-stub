@@ -9,6 +9,8 @@ GET         /income-tax/view/calculations/liability/23-24/:nino                 
 GET         /income-tax/view/calculations/liability/23-24/:nino/:calculationId        controllers.CalculationController.getCalculationDetailsFor2023_24(nino:String, calculationId:String)
 
 GET         /login                                                                    controllers.home.HomeController.getLogin()
+
++ nocsrf
 POST        /login                                                                    controllers.home.HomeController.postLogin()
 
 GET         /*url                                                                     controllers.RequestHandlerController.getRequestHandler(url)
