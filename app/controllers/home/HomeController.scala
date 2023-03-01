@@ -57,8 +57,7 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
       user =>
         microserviceAuthConnector.login(nino = user.nino) map {
           case (authExchange, _) =>
-            Redirect(reDirectURL)
-              .withSession(SessionBuilder.buildGGSession(authExchange))
+            Ok(s"${authExchange.bearerToken};${authExchange.sessionAuthorityUri}")
         }
     ).recoverWith {
       case exception: TooManyRequestException =>
