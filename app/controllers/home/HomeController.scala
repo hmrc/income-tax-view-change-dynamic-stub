@@ -37,9 +37,6 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
                                microserviceAuthConnector: MicroserviceAuthConnector
                               ) extends FrontendController(mcc) with Logging {
 
-
-
-
   val getLogin: Action[AnyContent] = Action.async { implicit request =>
     FileUtil.getUsersFromFile("/data/users.txt") match {
       case Left(ex) =>
@@ -54,11 +51,12 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
     User.form.bindFromRequest().fold(
       formWithErrors =>
         Future.successful(BadRequest(s"Invalid form submission: $formWithErrors")),
-      user =>
-        microserviceAuthConnector.login(nino = user.nino) map {
+      (user: User) => {
+        microserviceAuthConnector.login(nino = user.nino, isAgent = user.isAgent) map {
           case (authExchange, _) =>
             Ok(s"${authExchange.bearerToken};${authExchange.sessionAuthorityUri}")
         }
+      }
     ).recoverWith {
       case exception: TooManyRequestException =>
         Future.successful(TooManyRequests(exception.getMessage))

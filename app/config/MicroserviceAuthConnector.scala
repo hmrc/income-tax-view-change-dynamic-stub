@@ -23,15 +23,13 @@ import play.api.libs.json._
 import uk.gov.hmrc.auth.core.PlayAuthConnector
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, TooManyRequestException}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import utils.EnrolmentValues
 import utils.FileUtil.getUserCredentials
-import utils.LoginUtil.enrolmentData
+import utils.LoginUtil.{getDelegatedEnrolmentData, getEnrolmentData}
 
 import javax.inject.{Inject, Singleton}
 import scala.collection.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Try
 
 
 @Singleton
@@ -40,8 +38,8 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
   override val serviceUrl: String = servicesConfig.baseUrl("auth-login")
 
 
-  def login(nino: models.Nino)(implicit hc: HeaderCarrier): Future[(AuthExchange, GovernmentGatewayToken)] = {
-    createPayload(nino) match {
+  def login(nino: models.Nino, isAgent: Boolean)(implicit hc: HeaderCarrier): Future[(AuthExchange, GovernmentGatewayToken)] = {
+    createPayload(nino, isAgent) match {
       case Left(ex) =>
         Future.failed(new RuntimeException(s"Internal Error: unable to create a payload: $ex"))
       case Right(payload) =>
@@ -68,20 +66,22 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
     }
   }
 
-  private def createPayload(nino: Nino): Either[Throwable, JsValue] = {
+  private def createPayload(nino: Nino, isAgent: Boolean): Either[Throwable, JsValue] = {
     getUserCredentials(nino) match {
       case Left(ex) => Left(ex)
       case Right(userCredentials) =>
+        val delegateEnrolments = getDelegatedEnrolmentData(isAgent = isAgent, userCredentials.enrolmentData)
+
         Right(
           Json.obj(
             "credId" -> userCredentials.credId,
-            "affinityGroup" -> userCredentials.affinityGroup,
+            "affinityGroup" -> "Agent",
             "confidenceLevel" -> userCredentials.confidenceLevel,
             "credentialStrength" -> userCredentials.credentialStrength,
             "credentialRole" -> userCredentials.Role,
             "usersName" -> "usersName",
-            "enrolments" -> enrolmentData(userCredentials.enrolmentData),
-            "delegatedEnrolments" -> delegatedEnrolmentsJson(Nil)
+            "enrolments" -> getEnrolmentData(isAgent = isAgent, userCredentials.enrolmentData),
+            "delegatedEnrolments" -> delegateEnrolments
           ) ++ removeEmptyValues(
             "nino" -> Some(nino.value),
             "groupIdentifier" -> Some("groupIdentifier"),

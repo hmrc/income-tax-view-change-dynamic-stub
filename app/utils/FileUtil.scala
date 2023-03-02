@@ -19,7 +19,6 @@ package utils
 import models.{Nino, UserCredentials, UserRecord}
 import play.api.Play
 
-import scala.io.Source
 import scala.util.Try
 
 object FileUtil {
@@ -28,22 +27,22 @@ object FileUtil {
     Try {
       val resource = Play.getClass.getResourceAsStream(path)
       val lines = scala.io.Source.fromInputStream(resource).mkString("").split("\n").toList
-      lines.map(line => {
+      lines.flatMap(line => {
         Try {
           val recs = line.split('$')
           UserRecord(recs(0), recs(1), recs(2), recs(3))
         }.toOption
-      }).flatten
+      })
     }.toEither
   }
 
   def getUserCredentials(nino: Nino): Either[Throwable, UserCredentials] = {
     FileUtil.getUsersFromFile("/data/users.txt") match {
       case Left(ex) => Left(ex)
-      case Right(records) =>
+      case Right(records: Seq[UserRecord]) =>
         records.find(record => record.nino == nino.nino) match {
           case None =>
-            Left(new RuntimeException("Can not fine user by nino"))
+            Left(new RuntimeException("Can not find user by nino"))
           case Some(record) =>
             Right(
               UserCredentials(credId = UserCredentials.credId,//"6528180096307862",
@@ -51,7 +50,30 @@ object FileUtil {
                 confidenceLevel = 250,
                 credentialStrength = "strong",
                 Role = "User",
-                enrolmentData = EnrolmentValues(record.mtditid, record.utr)
+                enrolmentData = EnrolmentValues(record.mtditid, record.utr),
+                delegatedEnrolmentData = None
+              )
+            )
+        }
+    }
+  }
+
+  def getAgentCredentials(nino: Nino): Either[Throwable, UserCredentials] = {
+    FileUtil.getUsersFromFile("/data/users.txt") match {
+      case Left(ex) => Left(ex)
+      case Right(records) =>
+        records.find(record => record.nino == nino.nino) match {
+          case None =>
+            Left(new RuntimeException("Can not find user by nino"))
+          case Some(record) =>
+            Right(
+              UserCredentials(credId = UserCredentials.credId,//"6528180096307862",
+                affinityGroup = "Agent",
+                confidenceLevel = 250,
+                credentialStrength = "strong",
+                Role = "User",
+                enrolmentData = EnrolmentValues(record.mtditid, record.utr),
+                delegatedEnrolmentData = Some(DelegatedEnrolmentValues(record.mtditid, record.utr))
               )
             )
         }
