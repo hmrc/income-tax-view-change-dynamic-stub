@@ -56,7 +56,7 @@ object LoginUtil {
       val enrolmentKey = "HMRC-AS-AGENT"
       Seq(
         Enrolment(key = enrolmentKey, identifiers =
-          Seq(KVPair(key = "AgentReferenceNumber", value = "1")), state = "Activated"),
+          Seq(KVPair(key = "AgentReferenceNumber", value = "1")), state = "Activated")
       )
     } else {
       val enrolmentKey = "HMRC-MTD-IT"
