@@ -27,7 +27,7 @@ case class EnrolmentValues(mtditid: String, utr: String)
 
 case class DelegatedEnrolmentValues(mtditid: String, utr: String)
 
-case class DelegatedEnrolment(key: String, identifiers: Seq[KVPair], state: String, delegatedAuthRule: String)
+case class DelegatedEnrolment(key: String, identifiers: Seq[KVPair], delegatedAuthRule: String)
 
 object LoginUtil {
 
@@ -45,7 +45,6 @@ object LoginUtil {
   implicit val delegatedEnrolmentWrites: Writes[DelegatedEnrolment] = (
     (JsPath \ "key").write[String] and
       (JsPath \ "identifiers").write[Seq[KVPair]] and
-      (JsPath \ "state").write[String] and
       (JsPath \ "delegatedAuthRule").write[String]
     ) (unlift(DelegatedEnrolment.unapply))
 
@@ -74,7 +73,7 @@ object LoginUtil {
     val es = if (isAgent) {
       Seq(
         DelegatedEnrolment(key = "HMRC-MTD-IT", identifiers =
-          Seq(KVPair(key = "MTDITID", value = enrolment.mtditid)), state = "Activated", delegatedAuthRule = "mtd-it-auth")
+          Seq(KVPair(key = "MTDITID", value = enrolment.mtditid)), delegatedAuthRule = "mtd-it-auth")
 
       )
     } else {

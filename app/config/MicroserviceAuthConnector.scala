@@ -71,7 +71,6 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
       case Left(ex) => Left(ex)
       case Right(userCredentials) =>
         val delegateEnrolments = getDelegatedEnrolmentData(isAgent = isAgent, userCredentials.enrolmentData)
-
         Right(
           Json.obj(
             "credId" -> userCredentials.credId,
