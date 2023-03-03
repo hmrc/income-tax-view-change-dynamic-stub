@@ -36,16 +36,23 @@ object FileUtil {
     }.toEither
   }
 
-  def getUserCredentials(nino: Nino): Either[Throwable, UserCredentials] = {
+  def getUtrBtyNino(nino: String) : Either[Throwable, Option[String]] = {
+    FileUtil.getUsersFromFile("/data/users.txt") match {
+      case Left(ex) => Left(ex)
+      case Right(records: Seq[UserRecord]) => Right(records.find(_.nino == nino).map(_.utr))
+    }
+  }
+
+  def getUserCredentials(nino: String): Either[Throwable, UserCredentials] = {
     FileUtil.getUsersFromFile("/data/users.txt") match {
       case Left(ex) => Left(ex)
       case Right(records: Seq[UserRecord]) =>
-        records.find(record => record.nino == nino.nino) match {
+        records.find(record => record.nino == nino) match {
           case None =>
             Left(new RuntimeException("Can not find user by nino"))
           case Some(record) =>
             Right(
-              UserCredentials(credId = UserCredentials.credId,//"6528180096307862",
+              UserCredentials(credId = UserCredentials.credId,
                 affinityGroup = "Individual",
                 confidenceLevel = 250,
                 credentialStrength = "strong",
