@@ -43,8 +43,6 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
       case Left(ex) =>
         Future.failed(new RuntimeException(s"Internal Error: unable to create a payload: $ex"))
       case Right(payload) =>
-        println("Here is current Payload")
-        println(payload)
         loginRequest(payload)
     }
   }
