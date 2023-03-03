@@ -68,20 +68,6 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
     }
   }
 
-  /*
-  REQUIRED:
-  {"credId":"2756046623295698","affinityGroup":"Agent","confidenceLevel":250,"credentialStrength":"strong","credentialRole":"User","usersName":null,"enrolments":[{"key":"HMRC-AS-AGENT","identifiers":[{"key":"AgentReferenceNumber","value":"1"}],"state":"Activated"},{"key":"","identifiers":[{"key":"","value":""}],"state":"Activated"},{"key":"","identifiers":[{"key":"","value":""}],"state":"Activated"},{"key":"","identifiers":[{"key":"","value":""}],"state":"Activated"}],"delegatedEnrolments":[{"key":"HMRC-MTD-IT","identifiers":[{"key":"MTDITID","value":"XCIT33333333333"}],"delegatedAuthRule":"mtd-it-auth"}],"email":"user@test.com","gatewayInformation":{},"additionalInfo":{}}
-
-{"credId":"2756046623295698","affinityGroup":"Agent","confidenceLevel":250,"credentialStrength":"strong","credentialRole":"User","usersName":null,"enrolments":[{"key":"HMRC-AS-AGENT","identifiers":[{"key":"AgentReferenceNumber","value":"1"}],"state":"Activated"}],
-
-"delegatedEnrolments":[{"key":"HMRC-MTD-IT","identifiers":[{"key":"MTDITID","value":"XCIT33333333333"}],"delegatedAuthRule":"mtd-it-auth"}],"email":"user@test.com","gatewayInformation":{},"additionalInfo":{}}
-
-
-  CURRENT:
-{"credId":"bDSM991D6fLWkfYQ","affinityGroup":"Agent","confidenceLevel":250,"credentialStrength":"strong","credentialRole":"User","usersName":"usersName","enrolments":[{"key":"HMRC-AS-AGENT","identifiers":[{"key":"AgentReferenceNumber","value":"1"}],"state":"Activated"}],
-
-"delegatedEnrolments":[{"key":"HMRC-MTD-IT","identifiers":[{"key":"MTDITID","value":"XCIT33333333333"}],"delegatedAuthRule":"mtd-it-auth"}],"nino":"CC333333A","groupIdentifier":"groupIdentifier","gatewayToken":"gatewayToken","agentId":"agentId","agentCode":"agentCode","agentFriendlyName":"agentFriendlyName","email":"email"}
-   */
   private def createPayload(nino: Nino, isAgent: Boolean): Either[Throwable, JsValue] = {
     getUserCredentials(nino) match {
       case Left(ex) => Left(ex)
