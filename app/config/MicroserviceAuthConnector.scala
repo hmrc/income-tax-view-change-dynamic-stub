@@ -67,7 +67,7 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
   }
 
   private def createPayload(nino: Nino, isAgent: Boolean): Either[Throwable, JsValue] = {
-    getUserCredentials(nino) match {
+    getUserCredentials(nino.nino) match {
       case Left(ex) => Left(ex)
       case Right(userCredentials) =>
         val delegateEnrolments = getDelegatedEnrolmentData(isAgent = isAgent, userCredentials.enrolmentData)
@@ -81,15 +81,26 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
             "usersName" -> "usersName",
             "enrolments" -> getEnrolmentData(isAgent = isAgent, userCredentials.enrolmentData),
             "delegatedEnrolments" -> delegateEnrolments
-          ) ++ removeEmptyValues(
-            "nino" -> Some(nino.value),
-            "groupIdentifier" -> Some("groupIdentifier"),
-            "gatewayToken" -> Some("gatewayToken"),
-            "agentId" -> Some("agentId"),
-            "agentCode" -> Some("agentCode"),
-            "agentFriendlyName" -> Some("agentFriendlyName"),
-            "email" -> Some("email")
-          )
+          ) ++ {
+            if (isAgent) {
+              removeEmptyValues(
+                "email" -> Some("user@test.com")
+              ) ++
+                Json.obj(
+                  "gatewayInformation" -> JsObject.empty)
+
+            } else {
+              removeEmptyValues(
+                "nino" -> Some(nino.value),
+                "groupIdentifier" -> Some("groupIdentifier"),
+                "gatewayToken" -> Some("gatewayToken"),
+                "agentId" -> Some("agentId"),
+                "agentCode" -> Some("agentCode"),
+                "agentFriendlyName" -> Some("agentFriendlyName"),
+                "email" -> Some("email")
+              )
+            }
+          }
         )
     }
   }
