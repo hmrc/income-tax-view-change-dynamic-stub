@@ -74,7 +74,7 @@ class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
         Right(
           Json.obj(
             "credId" -> userCredentials.credId,
-            "affinityGroup" -> "Agent",
+            "affinityGroup" -> { if (isAgent) "Agent" else { "Individual"} } ,
             "confidenceLevel" -> userCredentials.confidenceLevel,
             "credentialStrength" -> userCredentials.credentialStrength,
             "credentialRole" -> userCredentials.Role,
