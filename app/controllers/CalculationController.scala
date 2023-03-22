@@ -26,6 +26,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.CalculationUtils.createCalResponseModel
+import utils.GetCalculationListUtils.getCalculationListSuccessResponse
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -70,5 +71,21 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
     }
   }
 
+  def generateCalculationListLegacy(nino: String, taxYear: Option[Int]): Action[AnyContent] = Action.async { _ =>
+    logger.info(s"Generating calculation list for nino: $nino, taxYear: $taxYear")
+
+    val ninoMatchCharacters = (nino: String) => s"${nino.charAt(0)}${nino.charAt(7)}"
+
+    ninoMatchCharacters(nino) match {
+      case "L2" => Future(
+        InternalServerError("""{"code": "SERVER_ERROR", "reason": "DES is currently experiencing problems that require live service intervention."}"""))
+      case matchChars if matchChars.startsWith("L") => Future(
+        NotFound("""{"code": "NOT_FOUND", "reason": "The remote endpoint has indicated that no data can be found."}"""))
+      case "A1" => Future(Ok(Json.parse(getCalculationListSuccessResponse(ninoMatchCharacters(nino).toLowerCase, taxYear, crystallised = true))))
+      //S0 is an exception as calculation ID only accepts characters from a-f
+      case "S0" => Future(Ok(Json.parse(getCalculationListSuccessResponse("c9", taxYear, crystallised = true))))
+      case _ => Future(Ok(Json.parse(getCalculationListSuccessResponse(ninoMatchCharacters(nino).toLowerCase, taxYear))))
+    }
+  }
 
 }
