@@ -5,7 +5,7 @@
 ### IF  #1896 - v9.0.0 ###
 GET         /income-tax/view/calculations/liability/23-24/:nino                       controllers.CalculationController.generateCalculationListFor2023_24(nino:String)
 
-GET         /income-tax/view/calculations/liability/legacy/:nino                      controllers.CalculationController.generateCalculationListForLegacy(nino:String, taxYear:Option[Int])
+GET         /income-tax/view/calculations/liability/legacy/:nino                      controllers.CalculationController.generateCalculationListLegacy(nino:String, taxYear:Option[Int])
 
 ### IF #1885 - v9.1.0 ###
 GET         /income-tax/view/calculations/liability/23-24/:nino/:calculationId        controllers.CalculationController.getCalculationDetailsFor2023_24(nino:String, calculationId:String)
