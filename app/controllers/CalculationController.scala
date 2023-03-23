@@ -22,10 +22,11 @@ import models.HttpMethod.GET
 import org.mongodb.scala.model.Filters.equal
 import play.api.Logging
 import play.api.libs.json.{Json, OWrites}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.CalculationUtils.createCalResponseModel
+import utils.GetCalculationDetailsUtils.getCalculationDetailsSuccessResponse
 import utils.GetCalculationListUtils.getCalculationListSuccessResponse
 
 import javax.inject.{Inject, Singleton}
@@ -39,10 +40,19 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 
-  def generateCalculationListFor2023_24(nino: String): Action[AnyContent] = Action.async { _ =>
+  def toSingleYear(taxYear: Option[Int]): Option[Int] = {
+    taxYear.flatMap {
+      _.toString.split('-') match {
+        case Array(_, endYear) => Some(("20" + endYear).toInt)
+        case _ => None
+      }
+    }
+  }
+
+  def generateCalculationList(nino: String, taxYear: Option[Int]): Action[AnyContent] = Action.async { _ =>
     logger.info(s"Generating calculation list for nino: $nino")
     Future {
-      createCalResponseModel(nino, Some(2024), crystallised = true) match {
+      createCalResponseModel(nino, toSingleYear(taxYear), crystallised = true) match {
         case Right(responseModel) =>
           val jsonReponse = Json.toJson(responseModel).toString()
           Ok(Json.parse(jsonReponse))
@@ -52,22 +62,27 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
     }
   }
 
-  def getCalculationDetailsFor2023_24(nino: String, calculationId: String): Action[AnyContent] = Action.async { _ =>
+  def getCalculationDetails(nino: String, calculationId: String, taxYear: Option[Int]): Action[AnyContent] = Action.async { _ =>
     logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
-    val id = s"/income-tax/view/calculations/liability/23-24/$nino/${calculationId.toLowerCase()}"
-    dataRepository
-      .find(equal("_id", id), equal("method", GET))
-      .map { stubData =>
-        (stubData.nonEmpty, stubData.head.response.isEmpty) match {
-          case (true, false) =>
-            Status(stubData.head.status)(stubData.head.response.get)
-          case _ =>
-            NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: $id")
+
+    if (toSingleYear(taxYear).contains(2024)) {
+      val id = s"/income-tax/view/calculations/liability/23-24/$nino/${calculationId.toLowerCase()}"
+      dataRepository
+        .find(equal("_id", id), equal("method", GET))
+        .map { stubData =>
+          (stubData.nonEmpty, stubData.head.response.isEmpty) match {
+            case (true, false) =>
+              Status(stubData.head.status)(stubData.head.response.get)
+            case _ =>
+              NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: $id")
+          }
+        }.recoverWith {
+        case _ => Future {
+          BadRequest(s"Search operation failed: $id")
         }
-      }.recoverWith {
-      case _ => Future {
-        BadRequest(s"Search operation failed: $id")
       }
+    } else {
+        getCalculationDetailsLegacy(nino, calculationId)
     }
   }
 
@@ -88,4 +103,12 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
     }
   }
 
+  def getCalculationDetailsLegacy(nino: String, calculationId: String): Future[Result] = {
+    println(s"\nNINO: $nino\n")
+    val ninoMatchCharacters = (nino: String) => s"${nino.charAt(0)}${nino.charAt(7)}"
+
+    logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
+    val calcResponseStr = getCalculationDetailsSuccessResponse(ninoMatchCharacters(nino), None)
+    Future(Ok(Json.parse(calcResponseStr)))
+  }
 }
