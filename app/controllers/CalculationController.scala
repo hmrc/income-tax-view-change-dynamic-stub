@@ -40,33 +40,40 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 
-  def toSingleYear(taxYear: Option[Int]): Option[Int] = {
-    taxYear.flatMap {
-      _.toString.split('-') match {
-        case Array(_, endYear) => Some(("20" + endYear).toInt)
-        case _ => None
+  val ninoMatchCharacters = (nino: String) => s"${nino.charAt(0)}${nino.charAt(7)}"
+
+  def generateCalculationList(nino: String, taxYear: Option[String]): Action[AnyContent] = Action.async { _ =>
+
+    if(toSingleYear(taxYear).contains("2024")) {
+      logger.info(s"Generating calculation list for nino: $nino")
+      Future {
+        createCalResponseModel(nino, toSingleYear(taxYear).map(_.toInt), crystallised = true) match {
+          case Right(responseModel) =>
+            val jsonReponse = Json.toJson(responseModel).toString()
+            Ok(Json.parse(jsonReponse))
+          case Left(error) =>
+            BadRequest(s"Failed with error: $error")
+        }
       }
+    } else {
+      generateCalculationListLegacy(nino, taxYear.map(_.toInt))
     }
   }
 
-  def generateCalculationList(nino: String, taxYear: Option[Int]): Action[AnyContent] = Action.async { _ =>
-    logger.info(s"Generating calculation list for nino: $nino")
-    Future {
-      createCalResponseModel(nino, toSingleYear(taxYear), crystallised = true) match {
-        case Right(responseModel) =>
-          val jsonReponse = Json.toJson(responseModel).toString()
-          Ok(Json.parse(jsonReponse))
-        case Left(error) =>
-          BadRequest(s"Failed with error: $error")
-      }
-    }
-  }
 
-  def getCalculationDetails(nino: String, calculationId: String, taxYear: Option[Int]): Action[AnyContent] = Action.async { _ =>
+
+  def getCalculationDetails(nino: String, calculationId: String, taxYear: Option[String]): Action[AnyContent] = Action.async { _ =>
     logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
 
-    if (toSingleYear(taxYear).contains(2024)) {
-      val id = s"/income-tax/view/calculations/liability/23-24/$nino/${calculationId.toLowerCase()}"
+    println(s"RECEIVED TAX YEAR = $taxYear")
+
+    println(s"toSingleYear(taxYear) = ${toSingleYear(taxYear)}")
+
+    if (toSingleYear(taxYear).contains("2024")) {
+
+      println(s"\nNEW YEAR\n")
+
+      val id = s"/income-tax/view/calculations/liability/$nino/${calculationId.toLowerCase()}"
       dataRepository
         .find(equal("_id", id), equal("method", GET))
         .map { stubData =>
@@ -82,14 +89,13 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
         }
       }
     } else {
-        getCalculationDetailsLegacy(nino, calculationId)
+      println(s"\nLEGACY YEAR\n")
+      getCalculationDetailsLegacy(nino, calculationId)
     }
   }
 
-  def generateCalculationListLegacy(nino: String, taxYear: Option[Int]): Action[AnyContent] = Action.async { _ =>
+  def generateCalculationListLegacy(nino: String, taxYear: Option[Int]): Future[Result] = {
     logger.info(s"Generating calculation list for nino: $nino, taxYear: $taxYear")
-
-    val ninoMatchCharacters = (nino: String) => s"${nino.charAt(0)}${nino.charAt(7)}"
 
     ninoMatchCharacters(nino) match {
       case "L2" => Future(
@@ -104,11 +110,18 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
   }
 
   def getCalculationDetailsLegacy(nino: String, calculationId: String): Future[Result] = {
-    println(s"\nNINO: $nino\n")
-    val ninoMatchCharacters = (nino: String) => s"${nino.charAt(0)}${nino.charAt(7)}"
 
     logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
     val calcResponseStr = getCalculationDetailsSuccessResponse(ninoMatchCharacters(nino), None)
     Future(Ok(Json.parse(calcResponseStr)))
+  }
+
+  def toSingleYear(taxYear: Option[String]): Option[String] = {
+    taxYear.flatMap {
+      _.split('-') match {
+        case Array(_, endYear) => Some("20" + endYear)
+        case _ => None
+      }
+    }
   }
 }
