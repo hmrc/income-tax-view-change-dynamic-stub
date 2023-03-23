@@ -22,10 +22,12 @@ import models.HttpMethod.GET
 import org.mongodb.scala.model.Filters.equal
 import play.api.Logging
 import play.api.libs.json.{Json, OWrites}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.CalculationUtils.createCalResponseModel
+import utils.GetCalculationDetailsUtils.getCalculationDetailsSuccessResponse
+import utils.GetCalculationListUtils.getCalculationListSuccessResponse
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,37 +40,88 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 
-  def generateCalculationListFor2023_24(nino: String): Action[AnyContent] = Action.async { _ =>
-    logger.info(s"Generating calculation list for nino: $nino")
-    Future {
-      createCalResponseModel(nino, Some(2024), crystallised = true) match {
-        case Right(responseModel) =>
-          val jsonReponse = Json.toJson(responseModel).toString()
-          Ok(Json.parse(jsonReponse))
-        case Left(error) =>
-          BadRequest(s"Failed with error: $error")
-      }
-    }
-  }
+  val ninoMatchCharacters = (nino: String) => s"${nino.charAt(0)}${nino.charAt(7)}"
 
-  def getCalculationDetailsFor2023_24(nino: String, calculationId: String): Action[AnyContent] = Action.async { _ =>
-    logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
-    val id = s"/income-tax/view/calculations/liability/23-24/$nino/${calculationId.toLowerCase()}"
-    dataRepository
-      .find(equal("_id", id), equal("method", GET))
-      .map { stubData =>
-        (stubData.nonEmpty, stubData.head.response.isEmpty) match {
-          case (true, false) =>
-            Status(stubData.head.status)(stubData.head.response.get)
-          case _ =>
-            NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: $id")
+  def generateCalculationList(nino: String, taxYear: Option[String]): Action[AnyContent] = Action.async { _ =>
+
+    if(toSingleYear(taxYear).contains("2024")) {
+      logger.info(s"Generating calculation list for nino: $nino")
+      Future {
+        createCalResponseModel(nino, toSingleYear(taxYear).map(_.toInt), crystallised = true) match {
+          case Right(responseModel) =>
+            val jsonReponse = Json.toJson(responseModel).toString()
+            Ok(Json.parse(jsonReponse))
+          case Left(error) =>
+            BadRequest(s"Failed with error: $error")
         }
-      }.recoverWith {
-      case _ => Future {
-        BadRequest(s"Search operation failed: $id")
       }
+    } else {
+      generateCalculationListLegacy(nino, taxYear.map(_.toInt))
     }
   }
 
 
+
+  def getCalculationDetails(nino: String, calculationId: String, taxYear: Option[String]): Action[AnyContent] = Action.async { _ =>
+    logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
+
+    println(s"RECEIVED TAX YEAR = $taxYear")
+
+    println(s"toSingleYear(taxYear) = ${toSingleYear(taxYear)}")
+
+    if (toSingleYear(taxYear).contains("2024")) {
+
+      println(s"\nNEW YEAR\n")
+
+      val id = s"/income-tax/view/calculations/liability/$nino/${calculationId.toLowerCase()}"
+      dataRepository
+        .find(equal("_id", id), equal("method", GET))
+        .map { stubData =>
+          (stubData.nonEmpty, stubData.head.response.isEmpty) match {
+            case (true, false) =>
+              Status(stubData.head.status)(stubData.head.response.get)
+            case _ =>
+              NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: $id")
+          }
+        }.recoverWith {
+        case _ => Future {
+          BadRequest(s"Search operation failed: $id")
+        }
+      }
+    } else {
+      println(s"\nLEGACY YEAR\n")
+      getCalculationDetailsLegacy(nino, calculationId)
+    }
+  }
+
+  def generateCalculationListLegacy(nino: String, taxYear: Option[Int]): Future[Result] = {
+    logger.info(s"Generating calculation list for nino: $nino, taxYear: $taxYear")
+
+    ninoMatchCharacters(nino) match {
+      case "L2" => Future(
+        InternalServerError("""{"code": "SERVER_ERROR", "reason": "DES is currently experiencing problems that require live service intervention."}"""))
+      case matchChars if matchChars.startsWith("L") => Future(
+        NotFound("""{"code": "NOT_FOUND", "reason": "The remote endpoint has indicated that no data can be found."}"""))
+      case "A1" => Future(Ok(Json.parse(getCalculationListSuccessResponse(ninoMatchCharacters(nino).toLowerCase, taxYear, crystallised = true))))
+      //S0 is an exception as calculation ID only accepts characters from a-f
+      case "S0" => Future(Ok(Json.parse(getCalculationListSuccessResponse("c9", taxYear, crystallised = true))))
+      case _ => Future(Ok(Json.parse(getCalculationListSuccessResponse(ninoMatchCharacters(nino).toLowerCase, taxYear))))
+    }
+  }
+
+  def getCalculationDetailsLegacy(nino: String, calculationId: String): Future[Result] = {
+
+    logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
+    val calcResponseStr = getCalculationDetailsSuccessResponse(ninoMatchCharacters(nino), None)
+    Future(Ok(Json.parse(calcResponseStr)))
+  }
+
+  def toSingleYear(taxYear: Option[String]): Option[String] = {
+    taxYear.flatMap {
+      _.split('-') match {
+        case Array(_, endYear) => Some("20" + endYear)
+        case _ => None
+      }
+    }
+  }
 }
