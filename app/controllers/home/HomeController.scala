@@ -22,7 +22,6 @@ import play.api.{Logger, Logging}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.http.TooManyRequestException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import utils.LoginUtil.{ reDirectURL}
 import utils.{FileUtil, SessionBuilder}
 import views.html.LoginPage
 
@@ -54,7 +53,12 @@ class HomeController @Inject()(mcc: MessagesControllerComponents,
       (user: User) => {
         microserviceAuthConnector.login(nino = user.nino, isAgent = user.isAgent) map {
           case (authExchange, _) =>
-            Ok(s"${authExchange.bearerToken};${authExchange.sessionAuthorityUri}")
+            if (user.isAgent) {
+              val utr = FileUtil.getUtrBtyNino(user.nino.nino).toOption.map(_.getOrElse("")).get
+              Ok(s"${authExchange.bearerToken};${authExchange.sessionAuthorityUri};${utr}")
+            } else {
+              Ok(s"${authExchange.bearerToken};${authExchange.sessionAuthorityUri}")
+            }
         }
       }
     ).recoverWith {
