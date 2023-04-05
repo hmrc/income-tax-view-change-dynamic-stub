@@ -16,25 +16,51 @@
 
 package repositories
 
+import actors.InMemoryStore
+import actors.InMemoryStore.{AddDocument, RemoveAll, RemoveById, Find}
+import akka.actor.ActorSystem
+import akka.pattern.ask
+import akka.util.Timeout
+import com.mongodb.client.result.{DeleteResult, InsertOneResult}
 import models.DataModel
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.result.{DeleteResult, InsertOneResult}
+
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
 
 @Singleton
-class DataRepository @Inject()(repository: DataRepositoryBase) {
+class DataRepository @Inject()(system: ActorSystem, repository: DataRepositoryBase) {
 
-  def removeAll(): Future[DeleteResult] = repository.collection.deleteMany(empty()).toFuture()
+  private val inMemoryStore = system.actorOf(InMemoryStore.props, "inMemoryStore-actor")
+  implicit val timeout: Timeout = 5.seconds
 
-  def removeById(url: String): Future[DeleteResult] = repository.collection.deleteOne(equal("_id", url)).toFuture()
+  def removeAll(): Future[Any] = {
+    ((inMemoryStore ? RemoveAll()))
+  }
+  //repository.collection.deleteMany(empty()).toFuture()
 
-  def addEntry(document: DataModel): Future[InsertOneResult] = repository.collection.insertOne(document).toFuture()
+  def removeById(url: String): Future[Any] =
+    (inMemoryStore ? RemoveById(url))
+  //repository.collection.deleteOne(equal("_id", url)).toFuture()
+
+  def addEntry(document: DataModel): Future[Any] =
+    (inMemoryStore ? AddDocument(document))
+  //repository.collection.insertOne(document).toFuture()
 
   def find(query: Bson*): Future[Option[DataModel]] = {
-    val finalQuery = if (query.isEmpty) empty() else and(query: _*)
-    repository.collection.find(finalQuery).headOption()
+    val documentId =
+      query.headOption.get.toString
+        .replace("Filter{fieldName='_id', value=/", "")
+        .replace("}", "")
+    ((inMemoryStore ? Find(s"/$documentId"))).mapTo[Any].map{
+      case dataModel: DataModel =>
+        Some(dataModel)
+      case _ => None
+    }
+    //val finalQuery = if (query.isEmpty) empty() else and(query: _*)
+    //repository.collection.find(finalQuery).headOption()
   }
 
 }
