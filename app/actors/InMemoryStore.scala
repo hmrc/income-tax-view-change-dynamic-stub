@@ -18,8 +18,10 @@ package actors
 
 import akka.actor._
 import models.DataModel
-
+import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.json.{JsPath, Reads, Writes}
 import scala.collection.mutable
+import scala.io.Source
 
 object InMemoryStore {
   def props = Props[InMemoryStore]
@@ -35,23 +37,58 @@ object InMemoryStore {
   case object OK
 
   case class Error(error: String)
+
+  case object LoadFromFile
 }
 
+case class KeyValuePair2(key: String, value: DataModel)
+object KeyValuePair2 {
+  implicit val keyValuePair2Writes: Writes[KeyValuePair2] = (
+    (JsPath \ "key").write[String] and
+      (JsPath \ "value").write[DataModel]
+    )(unlift(KeyValuePair2.unapply))
+
+  implicit val keyValuePair2Reads: Reads[KeyValuePair2] = (
+    (JsPath \ "key").read[String] and
+      (JsPath \ "value").read[DataModel]
+    )(KeyValuePair2.apply _)
+}
 
 class InMemoryStore extends Actor {
-
+  import play.api.libs.json._
   import InMemoryStore._
+  import KeyValuePair2._
 
-  //var store: mutable.Map[String, DataModel] = mutable.Map[String, DataModel]()
   var store: mutable.HashMap[String, DataModel] = mutable.HashMap[String, DataModel]()
+  val inMemoryFile = "inMemoryStore.json"
 
+  this.self ! LoadFromFile
 
   def receive = {
+    case LoadFromFile =>
+
+      store.clear()
+      val jsonAsString = Source.fromFile(inMemoryFile).getLines.toList.mkString("")
+      val json  = Json.parse(jsonAsString)
+      val list = json.as[List[KeyValuePair2]]
+      list.foreach(kv => {
+        store = store +=  (kv.key -> kv.value)
+      })
+      println(s"Load complete: ${store.size}")
+
     case AddDocument(document: DataModel) =>
       val key = document._id.hashCode.toString
-      //println(s"Adding document: ${document._id} - ${key}")
+//      println(s"Adding document: ${document._id} - ${key} - ")
       store = store += (key -> document)
-      sender() ! OK
+
+      //println(s"Count: ${store.size}")
+// Simple example: How to save inMemory object to file
+//      if (store.size == 824) {
+//        val objectToSave = store.toList.map(kv => KeyValuePair(kv._1, kv._2) )
+//        val json = Json.toJson(objectToSave)
+//        new PrintWriter("inMemoryStore.json") { write(json.toString()); close }
+//      }
+//      sender() ! OK
 
     case Find(id: String) =>
       val key = id.hashCode.toString

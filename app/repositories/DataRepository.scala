@@ -17,11 +17,10 @@
 package repositories
 
 import actors.InMemoryStore
-import actors.InMemoryStore.{AddDocument, RemoveAll, RemoveById, Find}
-import akka.actor.ActorSystem
+import actors.InMemoryStore.{AddDocument, Find, LoadFromFile, RemoveAll, RemoveById}
+import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import com.mongodb.client.result.{DeleteResult, InsertOneResult}
 import models.DataModel
 import org.mongodb.scala.bson.conversions.Bson
 
@@ -30,10 +29,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 
+import akka.routing.RoundRobinPool
 @Singleton
 class DataRepository @Inject()(system: ActorSystem, repository: DataRepositoryBase) {
 
-  private val inMemoryStore = system.actorOf(InMemoryStore.props, "inMemoryStore-actor")
+  private val inMemoryStore =
+    system.actorOf(RoundRobinPool(35).props(Props[InMemoryStore]()), "router2")
+
   implicit val timeout: Timeout = 5.seconds
 
   def removeAll(): Future[Any] = {
