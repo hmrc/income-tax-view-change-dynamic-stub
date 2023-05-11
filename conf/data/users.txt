@@ -23,8 +23,6 @@ CC111111A$XCIT11111111111$2222111111$Coding out immediately rejected
 CC222222A$XCIT22222222222$2222222222$Coding out accepted then rejected part way through year
 CC333333A$XCIT33333333333$2222333333$Coding out partially collected
 CC444444A$XCIT44444444444$2222444444$Coding out fully collected
-CE453000A$XUIT00CE453000A$7777777770$Income Sources - All live businesses and property
-CE453001A$XBIT00CE453001A$7777777771$Income Sources - All ceased businesses and property
 CC555555A$XCIT55555555555$2222000000$Coding out requested and accepted
 AY888881A$XYIT88888888881$8888000001$Refund claimed for partial amount and claim is in a pending state
 AY888882A$XYIT88888888882$8888000002$Refund for full amount claimed and claim in a pending state
