@@ -20,7 +20,7 @@ import com.typesafe.config.Config
 import models.DataModel
 import models.HttpMethod._
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, AnyContent, ControllerComponents, MessagesControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.SchemaValidation
@@ -44,7 +44,7 @@ class SetupDataController @Inject()(
     implicit request =>
       withJsonBody[DataModel](
         json => json.method.toUpperCase match {
-          case GET | POST =>
+          case GET | POST | PUT =>
             schemaValidation.validateUrlMatch(json.schemaId, json._id) flatMap {
               case true =>
                 schemaValidation.validateResponseJson(json.schemaId, json.response) flatMap {

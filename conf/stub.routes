@@ -15,3 +15,5 @@ POST        /login                                                              
 
 GET         /*url                                                                     controllers.RequestHandlerController.getRequestHandler(url)
 POST        /*url                                                                     controllers.RequestHandlerController.postRequestHandler(url)
++ nocsrf
+PUT         /*url                                                                     controllers.RequestHandlerController.putRequestHandler(url)
