@@ -19,7 +19,9 @@ package repositories
 import models.DataModel
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.result.{DeleteResult, InsertOneResult}
+import org.mongodb.scala.model.ReplaceOptions
+import org.mongodb.scala.result.{DeleteResult, UpdateResult}
+
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
@@ -30,7 +32,11 @@ class DataRepository @Inject()(repository: DataRepositoryBase) {
 
   def removeById(url: String): Future[DeleteResult] = repository.collection.deleteOne(equal("_id", url)).toFuture()
 
-  def addEntry(document: DataModel): Future[InsertOneResult] = repository.collection.insertOne(document).toFuture()
+  def addEntry(document: DataModel): Future[UpdateResult] = repository.collection.replaceOne(
+    equal("_id", document._id), document,
+    options = ReplaceOptions().upsert(true)
+  ).toFuture()
+
 
   def find(query: Bson*): Future[Option[DataModel]] = {
     val finalQuery = if (query.isEmpty) empty() else and(query: _*)

@@ -20,7 +20,7 @@ import models.DataModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.{reset, when}
 import org.mockito.stubbing.OngoingStubbing
-import org.mongodb.scala.result.{DeleteResult, InsertOneResult}
+import org.mongodb.scala.result.{DeleteResult, InsertOneResult, UpdateResult}
 import org.scalatestplus.mockito.MockitoSugar
 import repositories.DataRepository
 import testUtils.TestSupport
@@ -36,7 +36,7 @@ trait MockDataRepository extends TestSupport with MockitoSugar {
     reset(mockDataRepository)
   }
 
-  def mockAddEntry(document: DataModel)(response: InsertOneResult): OngoingStubbing[Future[InsertOneResult]] = {
+  def mockAddEntry(document: DataModel)(response: UpdateResult): OngoingStubbing[Future[UpdateResult]] = {
     when(mockDataRepository.addEntry(ArgumentMatchers.eq(document))).thenReturn(Future.successful(response))
   }
 
