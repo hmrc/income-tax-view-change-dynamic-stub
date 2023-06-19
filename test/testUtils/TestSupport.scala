@@ -16,7 +16,7 @@
 
 package testUtils
 
-import com.mongodb.client.result.{DeleteResult, InsertOneResult}
+import com.mongodb.client.result.{DeleteResult, InsertOneResult, UpdateResult}
 import com.typesafe.config.Config
 import org.bson.BsonBoolean
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
@@ -33,8 +33,10 @@ trait TestSupport extends UnitSpec with GuiceOneServerPerSuite with MockitoSugar
   implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
   implicit val config: Config = app.configuration.underlying
 
-  val successInsertOneResult: InsertOneResult = InsertOneResult.acknowledged(BsonBoolean.TRUE)
-  val failedInsertOneResult: InsertOneResult = InsertOneResult.unacknowledged()
+  val successUpdateResult = UpdateResult.acknowledged(0,0,BsonBoolean.TRUE)
+  val failedUpdateResult = UpdateResult.unacknowledged()
+  val successInsertOneResult = InsertOneResult.acknowledged(BsonBoolean.TRUE)
+  val failedInsertOneResult = InsertOneResult.unacknowledged()
   val successDeleteResult: DeleteResult = DeleteResult.acknowledged(0)
   val failedDeleteResult: DeleteResult = DeleteResult.unacknowledged()
 
