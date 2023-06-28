@@ -35,7 +35,7 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
 
   def getRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {
-      dataRepository.find(equal("_id", s"""${getRequestUri(request.uri)}"""), equal("method", GET)).map {
+      dataRepository.find(equal("_id", s"""${request.uri}"""), equal("method", GET)).map {
         stubData =>
           if (stubData.nonEmpty) {
             if (stubData.head.response.isEmpty) {
@@ -50,13 +50,6 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
     }
   }
 
-  def getRequestUri(uri: String): String = {
-    if (uri.contains("list-of-calculation-results")) {
-      uri.split('?').headOption.getOrElse(uri)
-    } else {
-      uri
-    }
-  }
 
   def postRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {
