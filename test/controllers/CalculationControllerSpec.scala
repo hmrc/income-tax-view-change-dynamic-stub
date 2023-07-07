@@ -27,7 +27,10 @@ import play.api.test.Helpers._
 
 
 class CalculationControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository with ScalaFutures with DataHelper {
-  object CalcControllerUnderTest extends CalculationController(mockCC, mockDataRepository)
+  object TestRequestHandlerController extends RequestHandlerController(mockSchemaValidation,
+    mockDataRepository,
+    mockCC)
+  object CalcControllerUnderTest extends CalculationController(mockCC, mockDataRepository, TestRequestHandlerController)
 
   "generateCalculationListFor2023_24" should {
 

@@ -33,20 +33,27 @@ import scala.concurrent.Future
 
 @Singleton
 class CalculationController @Inject()(cc: MessagesControllerComponents,
-                                      dataRepository: DataRepository
+                                      dataRepository: DataRepository,
+                                      requestHandlerController: RequestHandlerController
                                      ) extends FrontendController(cc) with Logging {
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 
-  def generateCalculationListFor2023_24(nino: String): Action[AnyContent] = Action.async { _ =>
-    logger.info(s"Generating calculation list for nino: $nino")
-    Future {
-      createCalResponseModel(nino, Some(2024), crystallised = true) match {
-        case Right(responseModel) =>
-          val jsonReponse = Json.toJson(responseModel).toString()
-          Ok(Json.parse(jsonReponse))
-        case Left(error) =>
-          BadRequest(s"Failed with error: $error")
+  def generateCalculationListFor2023_24(nino: String): Action[AnyContent] = {
+    if (nino.startsWith("AS")) {
+      requestHandlerController.getRequestHandler(s"/income-tax/view/calculations/liability/23-24/$nino")
+    } else {
+      Action.async { _ =>
+        logger.info(s"Generating calculation list for nino: $nino")
+        Future {
+          createCalResponseModel(nino, Some(2024), crystallised = true) match {
+            case Right(responseModel) =>
+              val jsonReponse = Json.toJson(responseModel).toString()
+              Ok(Json.parse(jsonReponse))
+            case Left(error) =>
+              BadRequest(s"Failed with error: $error")
+          }
+        }
       }
     }
   }
