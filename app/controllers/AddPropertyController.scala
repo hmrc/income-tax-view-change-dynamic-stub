@@ -30,10 +30,10 @@ class AddPropertyController @Inject()(cc: MessagesControllerComponents,
 
   def mapAddPropertyJourneyStub(mtdid: String): Action[AnyContent] = Action.async {
     implicit request =>
-      val testHeaders = request.headers.get("Gov-Test-Scenario")
+      val testHeader = request.headers.get("Gov-Test-Scenario")
 
-      if(testHeaders.contains("ISCreated")) {
-        val newRequest = request.withTarget(request.target.withUri(URI.create(s"/registration/business-details/mtdbsa/$mtdid?ISCreated=true")))
+      if(testHeader.contains("afterIncomeSourceCreated")) {
+        val newRequest = request.withTarget(request.target.withUri(URI.create(request.uri+"?afterIncomeSourceCreated=true")))
         requestHandlerController.getRequestHandler(newRequest.uri).apply(newRequest)
       } else {
         requestHandlerController.getRequestHandler(request.uri).apply(request)
