@@ -28,7 +28,7 @@ class AddPropertyController @Inject()(cc: MessagesControllerComponents,
                                       requestHandlerController: RequestHandlerController
                                      ) extends FrontendController(cc) with Logging {
 
-  def mapAddPropertyJourneyStub(): Action[AnyContent] = Action.async {
+  def mapAddPropertyJourneyStub(mtdid: String): Action[AnyContent] = Action.async {
     implicit request =>
       val testHeader = request.headers.get("Gov-Test-Scenario")
 
