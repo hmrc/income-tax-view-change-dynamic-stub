@@ -77,9 +77,9 @@ class InMemoryStore extends Actor {
     case AddDocument(document: DataModel) =>
       val key = document._id.hashCode.toString
       println(s"Adding document: ${document._id} - ${key} - ")
-      if (!store.contains(key)) {
+      //if (!store.contains(key)) {
         store = store += (key -> document)
-      }
+      //}
       println(s"Count: ${store.size}")
       sender() ! OK
 
