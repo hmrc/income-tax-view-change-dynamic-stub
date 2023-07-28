@@ -55,33 +55,34 @@ object KeyValuePair2 {
 }
 
 class InMemoryStore extends Actor {
-  import play.api.libs.json._
   import InMemoryStore._
-  import KeyValuePair2._
 
-  var store: mutable.HashMap[String, DataModel] = mutable.HashMap[String, DataModel]()
+  var store: mutable.Map[String, DataModel] = mutable.Map[String, DataModel]()
   val inMemoryFile = "inMemoryStore.json"
 
-  this.self ! LoadFromFile
+  //this.self ! LoadFromFile
 
   def receive = {
     case LoadFromFile =>
 
-      store.clear()
-      val jsonAsString = Source.fromFile(inMemoryFile).getLines.toList.mkString("")
-      val json  = Json.parse(jsonAsString)
-      val list = json.as[List[KeyValuePair2]]
-      list.foreach(kv => {
-        store = store +=  (kv.key -> kv.value)
-      })
-      println(s"Load complete: ${store.size}")
+//      store.clear()
+//      val jsonAsString = Source.fromFile(inMemoryFile).getLines.toList.mkString("")
+//      val json  = Json.parse(jsonAsString)
+//      val list = json.as[List[KeyValuePair2]]
+//      list.foreach(kv => {
+//        store = store +=  (kv.key -> kv.value)
+//      })
+//      println(s"Load complete: ${store.size}")
 
     case AddDocument(document: DataModel) =>
       val key = document._id.hashCode.toString
-//      println(s"Adding document: ${document._id} - ${key} - ")
-      store = store += (key -> document)
+      println(s"Adding document: ${document._id} - ${key} - ")
+      if (!store.contains(key)) {
+        store = store += (key -> document)
+      }
+      println(s"Count: ${store.size}")
+      sender() ! OK
 
-      //println(s"Count: ${store.size}")
 // Simple example: How to save inMemory object to file
 //      if (store.size == 824) {
 //        val objectToSave = store.toList.map(kv => KeyValuePair(kv._1, kv._2) )
@@ -92,7 +93,7 @@ class InMemoryStore extends Actor {
 
     case Find(id: String) =>
       val key = id.hashCode.toString
-      //println(s"Extracting document: ${id} - $key")
+      println(s"Extracting document: ${id} - $key")
       //println(s"Data: ${store(key)}")
       if (store.contains(key)) {
         sender() ! store(key)

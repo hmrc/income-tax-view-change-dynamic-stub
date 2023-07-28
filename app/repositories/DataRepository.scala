@@ -34,9 +34,9 @@ import akka.routing.RoundRobinPool
 class DataRepository @Inject()(system: ActorSystem, repository: DataRepositoryBase) {
 
   private val inMemoryStore =
-    system.actorOf(RoundRobinPool(35).props(Props[InMemoryStore]()), "router2")
+    system.actorOf(RoundRobinPool(1).props(Props[InMemoryStore]()), "router2")
 
-  implicit val timeout: Timeout = 5.seconds
+  implicit val timeout: Timeout = 1.seconds
 
   def removeAll(): Future[Any] = {
     ((inMemoryStore ? RemoveAll()))
@@ -56,10 +56,13 @@ class DataRepository @Inject()(system: ActorSystem, repository: DataRepositoryBa
       query.headOption.get.toString
         .replace("Filter{fieldName='_id', value=/", "")
         .replace("}", "")
+        println(s"Searching for documentID: $documentId")
     ((inMemoryStore ? Find(s"/$documentId"))).mapTo[Any].map{
       case dataModel: DataModel =>
         Some(dataModel)
-      case _ => None
+      case _ =>
+        println(s"Unable to find document id: $documentId")
+        None
     }
     //val finalQuery = if (query.isEmpty) empty() else and(query: _*)
     //repository.collection.find(finalQuery).headOption()

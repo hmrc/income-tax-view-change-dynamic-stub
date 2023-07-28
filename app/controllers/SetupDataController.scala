@@ -20,7 +20,7 @@ import com.typesafe.config.Config
 import models.DataModel
 import models.HttpMethod._
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, AnyContent, ControllerComponents, MessagesControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.SchemaValidation
@@ -44,13 +44,19 @@ class SetupDataController @Inject()(
     implicit request =>
       withJsonBody[DataModel](
         json => json.method.toUpperCase match {
-          case GET | POST =>
+          case GET | POST | PUT =>
             schemaValidation.validateUrlMatch(json.schemaId, json._id) flatMap {
               case true =>
                 schemaValidation.validateResponseJson(json.schemaId, json.response) flatMap {
-                  case true if json.schemaId == "getDesObligations" => addStubDataToDB(updateObligationsWithDateParameters(json))
-                  case true | `ignoreJsonValidation` => addStubDataToDB(json)
-                  case false => Future.successful(BadRequest(s"The Json Body:\n\n${json.response.get} did not validate against the Schema Definition"))
+                  case true if json.schemaId == "getDesObligations" =>
+                    println("AAAA")
+                    addStubDataToDB(updateObligationsWithDateParameters(json))
+                  case true | `ignoreJsonValidation` =>
+                    println("BBBB")
+                    addStubDataToDB(json)
+                  case false =>
+                    println("CCCC")
+                    Future.successful(BadRequest(s"The Json Body:\n\n${json.response.get} did not validate against the Schema Definition"))
                 }
               case false =>
                 schemaValidation.loadUrlRegex(json.schemaId) map {
@@ -60,7 +66,9 @@ class SetupDataController @Inject()(
           case x => Future.successful(BadRequest(s"The method: $x is currently unsupported"))
         }
       ).recover {
-        case _ => InternalServerError("Error Parsing Json DataModel")
+        case ex =>
+          println(s"DDD: $ex")
+          InternalServerError("Error Parsing Json DataModel")
       }
   }
 
@@ -77,14 +85,9 @@ class SetupDataController @Inject()(
   import scala.util.{Success, Failure}
 
   private def addStubDataToDB(json: DataModel): Future[Result] = {
-    dataRepository.addEntry(json).map{ _ =>
+    dataRepository.addEntry(json).map { _ =>
       Ok(s"The following JSON was added to the stub: \n\n${Json.toJson(json)}")
     }
-//      .onComplete {
-//      case Success(_) => Future{ Ok(s"The following JSON was added to the stub: \n\n${Json.toJson(json)}") }
-//      case Failure(ex) => Future.failed(ex)
-//        InternalServerError(s"Failed to add data to Stub: $ex")
-//    }
   }
 
   val removeData: String => Action[AnyContent] = url => Action.async {

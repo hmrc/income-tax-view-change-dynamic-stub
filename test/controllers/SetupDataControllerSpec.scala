@@ -67,7 +67,7 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
 
           mockValidateUrlMatch("2345", "1234")(response = true)
           mockValidateResponseJson("2345", Some(Json.parse("{}")))(response = true)
-          mockAddEntry(model)(successInsertOneResult)
+          mockAddEntry(model)(successUpdateResult)
           status(result) shouldBe Status.OK
         }
         "return Status InternalServerError (500) if unable to add data to the stub" in new Setup {
@@ -76,7 +76,7 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
 
           mockValidateUrlMatch("2345", "1234")(response = true)
           mockValidateResponseJson("2345", Some(Json.parse("{}")))(response = true)
-          mockAddEntry(model)(failedInsertOneResult)
+          mockAddEntry(model)(failedUpdateResult)
           status(result) shouldBe Status.INTERNAL_SERVER_ERROR
         }
 
@@ -97,7 +97,7 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
 
         mockValidateUrlMatch("2345", "1234")(response = true)
         mockValidateResponseJson("2345", Some(Json.parse("""{}""")))(response = true)
-        mockAddEntry(model)(successInsertOneResult)
+        mockAddEntry(model)(successUpdateResult)
         status(result) shouldBe Status.OK
       }
 

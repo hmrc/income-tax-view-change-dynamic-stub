@@ -16,6 +16,7 @@
 
 package controllers
 
+import models.HttpMethod
 import models.HttpMethod._
 import org.mongodb.scala.model.Filters._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
@@ -34,7 +35,7 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
 
   def getRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {
-      dataRepository.find(equal("_id", s"""${getRequestUri(request.uri)}"""), equal("method", GET)).map {
+      dataRepository.find(equal("_id", s"""${request.uri}"""), equal("method", GET)).map {
         stubData =>
           if (stubData.nonEmpty) {
             if (stubData.head.response.isEmpty) {
@@ -49,17 +50,35 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
     }
   }
 
-  def getRequestUri(uri: String): String = {
-    if (uri.contains("list-of-calculation-results")) {
-      uri.split('?').headOption.getOrElse(uri)
-    } else {
-      uri
-    }
-  }
 
   def postRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {
       dataRepository.find(equal("_id", s"""${request.uri}"""), equal("method", POST)).flatMap {
+        stubData =>
+          if (stubData.nonEmpty) {
+            schemaValidation.validateRequestJson(stubData.head.schemaId, request.body.asJson) map {
+              case true => if (stubData.head.response.isEmpty) {
+                Status(stubData.head.status)
+              } else {
+                Status(stubData.head.status)(stubData.head.response.get)
+              }
+              case false =>
+                BadRequest(s"The Json Body:\n\n${
+                  request.body.asJson
+                } did not validate against the Schema Definition")
+            }
+          } else {
+            Future(NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${
+              request.uri
+            }"))
+          }
+      }
+    }
+  }
+
+  def putRequestHandler(url: String): Action[AnyContent] = Action.async {
+    implicit request => {
+      dataRepository.find(equal("_id", s"""${request.uri}"""), equal("method", HttpMethod.PUT)).flatMap {
         stubData =>
           if (stubData.nonEmpty) {
             schemaValidation.validateRequestJson(stubData.head.schemaId, request.body.asJson) map {
