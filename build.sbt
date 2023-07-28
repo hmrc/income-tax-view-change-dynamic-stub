@@ -9,6 +9,8 @@ val appName = "income-tax-view-change-dynamic-stub"
 val playFrontendHMRCVersion = "6.4.0-play-28"
 val bootstrapPlayVersion = "5.21.0"
 
+val AkkaVersion = "2.8.0"
+
 val compile: Seq[ModuleID] = Seq(
   "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28" % "0.73.0",
   ws,

@@ -48,9 +48,15 @@ class SetupDataController @Inject()(
             schemaValidation.validateUrlMatch(json.schemaId, json._id) flatMap {
               case true =>
                 schemaValidation.validateResponseJson(json.schemaId, json.response) flatMap {
-                  case true if json.schemaId == "getDesObligations" => addStubDataToDB(updateObligationsWithDateParameters(json))
-                  case true | `ignoreJsonValidation` => addStubDataToDB(json)
-                  case false => Future.successful(BadRequest(s"The Json Body:\n\n${json.response.get} did not validate against the Schema Definition"))
+                  case true if json.schemaId == "getDesObligations" =>
+                    println("AAAA")
+                    addStubDataToDB(updateObligationsWithDateParameters(json))
+                  case true | `ignoreJsonValidation` =>
+                    println("BBBB")
+                    addStubDataToDB(json)
+                  case false =>
+                    println("CCCC")
+                    Future.successful(BadRequest(s"The Json Body:\n\n${json.response.get} did not validate against the Schema Definition"))
                 }
               case false =>
                 schemaValidation.loadUrlRegex(json.schemaId) map {
@@ -60,7 +66,9 @@ class SetupDataController @Inject()(
           case x => Future.successful(BadRequest(s"The method: $x is currently unsupported"))
         }
       ).recover {
-        case _ => InternalServerError("Error Parsing Json DataModel")
+        case ex =>
+          println(s"DDD: $ex")
+          InternalServerError("Error Parsing Json DataModel")
       }
   }
 
@@ -74,25 +82,31 @@ class SetupDataController @Inject()(
     if (fulfilledObligations && !datesSet) data.copy(_id = data._id + s"&from=$fromDate&to=$toDate")
     else data
   }
+  import scala.util.{Success, Failure}
 
   private def addStubDataToDB(json: DataModel): Future[Result] = {
-    dataRepository.addEntry(json).map(_.wasAcknowledged() match {
-      case true => Ok(s"The following JSON was added to the stub: \n\n${Json.toJson(json)}")
-      case _ => InternalServerError(s"Failed to add data to Stub.")
-    })
+    dataRepository.addEntry(json).map { _ =>
+      Ok(s"The following JSON was added to the stub: \n\n${Json.toJson(json)}")
+    }
   }
 
   val removeData: String => Action[AnyContent] = url => Action.async {
-    dataRepository.removeById(url).map(_.wasAcknowledged() match {
-      case true => Ok("Success")
-      case _ => InternalServerError("Could not delete data")
-    })
+    dataRepository.removeById(url).map{ _ =>
+      Ok("Success")
+    }
+//      .map(_.wasAcknowledged() match {
+//      case true => Ok("Success")
+//      case _ => InternalServerError("Could not delete data")
+//    })
   }
 
   val removeAll: Action[AnyContent] = Action.async {
-    dataRepository.removeAll().map(_.wasAcknowledged() match {
-      case true => Ok("Removed All Stubbed Data")
-      case _ => InternalServerError("Unexpected Error Clearing MongoDB.")
-    })
+    dataRepository.removeAll().map{ _ =>
+      Ok("Removed All Stubbed Data")
+    }
+//    match {
+//      case true => Ok("Removed All Stubbed Data")
+//      case _ => InternalServerError("Unexpected Error Clearing MongoDB.")
+//    })
   }
 }

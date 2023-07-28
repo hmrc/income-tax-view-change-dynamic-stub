@@ -16,31 +16,56 @@
 
 package repositories
 
+import actors.InMemoryStore
+import actors.InMemoryStore.{AddDocument, Find, LoadFromFile, RemoveAll, RemoveById}
+import akka.actor.{ActorSystem, Props}
+import akka.pattern.ask
+import akka.util.Timeout
 import models.DataModel
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.ReplaceOptions
-import org.mongodb.scala.result.{DeleteResult, UpdateResult}
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
 
+import akka.routing.RoundRobinPool
 @Singleton
-class DataRepository @Inject()(repository: DataRepositoryBase) {
+class DataRepository @Inject()(system: ActorSystem, repository: DataRepositoryBase) {
 
-  def removeAll(): Future[DeleteResult] = repository.collection.deleteMany(empty()).toFuture()
+  private val inMemoryStore =
+    system.actorOf(RoundRobinPool(1).props(Props[InMemoryStore]()), "router2")
 
-  def removeById(url: String): Future[DeleteResult] = repository.collection.deleteOne(equal("_id", url)).toFuture()
+  implicit val timeout: Timeout = 1.seconds
 
-  def addEntry(document: DataModel): Future[UpdateResult] = repository.collection.replaceOne(
-    equal("_id", document._id), document,
-    options = ReplaceOptions().upsert(true)
-  ).toFuture()
+  def removeAll(): Future[Any] = {
+    ((inMemoryStore ? RemoveAll()))
+  }
+  //repository.collection.deleteMany(empty()).toFuture()
 
+  def removeById(url: String): Future[Any] =
+    (inMemoryStore ? RemoveById(url))
+  //repository.collection.deleteOne(equal("_id", url)).toFuture()
+
+  def addEntry(document: DataModel): Future[Any] =
+    (inMemoryStore ? AddDocument(document))
+  //repository.collection.insertOne(document).toFuture()
 
   def find(query: Bson*): Future[Option[DataModel]] = {
-    val finalQuery = if (query.isEmpty) empty() else and(query: _*)
-    repository.collection.find(finalQuery).headOption()
+    val documentId =
+      query.headOption.get.toString
+        .replace("Filter{fieldName='_id', value=/", "")
+        .replace("}", "")
+        println(s"Searching for documentID: $documentId")
+    ((inMemoryStore ? Find(s"/$documentId"))).mapTo[Any].map{
+      case dataModel: DataModel =>
+        Some(dataModel)
+      case _ =>
+        println(s"Unable to find document id: $documentId")
+        None
+    }
+    //val finalQuery = if (query.isEmpty) empty() else and(query: _*)
+    //repository.collection.find(finalQuery).headOption()
   }
 
 }
