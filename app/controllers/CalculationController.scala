@@ -40,7 +40,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 
   def generateCalculationListFor2023_24(nino: String): Action[AnyContent] = {
-    if (nino.startsWith("AS")) {
+    if (nino.startsWith("AS") || nino.startsWith("MN")) {
       requestHandlerController.getRequestHandler(s"/income-tax/view/calculations/liability/23-24/$nino")
     } else {
       Action.async { _ =>
