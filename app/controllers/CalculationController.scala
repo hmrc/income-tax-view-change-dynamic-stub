@@ -20,9 +20,9 @@ package controllers
 import models.CalcSuccessReponse
 import models.HttpMethod.GET
 import org.mongodb.scala.model.Filters.equal
-import play.api.Logging
 import play.api.libs.json.{Json, OWrites}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.{Configuration, Logging}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.CalculationUtils.createCalResponseModel
@@ -34,14 +34,15 @@ import scala.concurrent.Future
 @Singleton
 class CalculationController @Inject()(cc: MessagesControllerComponents,
                                       dataRepository: DataRepository,
-                                      requestHandlerController: RequestHandlerController
+                                      requestHandlerController: RequestHandlerController,
+                                      configuration: Configuration
                                      ) extends FrontendController(cc) with Logging {
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 
   // Defines NINOs to be intercepted and response retrieved from ATs stub data
   val incomeSourcesNinos: Set[String] = Set("AS000001A", "AS000002A", "AS000003A", "AS000004A", "AS000005A",
-    "AS000006A", "AS000007A", "CE453003A", "CE453004A")
+    "AS000006A", "AS000007A", "CE453003A", "CE453004A", "MN000001A", "MN000002A")
 
   def generateCalculationListFor2023_24(nino: String): Action[AnyContent] = {
     if (incomeSourcesNinos.contains(nino)) {
@@ -80,6 +81,4 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
       }
     }
   }
-
-
 }
