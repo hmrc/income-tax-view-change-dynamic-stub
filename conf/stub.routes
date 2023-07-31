@@ -11,6 +11,9 @@ GET         /income-tax/view/calculations/liability/23-24/:nino/:calculationId  
 ### Mapping to No active Properties UK and Foreign ###
 GET         /registration/business-details/mtdbsa/:mtdid                              controllers.AddPropertyController.mapAddPropertyJourneyStub(mtdid:String)
 
++ nocsrf
+PUT         /income-tax/business-detail/income-source                                 controllers.UpdateIncomeSourceController.mapUpdateIncomeSourceStub()
+
 GET         /login                                                                    controllers.home.HomeController.getLogin()
 
 + nocsrf

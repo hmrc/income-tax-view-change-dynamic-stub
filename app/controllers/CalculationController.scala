@@ -39,8 +39,12 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 
+  // Defines NINOs to be intercepted and response retrieved from ATs stub data
+  val incomeSourcesNinos: Set[String] = Set("AS000001A", "AS000002A", "AS000003A", "AS000004A", "AS000005A",
+    "AS000006A", "AS000007A", "CE453003A", "CE453004A")
+
   def generateCalculationListFor2023_24(nino: String): Action[AnyContent] = {
-    if (nino.startsWith("AS")) {
+    if (incomeSourcesNinos.contains(nino)) {
       requestHandlerController.getRequestHandler(s"/income-tax/view/calculations/liability/23-24/$nino")
     } else {
       Action.async { _ =>
