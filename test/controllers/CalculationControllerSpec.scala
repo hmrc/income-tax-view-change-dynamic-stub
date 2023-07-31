@@ -30,7 +30,7 @@ class CalculationControllerSpec extends TestSupport with MockSchemaValidation wi
   object TestRequestHandlerController extends RequestHandlerController(mockSchemaValidation,
     mockDataRepository,
     mockCC)
-  object CalcControllerUnderTest extends CalculationController(mockCC, mockDataRepository, TestRequestHandlerController)
+  object CalcControllerUnderTest extends CalculationController(mockCC, mockDataRepository, TestRequestHandlerController, app.configuration)
 
   "generateCalculationListFor2023_24" should {
 

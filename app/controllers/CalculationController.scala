@@ -20,9 +20,9 @@ package controllers
 import models.CalcSuccessReponse
 import models.HttpMethod.GET
 import org.mongodb.scala.model.Filters.equal
-import play.api.Logging
 import play.api.libs.json.{Json, OWrites}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.{Configuration, Logging}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.CalculationUtils.createCalResponseModel
@@ -34,13 +34,15 @@ import scala.concurrent.Future
 @Singleton
 class CalculationController @Inject()(cc: MessagesControllerComponents,
                                       dataRepository: DataRepository,
-                                      requestHandlerController: RequestHandlerController
+                                      requestHandlerController: RequestHandlerController,
+                                      configuration: Configuration
                                      ) extends FrontendController(cc) with Logging {
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
+  private val calc23and24NinoPrefix : Seq[String] = configuration.getOptional[Seq[String]]("calc23and24NinoPrefix").getOrElse( Seq[String]() )
 
   def generateCalculationListFor2023_24(nino: String): Action[AnyContent] = {
-    if (nino.startsWith("AS") || nino.startsWith("MN")) {
+    if (calc23and24NinoPrefix.exists(prefix => nino.startsWith(prefix))) {
       requestHandlerController.getRequestHandler(s"/income-tax/view/calculations/liability/23-24/$nino")
     } else {
       Action.async { _ =>
