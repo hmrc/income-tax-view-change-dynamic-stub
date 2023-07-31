@@ -20,11 +20,10 @@ package controllers
 import models.CalcSuccessReponse
 import models.HttpMethod.GET
 import org.mongodb.scala.model.Filters.equal
-import play.api.{Configuration, Logging}
 import play.api.libs.json.{Json, OWrites}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.{Configuration, Logging}
 import repositories.DataRepository
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.CalculationUtils.createCalResponseModel
 
