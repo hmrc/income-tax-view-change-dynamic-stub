@@ -35,17 +35,17 @@ import scala.concurrent.Future
 class CalculationController @Inject()(cc: MessagesControllerComponents,
                                       dataRepository: DataRepository,
                                       requestHandlerController: RequestHandlerController,
-                                      configuration: Configuration
-                                     ) extends FrontendController(cc) with Logging {
+                                      configuration: Configuration) extends FrontendController(cc) with Logging {
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 
-  // Defines NINOs to be intercepted and response retrieved from ATs stub data
-  val incomeSourcesNinos: Set[String] = Set("AS000001A", "AS000002A", "AS000003A", "AS000004A", "AS000005A",
-    "AS000006A", "AS000007A", "CE453003A", "CE453004A", "MN000001A", "MN000002A")
-
   def generateCalculationListFor2023_24(nino: String): Action[AnyContent] = {
-    if (incomeSourcesNinos.contains(nino)) {
+
+    val stubbed1896Ninos: Seq[String] = configuration.getOptional[Seq[String]]("stubbed1896Ninos")
+      .getOrElse(Seq.empty)
+
+    if (stubbed1896Ninos.contains(nino)) {
+      // Retrieve stubbed response from ATs
       requestHandlerController.getRequestHandler(s"/income-tax/view/calculations/liability/23-24/$nino")
     } else {
       Action.async { _ =>

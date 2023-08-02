@@ -28,25 +28,32 @@ import scala.concurrent.Future
 class UpdateIncomeSourceController @Inject()(cc: MessagesControllerComponents,
                                              requestHandlerController: RequestHandlerController) extends FrontendController(cc) {
 
-  def mapUpdateIncomeSourceStub(): Action[AnyContent] = Action.async {
-    implicit request =>
-      val bodyOption: Option[JsValue] = request.body.asJson
 
-      bodyOption match {
-        case Some(body) =>
-          val incomeSourceIdOption = extractIncomeSourceId(body)
+  def mapUpdateIncomeSourceStub(): Action[AnyContent] = Action.async { implicit request =>
+    val bodyOption: Option[JsValue] = request.body.asJson
+    val InvalidJsonError = BadRequest("Invalid JSON in the UpdateIncomeSourceRequest body")
+    val IncomeSourceIdNotFoundError =
+      BadRequest("Income Source ID not found in the UpdateIncomeSourceRequest body")
 
-          incomeSourceIdOption match {
-            case Some(incomeSourceId) =>
-              val newRequest = request.withTarget(request.target.withUri(URI.create(request.uri + s"?id=$incomeSourceId")))
-              requestHandlerController.putRequestHandler(newRequest.uri).apply(newRequest)
-            case None =>
-              Future.successful(BadRequest("Income Source ID not found in the UpdateIncomeSourceRequest body"))
-          }
+    bodyOption match {
+      case Some(body) =>
+        val incomeSourceIdOption = extractIncomeSourceId(body)
 
-        case None =>
-          Future.successful(BadRequest("Invalid JSON in the UpdateIncomeSourceRequest body"))
-      }
+        incomeSourceIdOption match {
+          case Some(incomeSourceId) =>
+            val newRequest =
+              if (incomeSourceId.toLowerCase.contains("error")) {
+                // Retrieve stubbed error response from ATs
+                request.withTarget(request.target.withUri(URI.create(request.uri + s"?id=$incomeSourceId")))
+              } else {
+                // Retrieve stubbed success response from ATs
+                request
+              }
+            requestHandlerController.putRequestHandler(newRequest.uri).apply(newRequest)
+          case None => Future.successful(IncomeSourceIdNotFoundError)
+        }
+      case None => Future.successful(InvalidJsonError)
+    }
   }
 
   def extractIncomeSourceId(json: JsValue): Option[String] = {
