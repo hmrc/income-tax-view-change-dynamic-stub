@@ -35,14 +35,17 @@ import scala.concurrent.Future
 class CalculationController @Inject()(cc: MessagesControllerComponents,
                                       dataRepository: DataRepository,
                                       requestHandlerController: RequestHandlerController,
-                                      configuration: Configuration
-                                     ) extends FrontendController(cc) with Logging {
+                                      configuration: Configuration) extends FrontendController(cc) with Logging {
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
-  private val calc23and24NinoPrefix : Seq[String] = configuration.getOptional[Seq[String]]("calc23and24NinoPrefix").getOrElse( Seq[String]() )
 
   def generateCalculationListFor2023_24(nino: String): Action[AnyContent] = {
-    if (calc23and24NinoPrefix.exists(prefix => nino.startsWith(prefix))) {
+
+    val stubbed1896NinoPrefixes: Seq[String] = configuration.getOptional[Seq[String]]("stubbed1896NinoPrefixes")
+      .getOrElse(Seq.empty)
+
+    if (stubbed1896NinoPrefixes.exists(prefix => nino.startsWith(prefix))) {
+      // Retrieve stubbed response from ATs
       requestHandlerController.getRequestHandler(s"/income-tax/view/calculations/liability/23-24/$nino")
     } else {
       Action.async { _ =>
@@ -78,6 +81,4 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
       }
     }
   }
-
-
 }
