@@ -41,10 +41,10 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
 
   def generateCalculationListFor2023_24(nino: String): Action[AnyContent] = {
 
-    val stubbed1896Ninos: Seq[String] = configuration.getOptional[Seq[String]]("stubbed1896Ninos")
+    val stubbed1896NinoPrefixes: Seq[String] = configuration.getOptional[Seq[String]]("stubbed1896NinoPrefixes")
       .getOrElse(Seq.empty)
 
-    if (stubbed1896Ninos.contains(nino)) {
+    if (stubbed1896NinoPrefixes.exists(prefix => nino.startsWith(prefix))) {
       // Retrieve stubbed response from ATs
       requestHandlerController.getRequestHandler(s"/income-tax/view/calculations/liability/23-24/$nino")
     } else {
