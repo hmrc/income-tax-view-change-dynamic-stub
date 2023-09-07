@@ -16,17 +16,21 @@
 
 package controllers
 
-import models.HttpMethod
+import models.{CalcSuccessReponse, HttpMethod}
 import models.HttpMethod._
 import org.mongodb.scala.model.Filters._
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import repositories.DataRepository
+import repositories.{DataRepository, DefaultValues}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.SchemaValidation
+import play.api.libs.json._
+import play.shaded.ahc.io.netty.handler.codec.http.HttpResponseStatus
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import play.api.http.Status.OK
 
 @Singleton
 class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
@@ -44,9 +48,10 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
               Status(stubData.head.status)(stubData.head.response.get)
             }
           } else {
-            NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}")
+            DefaultValues.getResponse(url)
           }
       }
+
     }
   }
 
