@@ -16,11 +16,12 @@
 
 package repositories
 
+import parsers.ITSAStatusUrlParser.extractTaxYear
 import play.api.Logging
 import play.api.http.Status.OK
 import play.api.libs.json.{JsValue, Json, OWrites}
 import play.api.mvc.Results.{NotFound, Status}
-import play.api.mvc.{Action, AnyContent, MessagesRequest, Result}
+import play.api.mvc.{AnyContent, MessagesRequest, Result}
 
 object DefaultValues extends Logging {
   case class ITSAStatus(taxYear: String, itsaStatusDetails: List[ITSAStatusDetails])
@@ -30,20 +31,22 @@ object DefaultValues extends Logging {
   implicit val ITSAITSAStatusDetailsWriter: OWrites[ITSAStatusDetails] = Json.writes[ITSAStatusDetails]
   implicit val ITSAStatusWriter: OWrites[ITSAStatus] = Json.writes[ITSAStatus]
 
-  private def getItsaStatusDefaultJson(): JsValue = {
-
-    val itsaAStatus = List(ITSAStatus(taxYear = "2023-24", itsaStatusDetails = List(
-      ITSAStatusDetails(submittedOn = "2022-01-10T06:14:00Z", status = "Voluntary", statusReason = "Sign up - return available"))))
+  private def getItsaStatusDefaultJson(taxYear: String): JsValue = {
+    val itsaAStatus = List(ITSAStatus(taxYear = taxYear, itsaStatusDetails = List(
+      ITSAStatusDetails(submittedOn = "2022-01-10T06:14:00Z", status = "Voluntary",
+        statusReason = "Sign up - return available"))))
     Json.toJson(itsaAStatus)
   }
 
-  def getResponse(url: String)(implicit request: MessagesRequest[AnyContent]) : Result = {
-    if (url.contains("itsa-status")) {
-      val json = getItsaStatusDefaultJson()
-      logger.info(s"DefaultValues applied $json")
-      Status(OK)(json)
-    } else {
-      NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}")
+  def getResponse(url: String)(implicit request: MessagesRequest[AnyContent]): Result = {
+    extractTaxYear(url) match {
+      case Some(taxYear) =>
+        val taxYearNormalised = s"20$taxYear" // conversion to format 2023-24
+        val json = getItsaStatusDefaultJson(taxYearNormalised)
+        logger.info(s"DefaultValues applied $json")
+        Status(OK)(json)
+      case None =>
+        NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}")
     }
   }
 }
