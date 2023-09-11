@@ -20,10 +20,21 @@ object ITSAStatusUrlParser {
 
   import scala.util.matching.Regex
 
-  private val taxYearExtractor: Regex = """^\/income-tax\/([A-Z0-9]+){9}\/person-itd\/itsa-status/([\d\-]{5})+\?futureYears\=false\&history\=false$""".r
+  private val taxYearExtractorA: Regex = """^\/income-tax\/([A-Z0-9]+){9}\/person-itd\/itsa-status/([\d\-]{5})+\?futureYears\=false\&history\=false$""".r
+  private val taxYearExtractorB: Regex = """^income-tax\/([A-Z0-9]+){9}\/person-itd\/itsa-status/([\d\-]{5})+$""".r
 
-  def extractTaxYear(url: String): Option[String] = url match {
-    case taxYearExtractor(_, taxYear) => Some(taxYear)
+
+  def extractTaxYear(url: String): Option[String] = {
+    Seq( extractTaxYearA(url), extractTaxYearB(url) ).find(_.nonEmpty).flatten
+  }
+
+  private def extractTaxYearA(url: String): Option[String] = url match {
+    case taxYearExtractorA(_, taxYear) => Some(taxYear)
+    case _ => None
+  }
+
+  private def extractTaxYearB(url: String): Option[String] = url match {
+    case taxYearExtractorB(_, taxYear) => Some(taxYear)
     case _ => None
   }
 
