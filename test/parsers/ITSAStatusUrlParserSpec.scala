@@ -35,4 +35,9 @@ class ITSAStatusUrlParserSpec  extends AnyFunSuite {
     assert(extractTaxYear(url) == Some("20-21"))
   }
 
+  test("return correct tax year / case C: 23-24"){
+    val url = "income-tax/AS000002A/person-itd/itsa-status/23-24"
+    assert(extractTaxYear(url) == Some("23-24"))
+  }
+
 }
