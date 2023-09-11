@@ -43,7 +43,7 @@ object DefaultValues extends Logging {
       case Some(taxYear) =>
         val taxYearNormalised = s"20$taxYear" // conversion to format 2023-24
         val json = getItsaStatusDefaultJson(taxYearNormalised)
-        logger.info(s"DefaultValues applied $json")
+        logger.info(s"DefaultValues applied: $json - for: $url")
         Status(OK)(json)
       case None =>
         NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}")
