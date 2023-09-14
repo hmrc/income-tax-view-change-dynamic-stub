@@ -39,7 +39,7 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
 
   def getRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {
-      dataRepository.find(equal("_id", s"""${request.uri}"""), equal("method", GET)).map {
+      dataRepository.find(equal("_id", request.uri), equal("method", GET)).map {
         stubData =>
           if (stubData.nonEmpty) {
             if (stubData.head.response.isEmpty) {

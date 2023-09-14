@@ -24,19 +24,16 @@ import java.net.URI
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class AddPropertyController @Inject()(cc: MessagesControllerComponents,
-                                      requestHandlerController: RequestHandlerController
-                                     ) extends FrontendController(cc) with Logging {
+class BusinessDetailsRequestController @Inject()(cc: MessagesControllerComponents,
+                                                 requestHandlerController: RequestHandlerController
+                                                ) extends FrontendController(cc) with Logging {
 
-  def mapAddPropertyJourneyStub(mtdid: String): Action[AnyContent] = Action.async {
+  def transform(mtdid: String): Action[AnyContent] = Action.async {
     implicit request =>
       val testHeader = request.headers.get("Gov-Test-Scenario")
-
-      if(testHeader.contains("afterIncomeSourceCreated")) {
-        val newRequest = request.withTarget(request.target.withUri(URI.create(request.uri+"?afterIncomeSourceCreated=true")))
-        requestHandlerController.getRequestHandler(newRequest.uri).apply(newRequest)
-      } else {
-        requestHandlerController.getRequestHandler(request.uri).apply(request)
-      }
-    }
+      val suffix = if (testHeader.contains("afterIncomeSourceCreated")) "?afterIncomeSourceCreated=true" else ""
+      val uri = request.uri.replaceFirst("mtdId", "mtdbsa") + suffix
+      val newRequest = request.withTarget(request.target.withUri(URI.create(uri)))
+      requestHandlerController.getRequestHandler(uri).apply(newRequest)
+  }
 }
