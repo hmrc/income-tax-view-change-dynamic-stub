@@ -10,7 +10,7 @@ val playFrontendHMRCVersion = "6.4.0-play-28"
 val bootstrapPlayVersion = "5.21.0"
 
 val compile: Seq[ModuleID] = Seq(
-  "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28" % "0.73.0",
+  "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28" % "1.3.0",
   ws,
   "com.github.fge" % "json-schema-validator" % "2.2.6",
   "uk.gov.hmrc" %% "play-frontend-hmrc" % playFrontendHMRCVersion,
@@ -19,7 +19,7 @@ val compile: Seq[ModuleID] = Seq(
 
 def test(scope: String = "test,it"): Seq[ModuleID] = Seq(
   "uk.gov.hmrc" %% "bootstrap-backend-play-28" % "7.3.0" % scope,
-  "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-28" % "0.73.0" % scope,
+  "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-28" % "1.3.0" % scope,
   "org.pegdown" % "pegdown" % "1.6.0" % scope,
   "org.jsoup" % "jsoup" % "1.11.3" % scope,
   "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,

@@ -17,6 +17,7 @@
 package controllers
 
 import models.SchemaModel
+import play.api.Logging
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import repositories.SchemaRepository
@@ -27,7 +28,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class SetupSchemaController @Inject()(schemaRepository: SchemaRepository, cc: MessagesControllerComponents)
-  extends FrontendController(cc) {
+  extends FrontendController(cc) with Logging {
 
   val addSchema: Action[JsValue] = Action.async(parse.json) {
     implicit request =>
@@ -35,11 +36,13 @@ class SetupSchemaController @Inject()(schemaRepository: SchemaRepository, cc: Me
         json => {
           schemaRepository.addEntry(json).map(_.wasAcknowledged() match {
             case true => Ok(s"Successfully added Schema: ${request.body}")
-            case _ => InternalServerError("Could not store data")
+            case _ => logger.error("[SetupSchemaController][addSchema] could not store data" + json)
+              InternalServerError("Could not store data")
           })
         }
       ).recover {
-        case _ => BadRequest("Error Parsing Json SchemaModel")
+        case err => logger.error("[SetupSchemaController][addSchema] error parsing schemamodel: " + err)
+          BadRequest("Error Parsing Json SchemaModel")
       }
   }
 
