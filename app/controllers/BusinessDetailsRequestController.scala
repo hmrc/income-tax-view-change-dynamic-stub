@@ -32,7 +32,7 @@ class BusinessDetailsRequestController @Inject()(cc: MessagesControllerComponent
     implicit request =>
       val testHeader = request.headers.get("Gov-Test-Scenario")
       val suffix = if (testHeader.contains("afterIncomeSourceCreated")) "?afterIncomeSourceCreated=true" else ""
-      val uri = request.uri.replaceFirst("mtdId", "mtdbsa") + suffix
+      val uri = request.uri + suffix
       val newRequest = request.withTarget(request.target.withUri(URI.create(uri)))
       requestHandlerController.getRequestHandler(uri).apply(newRequest)
   }
