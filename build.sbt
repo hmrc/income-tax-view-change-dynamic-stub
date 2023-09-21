@@ -9,7 +9,7 @@ val appName = "income-tax-view-change-dynamic-stub"
 val playFrontendHMRCVersion = "6.4.0-play-28"
 val bootstrapPlayVersion = "7.3.0"
 val scalaMockVersion = "5.2.0"
-val hmrcMongoPlayVersion = "0.73.0"
+val hmrcMongoPlayVersion = "1.3.0"
 val scalaTestVersion = "3.1.1.0"
 
 val compile: Seq[ModuleID] = Seq(

@@ -38,7 +38,7 @@ trait MockSchemaRepository extends TestSupport with MockitoSugar {
   lazy val mockSchemaRepository: SchemaRepository = mock[SchemaRepository]
 
   def setupMockAddSchema(model: SchemaModel)(response: InsertOneResult): OngoingStubbing[Future[InsertOneResult]] =
-    when(mockSchemaRepository.addEntry(ArgumentMatchers.eq(model))).thenReturn(Future.successful(response))
+    when(mockSchemaRepository.addEntry(ArgumentMatchers.eq(model))(ArgumentMatchers.any())).thenReturn(Future.successful(response))
 
   def setupMockRemoveSchema(id: String)(response: DeleteResult): OngoingStubbing[Future[DeleteResult]] =
     when(mockSchemaRepository.removeById(ArgumentMatchers.eq(id))).thenReturn(Future.successful(response))

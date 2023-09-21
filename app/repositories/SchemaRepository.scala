@@ -19,8 +19,9 @@ package repositories
 import models.SchemaModel
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.result.{DeleteResult, InsertOneResult}
+
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SchemaRepository @Inject()(repository: SchemaRepositoryBase) {
@@ -33,6 +34,12 @@ class SchemaRepository @Inject()(repository: SchemaRepositoryBase) {
 
   def removeAll(): Future[DeleteResult] = repository.collection.deleteMany(empty()).toFuture()
 
-  def addEntry(document: SchemaModel): Future[InsertOneResult] = repository.collection.insertOne(document).toFuture()
+  def addEntry(document: SchemaModel)(implicit ec:ExecutionContext): Future[InsertOneResult] = {
+    repository.collection.deleteOne(
+      equal("_id", document._id)
+    ).toFuture() flatMap (_ => {
+      repository.collection.insertOne(document).toFuture()
+    })
+  }
 
 }
