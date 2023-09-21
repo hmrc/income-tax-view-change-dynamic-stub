@@ -7,7 +7,7 @@ import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 
 val appName = "income-tax-view-change-dynamic-stub"
 val playFrontendHMRCVersion = "6.4.0-play-28"
-val bootstrapPlayVersion = "5.21.0"
+val bootstrapPlayVersion = "5.24.0"
 
 val compile: Seq[ModuleID] = Seq(
   "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28" % "0.73.0",
@@ -26,7 +26,8 @@ def test(scope: String = "test,it"): Seq[ModuleID] = Seq(
   "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % scope,
   "org.scalamock" %% "scalamock" % "5.2.0" % scope,
   "org.scalatestplus" %% "mockito-3-2" % "3.1.1.0" % scope,
-  "com.vladsch.flexmark" % "flexmark-all" % "0.35.10" % scope
+  "com.vladsch.flexmark" % "flexmark-all" % "0.35.10" % scope,
+  "uk.gov.hmrc" %% "bootstrap-test-play-28" % bootstrapPlayVersion % scope,
 )
 
 lazy val appDependencies: Seq[ModuleID] = compile ++ test()
