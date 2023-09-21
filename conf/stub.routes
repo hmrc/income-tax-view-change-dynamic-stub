@@ -9,8 +9,9 @@ GET         /income-tax/view/calculations/liability/23-24/:nino                 
 GET         /income-tax/view/calculations/liability/23-24/:nino/:calculationId        controllers.CalculationController.getCalculationDetailsFor2023_24(nino:String, calculationId:String)
 
 ### Mapping to No active Properties UK and Foreign ###
-GET         /registration/business-details/mtdbsa/:mtdid                              controllers.BusinessDetailsRequestController.transform(mtdid:String)
-GET         /registration/business-details/mtdId/:mtdid                               controllers.BusinessDetailsRequestController.transform(mtdid:String)
+GET         /registration/business-details/mtdbsa/:mtdid                              controllers.BusinessDetailsRequestController.transform(mtdid: String)
+GET         /registration/business-details/mtdId/:mtdid                               controllers.BusinessDetailsRequestController.transform(mtdid: String)
+GET         /registration/business-details/nino/:nino                                 controllers.BusinessDetailsRequestController.transformNinoCall(nino: String)
 
 + nocsrf
 PUT         /income-tax/business-detail/income-source                                 controllers.UpdateIncomeSourceController.mapUpdateIncomeSourceStub()
