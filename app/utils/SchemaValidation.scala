@@ -18,7 +18,9 @@ package utils
 
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
+import com.github.fge.jsonschema.core.report.{LogLevel, ProcessingReport}
 import com.github.fge.jsonschema.main.{JsonSchema, JsonSchemaFactory}
+import play.api.Logging
 import play.api.libs.json.JsValue
 import repositories.SchemaRepository
 
@@ -27,7 +29,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class SchemaValidation @Inject()(repository: SchemaRepository) {
+class SchemaValidation @Inject()(repository: SchemaRepository) extends Logging {
 
   private final lazy val jsonMapper = new ObjectMapper()
   private final lazy val jsonFactory = jsonMapper.getFactory
@@ -51,6 +53,10 @@ class SchemaValidation @Inject()(repository: SchemaRepository) {
           schema =>
             val jsonParser = jsonFactory.createParser(response.toString)
             val jsonNode: JsonNode = jsonMapper.readTree(jsonParser)
+            val report: ProcessingReport = schema.validate(jsonNode)
+            report.forEach(message =>
+              if (List(LogLevel.ERROR, LogLevel.FATAL).contains(message.getLogLevel))
+                logger.error(s"${message.getLogLevel.toString} : $message"))
             schema.validate(jsonNode).isSuccess
         }
     }

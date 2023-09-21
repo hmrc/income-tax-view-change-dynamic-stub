@@ -22,6 +22,7 @@ import models.HttpMethod._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import repositories.DataRepository
+import play.api.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.SchemaValidation
 
@@ -36,7 +37,7 @@ class SetupDataController @Inject()(
                                      dataRepository: DataRepository,
                                      cc: MessagesControllerComponents,
                                      applicationConfig: Config
-                                   ) extends FrontendController(cc) {
+                                   ) extends FrontendController(cc) with Logging {
 
   val ignoreJsonValidation: Boolean = applicationConfig.getBoolean("schemaValidation.ignoreJsonValidation")
 
@@ -50,9 +51,12 @@ class SetupDataController @Inject()(
                 schemaValidation.validateResponseJson(json.schemaId, json.response) flatMap {
                   case true if json.schemaId == "getDesObligations" => addStubDataToDB(updateObligationsWithDateParameters(json))
                   case true | `ignoreJsonValidation` => addStubDataToDB(json)
-                  case false => Future.successful(BadRequest(s"The Json Body:\n\n${json.response.get} did not validate against the Schema Definition"))
+                  case false =>
+                    logger.error("[SetupDataController][addData] validateResponseJson failed" + json._id)
+                    Future.successful(BadRequest(s"The Json Body:\n\n${json.response.get} did not validate against the Schema Definition"))
                 }
               case false =>
+                logger.error("[SetupDataController][addData] validateUrlMatch failed" + json._id)
                 schemaValidation.loadUrlRegex(json.schemaId) map {
                   regex => BadRequest(s"URL ${json._id} did not match the Schema Definition Regex $regex")
                 }
