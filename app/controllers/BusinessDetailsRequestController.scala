@@ -17,7 +17,7 @@
 package controllers
 
 import play.api.Logging
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import java.net.URI
@@ -28,12 +28,21 @@ class BusinessDetailsRequestController @Inject()(cc: MessagesControllerComponent
                                                  requestHandlerController: RequestHandlerController
                                                 ) extends FrontendController(cc) with Logging {
 
+  private def addSuffixToRequest(key: String, suffix: String)(implicit request: MessagesRequest[AnyContent]) = {
+    val testHeader = request.headers.get("Gov-Test-Scenario")
+    val computedSuffix = if (testHeader.contains(key)) s"?$suffix" else ""
+    val uri = request.uri + computedSuffix
+    val newRequest = request.withTarget(request.target.withUri(URI.create(uri)))
+    requestHandlerController.getRequestHandler(uri).apply(newRequest)
+  }
+
   def transform(mtdid: String): Action[AnyContent] = Action.async {
     implicit request =>
-      val testHeader = request.headers.get("Gov-Test-Scenario")
-      val suffix = if (testHeader.contains("afterIncomeSourceCreated")) "?afterIncomeSourceCreated=true" else ""
-      val uri = request.uri.replaceFirst("mtdId", "mtdbsa") + suffix
-      val newRequest = request.withTarget(request.target.withUri(URI.create(uri)))
-      requestHandlerController.getRequestHandler(uri).apply(newRequest)
+      addSuffixToRequest("afterIncomeSourceCreated", "afterIncomeSourceCreated=true")
+  }
+
+  def transformNinoCall(nino: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      addSuffixToRequest("businessDetailsIf", "ifresponse")
   }
 }
