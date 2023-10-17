@@ -57,6 +57,6 @@ class UpdateIncomeSourceController @Inject()(cc: MessagesControllerComponents,
   }
 
   def extractIncomeSourceId(json: JsValue): Option[String] = {
-    (json \ "incomeSourceId").asOpt[String]
+    (json \ "incomeSourceID").asOpt[String]
   }
 }
