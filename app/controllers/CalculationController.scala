@@ -64,16 +64,15 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
   }
 
   def getCalculationDetailsFor2023_24(nino: String, calculationId: String): Action[AnyContent] = Action.async { _ =>
-    println("KKKKKKKK" + s"\n $nino\n$calculationId")
     logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
     val id = s"/income-tax/view/calculations/liability/23-24/$nino/${calculationId.toLowerCase()}"
     dataRepository
       .find(equal("_id", id), equal("method", GET))
       .flatMap {
-        case stubData@Some(dataModel: DataModel) =>
+        case stubData@Some(_: DataModel) =>
           Future(Status(stubData.head.status)(stubData.head.response.get))
         case None =>
-          println("SSSSSSSSSSS")
+          logger.info(s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
           getDefault
       }.recoverWith {
       case _ => Future {
@@ -84,14 +83,13 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
 
   def getDefault: Future[Result] = {
     val defaultId = "/income-tax/view/calculations/liability/23-24/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf2024a4"
-    println("USING DEFAULT VALUE PPPPPPPPP")
     dataRepository
       .find(equal("_id", defaultId), equal("method", GET))
       .map {
-        case stubData@Some(dataModel: DataModel) =>
+        case stubData@Some(_: DataModel) =>
           Status(stubData.head.status)(stubData.head.response.get)
         case None =>
-          NotFound(s"Tried and failed to find the default API 1885 endpoint in Dynamic Stub matching the URI: $defaultId")
+          NotFound(s"Failed to find the default API 1885 endpoint in Dynamic Stub matching the URI: $defaultId")
       }
   }
 }
