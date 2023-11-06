@@ -17,7 +17,7 @@
 package controllers
 
 
-import models.CalcSuccessReponse
+import models.{CalcSuccessReponse, DataModel}
 import models.HttpMethod.GET
 import org.mongodb.scala.model.Filters.equal
 import play.api.libs.json.{Json, OWrites}
@@ -68,15 +68,13 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
     logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
     val id = s"/income-tax/view/calculations/liability/23-24/$nino/${calculationId.toLowerCase()}"
     dataRepository
-      .find(equal("_id", "/income-tax/view/calculations/liability/23-24/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf2024a4"), equal("method", GET))
-      .flatMap { stubData =>
-        (stubData.nonEmpty, stubData.head.response.isEmpty) match {
-          case (true, false) =>
-            Future(Status(stubData.head.status)(stubData.head.response.get))
-          case _ =>
-            println("SSSSSSSSSSS")
-            getDefault
-        }
+      .find(equal("_id", id), equal("method", GET))
+      .flatMap {
+        case stubData@Some(dataModel: DataModel) =>
+          Future(Status(stubData.head.status)(stubData.head.response.get))
+        case None =>
+          println("SSSSSSSSSSS")
+          getDefault
       }.recoverWith {
       case _ => Future {
         BadRequest(s"Search operation failed: $id")
@@ -85,16 +83,15 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
   }
 
   def getDefault: Future[Result] = {
+    val defaultId = "/income-tax/view/calculations/liability/23-24/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf2024a4"
     println("USING DEFAULT VALUE PPPPPPPPP")
     dataRepository
-      .find(equal("_id", "/income-tax/view/calculations/liability/23-24/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf2024a4"), equal("method", GET))
-      .map { stubData =>
-        (stubData.nonEmpty, stubData.head.response.isEmpty) match {
-          case (true, false) =>
-            Status(stubData.head.status)(stubData.head.response.get)
-          case _ =>
-            NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: /income-tax/view/calculations/liability/23-24/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf2024a4")
-        }
+      .find(equal("_id", defaultId), equal("method", GET))
+      .map {
+        case stubData@Some(dataModel: DataModel) =>
+          Status(stubData.head.status)(stubData.head.response.get)
+        case None =>
+          NotFound(s"Tried and failed to find the default API 1885 endpoint in Dynamic Stub matching the URI: $defaultId")
       }
   }
 }
