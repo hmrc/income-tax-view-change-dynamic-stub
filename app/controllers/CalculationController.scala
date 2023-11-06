@@ -25,7 +25,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.api.{Configuration, Logging}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import utils.CalculationUtils.createCalResponseModel
+import utils.CalculationUtils.{createCalResponseModel, getTaxYearRangeEndYear}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,19 +39,19 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 
-  def generateCalculationListFor2023_24(nino: String): Action[AnyContent] = {
+  def generateCalculationListTYS(nino: String, taxYearRange: String): Action[AnyContent] = {
 
     val stubbed1896NinoPrefixes: Seq[String] = configuration.getOptional[Seq[String]]("stubbed1896NinoPrefixes")
       .getOrElse(Seq.empty)
 
     if (stubbed1896NinoPrefixes.exists(prefix => nino.startsWith(prefix))) {
       // Retrieve stubbed response from ATs
-      requestHandlerController.getRequestHandler(s"/income-tax/view/calculations/liability/23-24/$nino")
+      requestHandlerController.getRequestHandler(s"/income-tax/view/calculations/liability/$taxYearRange/$nino")
     } else {
       Action.async { _ =>
         logger.info(s"Generating calculation list for nino: $nino")
         Future {
-          createCalResponseModel(nino, Some(2024), crystallised = true) match {
+          createCalResponseModel(nino, Some(getTaxYearRangeEndYear(taxYearRange)), crystallised = true) match {
             case Right(responseModel) =>
               val jsonReponse = Json.toJson(responseModel).toString()
               Ok(Json.parse(jsonReponse))
@@ -63,9 +63,9 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
     }
   }
 
-  def getCalculationDetailsFor2023_24(nino: String, calculationId: String): Action[AnyContent] = Action.async { _ =>
+  def getCalculationDetailsTYS(nino: String, calculationId: String, taxYearRange: String): Action[AnyContent] = Action.async { _ =>
     logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
-    val id = s"/income-tax/view/calculations/liability/23-24/$nino/${calculationId.toLowerCase()}"
+    val id = s"/income-tax/view/calculations/liability/$taxYearRange/$nino/${calculationId.toLowerCase()}"
     dataRepository
       .find(equal("_id", id), equal("method", GET))
       .map { stubData =>
