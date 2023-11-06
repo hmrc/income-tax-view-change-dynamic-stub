@@ -21,7 +21,7 @@ import models.CalcSuccessReponse
 import models.HttpMethod.GET
 import org.mongodb.scala.model.Filters.equal
 import play.api.libs.json.{Json, OWrites}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import play.api.{Configuration, Logging}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -64,21 +64,37 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
   }
 
   def getCalculationDetailsFor2023_24(nino: String, calculationId: String): Action[AnyContent] = Action.async { _ =>
+    println("KKKKKKKK" + s"\n $nino\n$calculationId")
     logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
     val id = s"/income-tax/view/calculations/liability/23-24/$nino/${calculationId.toLowerCase()}"
     dataRepository
-      .find(equal("_id", id), equal("method", GET))
-      .map { stubData =>
+      .find(equal("_id", "/income-tax/view/calculations/liability/23-24/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf2024a4"), equal("method", GET))
+      .flatMap { stubData =>
         (stubData.nonEmpty, stubData.head.response.isEmpty) match {
           case (true, false) =>
-            Status(stubData.head.status)(stubData.head.response.get)
+            Future(Status(stubData.head.status)(stubData.head.response.get))
           case _ =>
-            NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: $id")
+            println("SSSSSSSSSSS")
+            getDefault
         }
       }.recoverWith {
       case _ => Future {
         BadRequest(s"Search operation failed: $id")
       }
     }
+  }
+
+  def getDefault: Future[Result] = {
+    println("USING DEFAULT VALUE PPPPPPPPP")
+    dataRepository
+      .find(equal("_id", "/income-tax/view/calculations/liability/23-24/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf2024a4"), equal("method", GET))
+      .map { stubData =>
+        (stubData.nonEmpty, stubData.head.response.isEmpty) match {
+          case (true, false) =>
+            Status(stubData.head.status)(stubData.head.response.get)
+          case _ =>
+            NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: /income-tax/view/calculations/liability/23-24/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf2024a4")
+        }
+      }
   }
 }

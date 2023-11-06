@@ -49,4 +49,11 @@ object DefaultValues extends Logging {
         NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}")
     }
   }
+
+  def getCalculationDetailsFor2023_24Response(url: String): Result = {
+    // val json = getCalculationDetailsFor2023_24DefaultJson
+    //logger.info(s"DefaultValues applied: $json - for: $url")
+    println("WORKING DDDDD")
+    Status(OK)
+  }
 }
