@@ -39,6 +39,10 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 
+  def getCalcLegacy(nino: String, calcId: String): Action[AnyContent] = {
+    requestHandlerController.getRequestHandler(s"/income-tax/view/calculations/liability/$nino/$calcId")
+  }
+
   def generateCalculationListTYS(nino: String, taxYearRange: String): Action[AnyContent] = {
 
     val stubbed1896NinoPrefixes: Seq[String] = configuration.getOptional[Seq[String]]("stubbed1896NinoPrefixes")
