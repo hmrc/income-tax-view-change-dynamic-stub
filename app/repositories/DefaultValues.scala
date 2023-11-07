@@ -16,14 +16,21 @@
 
 package repositories
 
+import models.DataModel
+import models.HttpMethod.GET
+import org.mongodb.scala.model.Filters.equal
 import parsers.ITSAStatusUrlParser.extractTaxYear
 import play.api.Logging
-import play.api.http.Status.OK
 import play.api.libs.json.{JsValue, Json, OWrites}
-import play.api.mvc.Results.{NotFound, Status}
-import play.api.mvc.{AnyContent, MessagesRequest, Result}
+import play.api.mvc.{AnyContent, MessagesControllerComponents, MessagesRequest, Result}
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-object DefaultValues extends Logging {
+import javax.inject.Inject
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
+class DefaultValues @Inject()(dataRepository: DataRepository,
+                              cc: MessagesControllerComponents) extends FrontendController(cc) with Logging {
   case class ITSAStatus(taxYear: String, itsaStatusDetails: List[ITSAStatusDetails])
 
   case class ITSAStatusDetails(submittedOn: String, status: String, statusReason: String)
@@ -48,5 +55,16 @@ object DefaultValues extends Logging {
       case None =>
         NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}")
     }
+  }
+
+  def getDefaultRequestHandler(url: String): Future[Result] = {
+    dataRepository
+      .find(equal("_id", url), equal("method", GET))
+      .map {
+        case stubData@Some(_: DataModel) =>
+          Status(stubData.head.status)(stubData.head.response.get)
+        case None =>
+          NotFound(s"Failed to find the default API endpoint in the repository matching the URI: $url")
+      }
   }
 }

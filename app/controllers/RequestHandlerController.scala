@@ -35,7 +35,8 @@ import play.api.http.Status.OK
 @Singleton
 class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
                                          dataRepository: DataRepository,
-                                         cc: MessagesControllerComponents) extends FrontendController(cc) {
+                                         cc: MessagesControllerComponents,
+                                         defaultValues: DefaultValues) extends FrontendController(cc) {
 
   def getRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {
@@ -48,7 +49,7 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
               Status(stubData.head.status)(stubData.head.response.get)
             }
           } else {
-            DefaultValues.getResponse(url)
+            defaultValues.getResponse(url)
           }
       }
 
