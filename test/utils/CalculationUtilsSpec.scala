@@ -17,6 +17,7 @@
 package utils
 
 import testUtils.TestSupport
+import utils.CalculationUtils.getTaxYearRangeEndYear
 
 class CalculationUtilsSpec extends  TestSupport{
   import CalculationUtils.createCalResponseModel
@@ -52,5 +53,16 @@ class CalculationUtilsSpec extends  TestSupport{
       error.getMessage shouldBe "String index out of range: 7"
     }
 
+    "getTaxYearRangeEndYear" in {
+      val result1 = getTaxYearRangeEndYear("23-24")
+      val result2 = getTaxYearRangeEndYear("24-25")
+      val result3 = getTaxYearRangeEndYear("25-26")
+      val result4 = getTaxYearRangeEndYear("70-71")
+
+      result1 shouldBe 2024
+      result2 shouldBe 2025
+      result3 shouldBe 2026
+      result4 shouldBe 2071
+    }
   }
 }
