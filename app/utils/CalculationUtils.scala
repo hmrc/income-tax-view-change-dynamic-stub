@@ -40,6 +40,10 @@ object CalculationUtils {
     }.toEither
   }
 
+  def getTaxYearRangeEndYear(taxYearRange: String): Int = {
+    s"20${taxYearRange.takeRight(2)}".toInt
+  }
+
   private def getCalcResponse(taxYear: Option[Int],
                               crystallised: Boolean, calcEncoding: String): CalcSuccessReponse = {
     CalcSuccessReponse(
