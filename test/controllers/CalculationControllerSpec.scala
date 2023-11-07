@@ -22,15 +22,19 @@ import org.scalatest.concurrent.ScalaFutures
 import play.api.http.Status.OK
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import repositories.DefaultValues
 import testUtils.TestSupport
 
 
 class CalculationControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository with ScalaFutures with DataHelper {
+
+  val defaultValues: DefaultValues = app.injector.instanceOf[DefaultValues]
   object TestRequestHandlerController extends RequestHandlerController(mockSchemaValidation,
     mockDataRepository,
-    mockCC)
+    mockCC,
+    defaultValues)
 
-  object CalcControllerUnderTest extends CalculationController(mockCC, mockDataRepository, TestRequestHandlerController, app.configuration)
+  object CalcControllerUnderTest extends CalculationController(mockCC, mockDataRepository, TestRequestHandlerController, app.configuration, defaultValues)
 
   "generateCalculationListTYS" should {
 
@@ -59,8 +63,6 @@ class CalculationControllerSpec extends TestSupport with MockSchemaValidation wi
       status(result1) shouldBe OK
       status(result2) shouldBe OK
     }
-
-
 
     "no data for given Nino and TaxYear: return NotFound" in {
       mockFind(None)
