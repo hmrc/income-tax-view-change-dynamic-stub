@@ -17,24 +17,25 @@
 package controllers
 
 import controllers.helpers.DataHelper
-import mocks.{MockDataRepository, MockSchemaValidation}
+import mocks.{MockDataRepository, MockDefaultValues, MockSchemaValidation}
 import org.scalatest.concurrent.ScalaFutures
 import play.api.http.Status.OK
+import play.api.mvc.Results.Status
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.DefaultValues
 import testUtils.TestSupport
 
 
-class CalculationControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository with ScalaFutures with DataHelper {
+class CalculationControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository with ScalaFutures
+  with DataHelper with MockDefaultValues {
 
-  val defaultValues: DefaultValues = app.injector.instanceOf[DefaultValues]
   object TestRequestHandlerController extends RequestHandlerController(mockSchemaValidation,
     mockDataRepository,
     mockCC,
-    defaultValues)
+    mockDefaultValues)
 
-  object CalcControllerUnderTest extends CalculationController(mockCC, mockDataRepository, TestRequestHandlerController, app.configuration, defaultValues)
+  object CalcControllerUnderTest extends CalculationController(mockCC, mockDataRepository, TestRequestHandlerController, app.configuration, mockDefaultValues)
 
   "generateCalculationListTYS" should {
 
@@ -66,16 +67,17 @@ class CalculationControllerSpec extends TestSupport with MockSchemaValidation wi
 
     "no data for given Nino and TaxYear: return NotFound" in {
       mockFind(None)
+      mockGetDefaultRequestHandler(Status(NOT_FOUND))
       val result = CalcControllerUnderTest
         .getCalculationDetailsTYS(nino = "", calculationId = calculationIdTest, "23-24")(FakeRequest())
-      status(result) shouldBe BAD_REQUEST
+      status(result) shouldBe NOT_FOUND
     }
 
     "no data for given Nino and TaxYear: empty response" in {
       mockFind(Some(successWithEmptyBody))
       val result = CalcControllerUnderTest
         .getCalculationDetailsTYS(nino = ninoTest, calculationId = calculationIdTest, "23-24")(FakeRequest())
-      status(result) shouldBe NOT_FOUND
+      status(result) shouldBe NO_CONTENT
     }
   }
 

@@ -16,21 +16,24 @@
 
 package controllers
 
-import mocks.{MockDataRepository, MockSchemaValidation}
+import mocks.{MockDataRepository, MockDefaultValues, MockSchemaValidation}
 import models.{DataModel, SchemaModel}
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import repositories.DefaultValues
 import testUtils.TestSupport
 
-class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository {
+class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository with MockDefaultValues {
   lazy val mockCC: MessagesControllerComponents = stubMessagesControllerComponents()
+
 
   object TestRequestHandlerController extends RequestHandlerController(mockSchemaValidation,
     mockDataRepository,
-    mockCC)
+    mockCC,
+    mockDefaultValues)
 
   lazy val successModel: DataModel = DataModel(
     _id = "test",
