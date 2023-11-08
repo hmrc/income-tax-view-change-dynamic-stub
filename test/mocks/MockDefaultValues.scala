@@ -23,10 +23,9 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.Result
 import repositories.DefaultValues
 import testUtils.TestSupport
-
 import scala.concurrent.Future
 
-trait MockDefaultValues extends TestSupport with MockitoSugar{
+trait MockDefaultValues extends TestSupport with MockitoSugar {
 
   lazy val mockDefaultValues: DefaultValues = mock[DefaultValues]
 
@@ -37,6 +36,10 @@ trait MockDefaultValues extends TestSupport with MockitoSugar{
 
   def mockGetDefaultRequestHandler(result: Result): OngoingStubbing[Future[Result]] = {
     when(mockDefaultValues.getDefaultRequestHandler(ArgumentMatchers.any())).thenReturn(Future.successful(result))
+  }
+
+  def mockGetDefaultValuesGetResponse(result: Result): OngoingStubbing[Result] = {
+    when(mockDefaultValues.getResponse(ArgumentMatchers.any())(ArgumentMatchers.any())).thenReturn(result)
   }
 
 }

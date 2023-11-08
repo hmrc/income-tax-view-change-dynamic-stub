@@ -21,13 +21,13 @@ import models.{DataModel, SchemaModel}
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.mvc.MessagesControllerComponents
+import play.api.mvc.Results.NotFound
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import testUtils.TestSupport
 
 class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository with MockDefaultValues {
   lazy val mockCC: MessagesControllerComponents = stubMessagesControllerComponents()
-
 
   object TestRequestHandlerController extends RequestHandlerController(mockSchemaValidation,
     mockDataRepository,
@@ -76,9 +76,11 @@ class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation
     }
 
     "return a 404 status when the endpoint cannot be found" in {
+      mockFind(None)
+      mockGetDefaultValuesGetResponse(NotFound)
+
       lazy val result = TestRequestHandlerController.getRequestHandler("/test")(FakeRequest())
 
-      mockFind(None)
       status(result) shouldBe Status.NOT_FOUND
     }
   }
