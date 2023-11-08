@@ -20,7 +20,7 @@ import models.DataModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.{reset, when}
 import org.mockito.stubbing.OngoingStubbing
-import org.mongodb.scala.result.{DeleteResult, InsertOneResult, UpdateResult}
+import org.mongodb.scala.result.{DeleteResult, UpdateResult}
 import org.scalatestplus.mockito.MockitoSugar
 import repositories.DataRepository
 import testUtils.TestSupport

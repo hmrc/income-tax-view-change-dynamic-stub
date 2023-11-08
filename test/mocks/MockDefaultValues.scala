@@ -16,14 +16,12 @@
 
 package mocks
 
-import models.DataModel
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.{reset, when}
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.mvc.Result
-import repositories.{DataRepository, DefaultValues}
+import repositories.DefaultValues
 import testUtils.TestSupport
 
 import scala.concurrent.Future

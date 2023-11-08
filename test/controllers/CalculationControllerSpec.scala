@@ -23,9 +23,7 @@ import play.api.http.Status.OK
 import play.api.mvc.Results.Status
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import repositories.DefaultValues
 import testUtils.TestSupport
-
 
 class CalculationControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository with ScalaFutures
   with DataHelper with MockDefaultValues {
@@ -77,6 +75,33 @@ class CalculationControllerSpec extends TestSupport with MockSchemaValidation wi
       mockFind(Some(successWithEmptyBody))
       val result = CalcControllerUnderTest
         .getCalculationDetailsTYS(nino = ninoTest, calculationId = calculationIdTest, "23-24")(FakeRequest())
+      status(result) shouldBe NO_CONTENT
+    }
+  }
+
+  "getCalcLegacy" should {
+    "data for given Nino and TaxYear exists: return OK" in {
+      mockFind(Some(successWithBodyModel))
+      val result1 = CalcControllerUnderTest
+        .getCalcLegacy(nino = ninoTest, calcId = calculationIdTest)(FakeRequest())
+      val result2 = CalcControllerUnderTest
+        .getCalcLegacy(nino = ninoTest, calcId = calculationIdTest)(FakeRequest())
+      status(result1) shouldBe OK
+      status(result2) shouldBe OK
+    }
+
+    "no data for given Nino and TaxYear: return NotFound" in {
+      mockFind(None)
+      mockGetDefaultRequestHandler(Status(NOT_FOUND))
+      val result = CalcControllerUnderTest
+        .getCalcLegacy(nino = "", calcId = calculationIdTest)(FakeRequest())
+      status(result) shouldBe NOT_FOUND
+    }
+
+    "no data for given Nino and TaxYear: empty response" in {
+      mockFind(Some(successWithEmptyBody))
+      val result = CalcControllerUnderTest
+        .getCalcLegacy(nino = ninoTest, calcId = calculationIdTest)(FakeRequest())
       status(result) shouldBe NO_CONTENT
     }
   }

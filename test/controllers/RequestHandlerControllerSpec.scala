@@ -23,7 +23,6 @@ import play.api.libs.json.Json
 import play.api.mvc.MessagesControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import repositories.DefaultValues
 import testUtils.TestSupport
 
 class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository with MockDefaultValues {

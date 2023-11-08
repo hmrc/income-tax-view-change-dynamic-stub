@@ -17,16 +17,15 @@
 package controllers
 
 
-import models.{CalcSuccessReponse, DataModel}
 import models.HttpMethod.GET
+import models.{CalcSuccessReponse, DataModel}
 import org.mongodb.scala.model.Filters.equal
 import play.api.libs.json.{JsValue, Json, OWrites}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.api.{Configuration, Logging}
 import repositories.{DataRepository, DefaultValues}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.CalculationUtils.{createCalResponseModel, getTaxYearRangeEndYear}
-
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -45,8 +44,15 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
     dataRepository
       .find(equal("_id", id), equal("method", GET))
       .flatMap {
-        case stubData@Some(_: DataModel) =>
-          Future(Status(stubData.head.status)(stubData.head.response.get))
+        case stubData@Some(dataModel: DataModel) =>
+          dataModel.response match {
+            case Some(_: JsValue) => Future(Status(stubData.head.status)(stubData.head.response.get))
+            case None => logger.info(s"[CalculationController][getCalcLegacy] " +
+              s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
+              Future {
+                Status(NO_CONTENT)
+              }
+          }
         case None =>
           logger.info(s"[CalculationController][getCalcLegacy] " +
             s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
@@ -94,7 +100,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
             case Some(_: JsValue) => Future(Status(stubData.head.status)(stubData.head.response.get))
             case None => logger.info(s"[CalculationController][getCalculationDetailsTYS] " +
               s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
-              Future{
+              Future {
                 Status(NO_CONTENT)
               }
           }
@@ -106,9 +112,8 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
       }.recoverWith {
       case _ =>
         Future {
-        BadRequest(s"Search operation failed: $id")
-      }
+          BadRequest(s"Search operation failed: $id")
+        }
     }
   }
-
 }
