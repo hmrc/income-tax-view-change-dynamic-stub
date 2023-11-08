@@ -49,9 +49,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
             case Some(_: JsValue) => Future(Status(stubData.head.status)(stubData.head.response.get))
             case None => logger.info(s"[CalculationController][getCalcLegacy] " +
               s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
-              Future {
-                Status(NO_CONTENT)
-              }
+              Future.successful(Status(NO_CONTENT))
           }
         case None =>
           logger.info(s"[CalculationController][getCalcLegacy] " +
@@ -59,9 +57,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
           val fallbackUrl: String = "/income-tax/view/calculations/liability/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf2023m6"
           defaultValues.getDefaultRequestHandler(url = fallbackUrl)
       }.recoverWith {
-      case _ => Future {
-        BadRequest(s"Search operation failed: $id")
-      }
+      case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
     }
   }
 
@@ -100,9 +96,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
             case Some(_: JsValue) => Future(Status(stubData.head.status)(stubData.head.response.get))
             case None => logger.info(s"[CalculationController][getCalculationDetailsTYS] " +
               s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
-              Future {
-                Status(NO_CONTENT)
-              }
+              Future.successful(Status(NO_CONTENT))
           }
         case None =>
           logger.info(s"[CalculationController][getCalculationDetailsTYS] " +
@@ -110,10 +104,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
           val fallbackUrl: String = "/income-tax/view/calculations/liability/23-24/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf2024a4"
           defaultValues.getDefaultRequestHandler(url = fallbackUrl)
       }.recoverWith {
-      case _ =>
-        Future {
-          BadRequest(s"Search operation failed: $id")
-        }
+      case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
     }
   }
 }
