@@ -40,7 +40,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 
   def getCalcLegacy(nino: String, calcId: String): Action[AnyContent] = Action.async { _ =>
-    val id = getFallbackUrlLegacy(calcId = calcId)
+    val id = s"/income-tax/view/calculations/liability/$nino/$calcId"
     dataRepository
       .find(equal("_id", id), equal("method", GET))
       .flatMap {
@@ -54,7 +54,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
         case None =>
           logger.info(s"[CalculationController][getCalcLegacy] " +
             s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
-          val fallbackUrl: String = "/income-tax/view/calculations/liability/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf2023m6"
+          val fallbackUrl: String = getFallbackUrlLegacy(calcId = calcId)
           defaultValues.getDefaultRequestHandler(url = fallbackUrl)
       }.recoverWith {
       case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
@@ -87,7 +87,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
 
   def getCalculationDetailsTYS(nino: String, calculationId: String, taxYearRange: String): Action[AnyContent] = Action.async { _ =>
     logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
-    val id = getFallbackUrlTYS(taxYearRange = taxYearRange)
+    val id = s"/income-tax/view/calculations/liability/$taxYearRange/$nino/${calculationId.toLowerCase()}"
     dataRepository
       .find(equal("_id", id), equal("method", GET))
       .flatMap {
@@ -101,7 +101,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
         case None =>
           logger.info(s"[CalculationController][getCalculationDetailsTYS] " +
             s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
-          val fallbackUrl: String = "/income-tax/view/calculations/liability/23-24/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf2024a4"
+          val fallbackUrl: String = getFallbackUrlTYS(taxYearRange = taxYearRange)
           defaultValues.getDefaultRequestHandler(url = fallbackUrl)
       }.recoverWith {
       case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
