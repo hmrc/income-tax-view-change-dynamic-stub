@@ -17,16 +17,15 @@
 package controllers
 
 
-import models.CalcSuccessReponse
 import models.HttpMethod.GET
+import models.{CalcSuccessReponse, DataModel}
 import org.mongodb.scala.model.Filters.equal
-import play.api.libs.json.{Json, OWrites}
+import play.api.libs.json.{JsValue, Json, OWrites}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.api.{Configuration, Logging}
-import repositories.DataRepository
+import repositories.{DataRepository, DefaultValues}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import utils.CalculationUtils.{createCalResponseModel, getTaxYearRangeEndYear}
-
+import utils.CalculationUtils.{createCalResponseModel, getTaxYearRangeEndYear, getFallbackUrlLegacy, getFallbackUrlTYS}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -35,12 +34,31 @@ import scala.concurrent.Future
 class CalculationController @Inject()(cc: MessagesControllerComponents,
                                       dataRepository: DataRepository,
                                       requestHandlerController: RequestHandlerController,
-                                      configuration: Configuration) extends FrontendController(cc) with Logging {
+                                      configuration: Configuration,
+                                      defaultValues: DefaultValues) extends FrontendController(cc) with Logging {
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 
-  def getCalcLegacy(nino: String, calcId: String): Action[AnyContent] = {
-    requestHandlerController.getRequestHandler(s"/income-tax/view/calculations/liability/$nino/$calcId")
+  def getCalcLegacy(nino: String, calcId: String): Action[AnyContent] = Action.async { _ =>
+    val id = s"/income-tax/view/calculations/liability/$nino/$calcId"
+    dataRepository
+      .find(equal("_id", id), equal("method", GET))
+      .flatMap {
+        case stubData@Some(dataModel: DataModel) =>
+          dataModel.response match {
+            case Some(_: JsValue) => Future(Status(stubData.head.status)(stubData.head.response.get))
+            case None => logger.info(s"[CalculationController][getCalcLegacy] " +
+              s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
+              Future.successful(Status(NO_CONTENT))
+          }
+        case None =>
+          logger.info(s"[CalculationController][getCalcLegacy] " +
+            s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
+          val fallbackUrl: String = getFallbackUrlLegacy(calcId = calcId)
+          defaultValues.getDefaultRequestHandler(url = fallbackUrl)
+      }.recoverWith {
+      case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
+    }
   }
 
   def generateCalculationListTYS(nino: String, taxYearRange: String): Action[AnyContent] = {
@@ -72,17 +90,21 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
     val id = s"/income-tax/view/calculations/liability/$taxYearRange/$nino/${calculationId.toLowerCase()}"
     dataRepository
       .find(equal("_id", id), equal("method", GET))
-      .map { stubData =>
-        (stubData.nonEmpty, stubData.head.response.isEmpty) match {
-          case (true, false) =>
-            Status(stubData.head.status)(stubData.head.response.get)
-          case _ =>
-            NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: $id")
-        }
+      .flatMap {
+        case stubData@Some(dataModel: DataModel) =>
+          dataModel.response match {
+            case Some(_: JsValue) => Future(Status(stubData.head.status)(stubData.head.response.get))
+            case None => logger.info(s"[CalculationController][getCalculationDetailsTYS] " +
+              s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
+              Future.successful(Status(NO_CONTENT))
+          }
+        case None =>
+          logger.info(s"[CalculationController][getCalculationDetailsTYS] " +
+            s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
+          val fallbackUrl: String = getFallbackUrlTYS(taxYearRange = taxYearRange)
+          defaultValues.getDefaultRequestHandler(url = fallbackUrl)
       }.recoverWith {
-      case _ => Future {
-        BadRequest(s"Search operation failed: $id")
-      }
+      case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
     }
   }
 }

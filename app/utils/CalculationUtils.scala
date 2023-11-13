@@ -59,5 +59,14 @@ object CalculationUtils {
       crystallised = crystallised
     )
   }
-}
 
+  def getFallbackUrlLegacy(calcId: String): String = {
+    val taxYear = calcId.substring(calcId.length - 6, calcId.length - 2)
+    s"/income-tax/view/calculations/liability/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf${taxYear}s1"
+  }
+
+  def getFallbackUrlTYS(taxYearRange: String): String = {
+    val taxYear = s"20${taxYearRange.takeRight(2)}"
+    s"/income-tax/view/calculations/liability/$taxYearRange/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf${taxYear}s1"
+  }
+}

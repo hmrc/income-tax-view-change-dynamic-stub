@@ -16,7 +16,6 @@
 
 package models
 
-
 case class CalcSuccessReponse(calculationId: String,
                                calculationTimestamp: String,
                                calculationType: String,
