@@ -25,7 +25,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.api.{Configuration, Logging}
 import repositories.{DataRepository, DefaultValues}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import utils.CalculationUtils.{createCalResponseModel, getTaxYearRangeEndYear}
+import utils.CalculationUtils.{createCalResponseModel, getTaxYearRangeEndYear, getFallbackUrlLegacy, getFallbackUrlTYS}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -40,7 +40,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 
   def getCalcLegacy(nino: String, calcId: String): Action[AnyContent] = Action.async { _ =>
-    val id = s"/income-tax/view/calculations/liability/$nino/$calcId"
+    val id = getFallbackUrlLegacy(calcId = calcId)
     dataRepository
       .find(equal("_id", id), equal("method", GET))
       .flatMap {
@@ -87,7 +87,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
 
   def getCalculationDetailsTYS(nino: String, calculationId: String, taxYearRange: String): Action[AnyContent] = Action.async { _ =>
     logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
-    val id = s"/income-tax/view/calculations/liability/$taxYearRange/$nino/${calculationId.toLowerCase()}"
+    val id = getFallbackUrlTYS(taxYearRange = taxYearRange)
     dataRepository
       .find(equal("_id", id), equal("method", GET))
       .flatMap {
