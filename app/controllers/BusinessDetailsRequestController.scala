@@ -43,6 +43,7 @@ class BusinessDetailsRequestController @Inject()(cc: MessagesControllerComponent
 
   def transformNinoCall(nino: String): Action[AnyContent] = Action.async {
     implicit request =>
-      addSuffixToRequest("businessDetailsIf", "ifresponse")
+      val newRequest = request.withTarget(request.target.withUri(URI.create(request.uri)))
+      requestHandlerController.getRequestHandler(request.uri).apply(newRequest)
   }
 }
