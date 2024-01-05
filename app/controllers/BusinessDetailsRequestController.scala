@@ -41,8 +41,4 @@ class BusinessDetailsRequestController @Inject()(cc: MessagesControllerComponent
       addSuffixToRequest("afterIncomeSourceCreated", "afterIncomeSourceCreated=true")
   }
 
-  def transformNinoCall(nino: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      addSuffixToRequest("businessDetailsIf", "ifresponse")
-  }
 }
