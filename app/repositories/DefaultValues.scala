@@ -26,11 +26,11 @@ import play.api.mvc.{AnyContent, MessagesControllerComponents, MessagesRequest, 
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class DefaultValues @Inject()(dataRepository: DataRepository,
-                              cc: MessagesControllerComponents) extends FrontendController(cc) with Logging {
+                              cc: MessagesControllerComponents)
+                             (implicit val ec: ExecutionContext) extends FrontendController(cc) with Logging {
   case class ITSAStatus(taxYear: String, itsaStatusDetails: List[ITSAStatusDetails])
 
   case class ITSAStatusDetails(submittedOn: String, status: String, statusReason: String)

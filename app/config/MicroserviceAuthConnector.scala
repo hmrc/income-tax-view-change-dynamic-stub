@@ -28,13 +28,12 @@ import utils.LoginUtil.{getDelegatedEnrolmentData, getEnrolmentData}
 
 import javax.inject.{Inject, Singleton}
 import scala.collection.Seq
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 
 @Singleton
 class MicroserviceAuthConnector @Inject()(servicesConfig: ServicesConfig,
-                                          val http: HttpClient) extends PlayAuthConnector {
+                                          val http: HttpClient) (implicit val ec: ExecutionContext) extends PlayAuthConnector {
   override val serviceUrl: String = servicesConfig.baseUrl("auth-login")
 
 

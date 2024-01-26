@@ -24,10 +24,12 @@ import repositories.SchemaRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 @Singleton
-class SetupSchemaController @Inject()(schemaRepository: SchemaRepository, cc: MessagesControllerComponents)
+class SetupSchemaController @Inject()(schemaRepository: SchemaRepository,
+                                      cc: MessagesControllerComponents)
+                                     (implicit val ec: ExecutionContext)
   extends FrontendController(cc) with Logging {
 
   val addSchema: Action[JsValue] = Action.async(parse.json) {

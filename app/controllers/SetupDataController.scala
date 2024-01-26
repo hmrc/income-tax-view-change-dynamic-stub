@@ -28,8 +28,7 @@ import utils.SchemaValidation
 
 import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SetupDataController @Inject()(
@@ -37,7 +36,7 @@ class SetupDataController @Inject()(
                                      dataRepository: DataRepository,
                                      cc: MessagesControllerComponents,
                                      applicationConfig: Config
-                                   ) extends FrontendController(cc) with Logging {
+                                   ) (implicit val ec: ExecutionContext) extends FrontendController(cc) with Logging {
 
   val ignoreJsonValidation: Boolean = applicationConfig.getBoolean("schemaValidation.ignoreJsonValidation")
 
