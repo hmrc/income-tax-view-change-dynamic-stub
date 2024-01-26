@@ -25,14 +25,15 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.SchemaValidation
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
                                          dataRepository: DataRepository,
                                          cc: MessagesControllerComponents,
-                                         defaultValues: DefaultValues) extends FrontendController(cc) {
+                                         defaultValues: DefaultValues)
+                                        (implicit val ec: ExecutionContext)
+  extends FrontendController(cc) {
 
   def getRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {

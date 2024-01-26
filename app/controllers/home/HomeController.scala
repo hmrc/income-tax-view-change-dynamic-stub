@@ -26,15 +26,15 @@ import utils.{FileUtil, SessionBuilder}
 import views.html.LoginPage
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 
 @Singleton
 class HomeController @Inject()(mcc: MessagesControllerComponents,
                                loginPage: LoginPage,
                                microserviceAuthConnector: MicroserviceAuthConnector
-                              ) extends FrontendController(mcc) with Logging {
+                              )(implicit val ec: ExecutionContext)
+  extends FrontendController(mcc) with Logging {
 
   val getLogin: Action[AnyContent] = Action.async { implicit request =>
     FileUtil.getUsersFromFile("/data/users.txt") match {

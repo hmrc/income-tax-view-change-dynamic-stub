@@ -25,11 +25,12 @@ import play.api.libs.json.JsValue
 import repositories.SchemaRepository
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SchemaValidation @Inject()(repository: SchemaRepository) extends Logging {
+class SchemaValidation @Inject()(repository: SchemaRepository)
+                                (implicit val ec: ExecutionContext)
+  extends Logging {
 
   private final lazy val jsonMapper = new ObjectMapper()
   private final lazy val jsonFactory = jsonMapper.getFactory

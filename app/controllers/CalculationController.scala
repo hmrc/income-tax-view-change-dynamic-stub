@@ -25,17 +25,19 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.api.{Configuration, Logging}
 import repositories.{DataRepository, DefaultValues}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import utils.CalculationUtils.{createCalResponseModel, getTaxYearRangeEndYear, getFallbackUrlLegacy, getFallbackUrlTYS}
+import utils.CalculationUtils.{createCalResponseModel, getFallbackUrlLegacy, getFallbackUrlTYS, getTaxYearRangeEndYear}
+
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CalculationController @Inject()(cc: MessagesControllerComponents,
                                       dataRepository: DataRepository,
                                       requestHandlerController: RequestHandlerController,
                                       configuration: Configuration,
-                                      defaultValues: DefaultValues) extends FrontendController(cc) with Logging {
+                                      defaultValues: DefaultValues)
+                                     (implicit val ec: ExecutionContext)
+  extends FrontendController(cc) with Logging {
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
 

@@ -22,10 +22,10 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 @Singleton
-class DataRepositoryBase @Inject()(implicit mongo: MongoComponent)
+class DataRepositoryBase @Inject()(implicit mongo: MongoComponent, val ec: ExecutionContext)
   extends PlayMongoRepository[DataModel](
     mongoComponent = mongo,
     collectionName = "data",
@@ -33,7 +33,7 @@ class DataRepositoryBase @Inject()(implicit mongo: MongoComponent)
     indexes = Seq()
   )
 
-class SchemaRepositoryBase @Inject()(implicit mongo: MongoComponent)
+class SchemaRepositoryBase @Inject()(implicit mongo: MongoComponent,  val ec: ExecutionContext)
   extends PlayMongoRepository[SchemaModel](
     mongoComponent = mongo,
     collectionName = "schemas",
