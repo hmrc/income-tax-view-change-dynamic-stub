@@ -4,5 +4,3 @@
 ->         /setup                                          setup.Routes
 ->         /                                               health.Routes
 ->         /                                               stub.Routes
-
-GET        /admin/metric                                   com.kenshoo.play.metrics.MetricsController.metrics
