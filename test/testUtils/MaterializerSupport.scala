@@ -16,7 +16,8 @@
 
 package testUtils
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
+
 
 trait MaterializerSupport {
   implicit val system = ActorSystem("Sys")
