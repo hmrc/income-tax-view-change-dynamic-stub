@@ -6,7 +6,7 @@ ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" 
 
 resolvers += Resolver.typesafeRepo("releases")
 
-addSbtPlugin("uk.gov.hmrc" % "sbt-auto-build" % "3.18.0")
+addSbtPlugin("uk.gov.hmrc" % "sbt-auto-build" % "3.20.0")
 
 addSbtPlugin("uk.gov.hmrc" % "sbt-distributables" % "2.4.0")
 

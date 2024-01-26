@@ -59,6 +59,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(defaultSettings(): _*)
   .settings(majorVersion := 0)
   .settings(RoutesKeys.routesImport -= "controllers.Assets.Asset")
+  .settings(scalacOptions += "-Wconf:cat=unused-imports&src=routes/.*:s")
   .settings(
     libraryDependencies ++= appDependencies,
     retrieveManaged := true
