@@ -18,7 +18,7 @@ package controllers
 
 
 import models.HttpMethod.GET
-import models.{CalcSuccessReponse, DataModel}
+import models.{CalcSuccessReponse, CrystallisationStatus, DataModel}
 import org.mongodb.scala.model.Filters.equal
 import play.api.libs.json.{JsValue, Json, OWrites}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
@@ -107,6 +107,26 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
           defaultValues.getDefaultRequestHandler(url = fallbackUrl)
       }.recoverWith {
       case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
+    }
+  }
+
+  private def createOverwriteCalculationListUrl(nino: String, taxYearRange: String) = {
+    s"/income-tax/view/calculations/liability/$taxYearRange/$nino"
+  }
+
+  def overwriteCalculationListTYS(nino: String, taxYearRange: String, crystallisationStatus: String): Action[AnyContent] = Action.async { _ =>
+
+    val url = createOverwriteCalculationListUrl(nino = nino, taxYearRange = taxYearRange)
+
+    val crystallisationStatusObj = CrystallisationStatus(crystallisationStatus, url)
+
+    println("AAAAAAAAAA" + url + crystallisationStatusObj)
+
+    dataRepository.replaceOne(url = url, updatedFile = crystallisationStatusObj.makeOverwriteDataModel).flatMap { result =>
+      result.wasAcknowledged() match {
+        case true => Future.successful(Ok("Success"))
+        case false => Future.successful(InternalServerError("Write was not acknowledged"))
+      }
     }
   }
 }
