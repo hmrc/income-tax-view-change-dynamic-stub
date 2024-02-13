@@ -29,7 +29,7 @@ case class CrystallisationStatus(status: String,
   def isCrystallised: Boolean = status match {
     case "Crystallised" => true
     case "NonCrystallised" => false
-    case _ => throw UnexpectedException(Some("Status can be only Crystallsied or Non-Crystallised"))
+    case _ => throw UnexpectedException(Some("Status can be only Crystallised or Non-Crystallised"))
   }
 
   def makeOverwriteJson: JsValue = {
@@ -46,7 +46,7 @@ case class CrystallisationStatus(status: String,
     DataModel(
       _id = url,
       schemaId = "getCalculationListDetailsSuccess",
-      method = "GET",
+      method = "ZOO WEE PAPA",
       status = expectedStatusCode,
       response = Some(makeOverwriteJson)
     )

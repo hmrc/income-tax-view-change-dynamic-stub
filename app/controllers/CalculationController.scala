@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,13 +120,16 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
 
     val crystallisationStatusObj = CrystallisationStatus(crystallisationStatus, url)
 
-    println("AAAAAAAAAA" + url + crystallisationStatusObj)
+    println("AAAAAAAAAA\n" + crystallisationStatus + "\n" + url + "\n" + crystallisationStatusObj)
 
-    dataRepository.replaceOne(url = url, updatedFile = crystallisationStatusObj.makeOverwriteDataModel).flatMap { result =>
-      result.wasAcknowledged() match {
-        case true => Future.successful(Ok("Success"))
-        case false => Future.successful(InternalServerError("Write was not acknowledged"))
+    dataRepository.replaceOne(url = url, updatedFile = crystallisationStatusObj.makeOverwriteDataModel).map { result =>
+      if (result.wasAcknowledged) {
+        Ok("Success")
+      } else {
+        InternalServerError("Write was not acknowledged")
       }
+    }.recoverWith {
+      case ex => Future.successful(BadRequest(s"Update operation failed $ex"))
     }
   }
 }
