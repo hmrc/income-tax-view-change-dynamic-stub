@@ -16,9 +16,9 @@
 
 package controllers
 
-import models.CrystallisationStatus
-import play.api.{Configuration, Logging}
+import models.ItsaStatus
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.{Configuration, Logging}
 import repositories.{DataRepository, DefaultValues}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -27,10 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ItsaStatusController @Inject()(cc: MessagesControllerComponents,
-                                     dataRepository: DataRepository,
-                                     requestHandlerController: RequestHandlerController,
-                                     configuration: Configuration,
-                                     defaultValues: DefaultValues)
+                                     dataRepository: DataRepository)
                                     (implicit val ec: ExecutionContext)
   extends FrontendController(cc) with Logging {
 
@@ -42,11 +39,11 @@ class ItsaStatusController @Inject()(cc: MessagesControllerComponents,
 
     val url = createOverwriteItsaStatusUrl(nino = nino, taxYearRange = taxYearRange)
 
-    val itsaStatusObj = CrystallisationStatus(itsaStatus, url, taxYearRange)
+    val itsaStatusObj = ItsaStatus(itsaStatus, url, taxYearRange)
 
-    println("AAAAAAAAAA\n" + itsaStatus + "\n" + url + "\n" + crystallisationStatusObj)
+    println("AAAAAAAAAA\n" + itsaStatus + "\n" + url + "\n" + itsaStatusObj)
 
-    dataRepository.replaceOne(url = url, updatedFile = crystallisationStatusObj.makeOverwriteDataModel).map { result =>
+    dataRepository.replaceOne(url = url, updatedFile = itsaStatusObj.makeOverwriteDataModel).map { result =>
       if (result.wasAcknowledged) {
         Ok("Success")
       } else {
