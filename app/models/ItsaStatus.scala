@@ -39,14 +39,14 @@ case class ItsaStatus(status: String,
   private val jsonTaxYearRange: String = s"20$taxYearRange"
 
   def makeOverwriteJson: JsValue = {
-    Json.obj(
+    Json.arr(Json.obj(
       "taxYear" -> jsonTaxYearRange,
-      "itsaStatusDetails" -> Json.arr(
+      "itsaStatusDetails" -> Json.arr(Json.obj(
         "submittedOn" -> "2022-01-10T06:14:00Z",
         "status" -> itsaStatusLong,
         "statusReason" -> statusReason
-      )
-    )
+      ))
+    ))
   }
 
   def makeOverwriteDataModel: DataModel =
