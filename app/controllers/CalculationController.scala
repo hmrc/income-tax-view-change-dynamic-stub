@@ -120,8 +120,6 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
 
     val crystallisationStatusObj = CrystallisationStatus(crystallisationStatus, url)
 
-    println("AAAAAAAAAA\n" + crystallisationStatus + "\n" + url + "\n" + crystallisationStatusObj)
-
     dataRepository.replaceOne(url = url, updatedFile = crystallisationStatusObj.makeOverwriteDataModel).map { result =>
       if (result.wasAcknowledged) {
         Ok("Success")

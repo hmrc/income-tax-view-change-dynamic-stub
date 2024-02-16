@@ -41,8 +41,6 @@ class ItsaStatusController @Inject()(cc: MessagesControllerComponents,
 
     val itsaStatusObj = ItsaStatus(itsaStatus, url, taxYearRange)
 
-    println("AAAAAAAAAA\n" + itsaStatus + "\n" + url + "\n" + itsaStatusObj)
-
     dataRepository.replaceOne(url = url, updatedFile = itsaStatusObj.makeOverwriteDataModel).map { result =>
       if (result.wasAcknowledged) {
         Ok("Success")
