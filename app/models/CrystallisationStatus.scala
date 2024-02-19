@@ -17,61 +17,69 @@
 package models
 
 import play.api.UnexpectedException
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsObject, JsValue, Json, Writes}
+import utils.Utilities._
 
 import scala.util.Try
 
+//implicit class JsonUtil[A](json: JsObject) {
+//  def ++(key: String, optValue: Option[A])(implicit writes: Writes[A]): JsObject = {
+//    json ++ optValue.fold(Json.obj())(value => Json.obj(key -> value))
+//  }
+//}
 
 case class CrystallisationStatus(status: String,
-                                 url: String) {
+                                 nino: String,
+                                 taxYearRange: String) {
 
   val expectedStatusCode: Int = 200
+
   def isCrystallised: Boolean = status match {
     case "Crystallised" => true
     case "NonCrystallised" => false
     case _ => throw UnexpectedException(Some("Status can be only Crystallised or Non-Crystallised"))
   }
 
+  def createOverwriteCalculationListUrl: String = {
+    if (is1896) {
+      s"/income-tax/view/calculations/liability/$taxYearRange/$nino"
+    } else {
+      s"/income-tax/list-of-calculation-results/$nino?taxYear=20${taxYearRange.takeRight(2)}"
+    }
+  }
+
+  def is1896: Boolean = taxYearRange.takeRight(2).toInt >= 24
+
+  def taxYearField: Option[String] = if (is1896) None else Some("20" + taxYearRange)
+
+  def calculationTypeField: String = if (is1896) "crystallisation" else "finalDeclaration"
+
   def makeOverwriteJson: JsValue = {
     Json.obj("calculationId" -> "1d35cfe4-cd23-22b2-b074-fae6052024a8",
       "calculationTimestamp" -> "2023-09-30T09:15:34.0Z",
-      "calculationType" -> "crystallisation",
-      "totalIncomeTaxAndNicsDue" -> 15450,
-      "crystallised" -> isCrystallised,
-      "intentToCrystallise" -> true,
-      "crystallisationTimestamp" -> "2023-09-08T01:03:31.0Z")
+      "calculationType" -> calculationTypeField) ++
+      ("taxYear", taxYearField) ++
+      Json.obj("totalIncomeTaxAndNicsDue" -> 15450,
+        "crystallised" -> isCrystallised,
+        "intentToCrystallise" -> true,
+        "crystallisationTimestamp" -> "2023-09-08T01:03:31.0Z")
+  }
+
+  def getSchemaIdValue: String = {
+    if (is1896) {
+      "getCalculationListDetailsSuccess"
+    } else {
+      "getListCalculationDetailsSuccess"
+    }
   }
 
   def makeOverwriteDataModel: DataModel =
     DataModel(
-      _id = url,
-      schemaId = "getCalculationListDetailsSuccess",
+      _id = createOverwriteCalculationListUrl,
+      schemaId = getSchemaIdValue,
       method = "ZOO WEE PAPA",
       status = expectedStatusCode,
       response = Some(makeOverwriteJson)
     )
-}
 
-//class CrystallisationStatus private(val status: String) extends AnyVal {
-//
-//  def makeOverwriteJson: JsValue = {
-//
-//    this.status match {
-//      case
-//    }
-//
-//  }
-//
-//}
-//
-//object CrystallisationStatus {
-//
-//  def apply(id: String): CrystallisationStatus = {
-//    mkCrystallisationStatus(id)
-//  }
-//
-//  def mkCrystallisationStatus(id: String): CrystallisationStatus = {
-//    new CrystallisationStatus(id)
-//  }
-//
-//}
+}

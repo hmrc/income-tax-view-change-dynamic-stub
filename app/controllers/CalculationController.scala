@@ -110,24 +110,20 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
     }
   }
 
-  private def createOverwriteCalculationListUrl(nino: String, taxYearRange: String) = {
-    s"/income-tax/view/calculations/liability/$taxYearRange/$nino"
-  }
 
   def overwriteCalculationListTYS(nino: String, taxYearRange: String, crystallisationStatus: String): Action[AnyContent] = Action.async { _ =>
 
-    val url = createOverwriteCalculationListUrl(nino = nino, taxYearRange = taxYearRange)
+    val crystallisationStatusObj = CrystallisationStatus(crystallisationStatus, nino, taxYearRange)
 
-    val crystallisationStatusObj = CrystallisationStatus(crystallisationStatus, url)
-
-    dataRepository.replaceOne(url = url, updatedFile = crystallisationStatusObj.makeOverwriteDataModel).map { result =>
-      if (result.wasAcknowledged) {
-        Ok("Success")
-      } else {
-        InternalServerError("Write was not acknowledged")
-      }
-    }.recoverWith {
-      case ex => Future.successful(BadRequest(s"Update operation failed $ex"))
+    dataRepository.replaceOne(url = crystallisationStatusObj.createOverwriteCalculationListUrl, updatedFile = crystallisationStatusObj.makeOverwriteDataModel)
+      .map { result =>
+        if (result.wasAcknowledged) {
+          Ok("Success")
+        } else {
+          InternalServerError("Write was not acknowledged")
+        }
+      }.recoverWith {
+      case ex => Future.failed(ex)
     }
   }
 }
