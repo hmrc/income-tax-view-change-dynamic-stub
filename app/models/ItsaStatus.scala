@@ -24,7 +24,7 @@ case class ItsaStatus(status: String,
 
   val expectedStatusCode: Int = 200
 
-  def itsaStatusLong: String = status match {
+  private def itsaStatusLong: String = status match {
     case "NoStatus" => "No Status"
     case "Voluntary" => "MTD Voluntary"
     case "Mandated" => "MTD Mandated"
@@ -45,7 +45,7 @@ case class ItsaStatus(status: String,
     Json.arr(Json.obj(
       "taxYear" -> jsonTaxYearRange,
       "itsaStatusDetails" -> Json.arr(Json.obj(
-        "submittedOn" -> s"20${taxYearRange.takeRight(2)}-01-10T06:14:00Z",
+        "submittedOn" -> s"2024-01-10T06:14:00Z",
         "status" -> itsaStatusLong,
         "statusReason" -> statusReason
       ))
