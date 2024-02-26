@@ -17,9 +17,9 @@
 package controllers
 
 import models.ItsaStatus
+import play.api.Logging
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import play.api.{Configuration, Logging}
-import repositories.{DataRepository, DefaultValues}
+import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}

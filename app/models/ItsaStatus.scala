@@ -25,14 +25,17 @@ case class ItsaStatus(status: String,
   val expectedStatusCode: Int = 200
 
   def itsaStatusLong: String = status match {
-    case "NotSet" => "No Status"
+    case "NoStatus" => "No Status"
     case "Voluntary" => "MTD Voluntary"
-    case "Mandatory" => "MTD Mandated"
+    case "Mandated" => "MTD Mandated"
     case "Annual" => "Annual"
+    case "NonDigital" => "Non Digital"
+    case "Dormant" => "Dormant"
+    case "Exempt" => "MTD Exempt"
   }
 
   def statusReason: String = status match {
-    case "NotSet" => "Sign up - return available"
+    case "NoStatus" => "Sign up - return available"
     case _ => "Sign up - no return available"
   }
 
@@ -42,14 +45,14 @@ case class ItsaStatus(status: String,
     Json.arr(Json.obj(
       "taxYear" -> jsonTaxYearRange,
       "itsaStatusDetails" -> Json.arr(Json.obj(
-        "submittedOn" -> "2022-01-10T06:14:00Z",
+        "submittedOn" -> s"20${taxYearRange.takeRight(2)}-01-10T06:14:00Z",
         "status" -> itsaStatusLong,
         "statusReason" -> statusReason
       ))
     ))
   }
 
-  def makeOverwriteDataModel: DataModel =
+  def makeOverwriteDataModel: DataModel = {
     DataModel(
       _id = url,
       schemaId = "getITSAStatusSuccess",
@@ -57,5 +60,6 @@ case class ItsaStatus(status: String,
       status = expectedStatusCode,
       response = Some(makeOverwriteJson)
     )
+  }
 
 }

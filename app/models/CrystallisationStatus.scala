@@ -17,16 +17,8 @@
 package models
 
 import play.api.UnexpectedException
-import play.api.libs.json.{JsObject, JsValue, Json, Writes}
+import play.api.libs.json.{JsValue, Json}
 import utils.Utilities._
-
-import scala.util.Try
-
-//implicit class JsonUtil[A](json: JsObject) {
-//  def ++(key: String, optValue: Option[A])(implicit writes: Writes[A]): JsObject = {
-//    json ++ optValue.fold(Json.obj())(value => Json.obj(key -> value))
-//  }
-//}
 
 case class CrystallisationStatus(status: String,
                                  nino: String,
@@ -55,14 +47,15 @@ case class CrystallisationStatus(status: String,
   def calculationTypeField: String = if (is1896) "crystallisation" else "finalDeclaration"
 
   def makeOverwriteJson: JsValue = {
-    Json.obj("calculationId" -> "1d35cfe4-cd23-22b2-b074-fae6052024a8",
-      "calculationTimestamp" -> "2023-09-30T09:15:34.0Z",
-      "calculationType" -> calculationTypeField) ++
-      ("taxYear", taxYearField) ++
-      Json.obj("totalIncomeTaxAndNicsDue" -> 15450,
-        "crystallised" -> isCrystallised,
-        "intentToCrystallise" -> true,
-        "crystallisationTimestamp" -> "2023-09-08T01:03:31.0Z")
+    Json.arr(
+      Json.obj("calculationId" -> "1d35cfe4-cd23-22b2-b074-fae6052024a8",
+        "calculationTimestamp" -> s"20${taxYearRange.takeRight(2)}-09-30T09:15:34.0Z",
+        "calculationType" -> calculationTypeField) ++
+        ("taxYear", taxYearField) ++
+        Json.obj("totalIncomeTaxAndNicsDue" -> 15450,
+          "crystallised" -> isCrystallised,
+          "intentToCrystallise" -> true,
+          "crystallisationTimestamp" -> s"20${taxYearRange.takeRight(2)}-09-08T01:03:31.0Z"))
   }
 
   def getSchemaIdValue: String = {
@@ -77,7 +70,7 @@ case class CrystallisationStatus(status: String,
     DataModel(
       _id = createOverwriteCalculationListUrl,
       schemaId = getSchemaIdValue,
-      method = "ZOO WEE PAPA",
+      method = "GET",
       status = expectedStatusCode,
       response = Some(makeOverwriteJson)
     )

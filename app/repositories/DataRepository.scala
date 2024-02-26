@@ -21,7 +21,6 @@ import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.{Filters, ReplaceOptions}
 import org.mongodb.scala.result.{DeleteResult, UpdateResult}
-import play.api.libs.json.JsValue
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
