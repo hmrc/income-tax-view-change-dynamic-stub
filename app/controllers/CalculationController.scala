@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package controllers
 
 
 import models.HttpMethod.GET
-import models.{CalcSuccessReponse, DataModel}
+import models.{CalcSuccessReponse, CrystallisationStatus, DataModel}
 import org.mongodb.scala.model.Filters.equal
 import play.api.libs.json.{JsValue, Json, OWrites}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
@@ -107,6 +107,23 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
           defaultValues.getDefaultRequestHandler(url = fallbackUrl)
       }.recoverWith {
       case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
+    }
+  }
+
+
+  def overwriteCalculationListTYS(nino: String, taxYearRange: String, crystallisationStatus: String): Action[AnyContent] = Action.async { _ =>
+
+    val crystallisationStatusObj = CrystallisationStatus(crystallisationStatus, nino, taxYearRange)
+
+    dataRepository.replaceOne(url = crystallisationStatusObj.createOverwriteCalculationListUrl, updatedFile = crystallisationStatusObj.makeOverwriteDataModel)
+      .map { result =>
+        if (result.wasAcknowledged) {
+          Ok("Success")
+        } else {
+          InternalServerError("Write was not acknowledged")
+        }
+      }.recoverWith {
+      case ex => Future.failed(ex)
     }
   }
 }

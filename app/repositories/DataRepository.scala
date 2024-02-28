@@ -19,7 +19,7 @@ package repositories
 import models.DataModel
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.ReplaceOptions
+import org.mongodb.scala.model.{Filters, ReplaceOptions}
 import org.mongodb.scala.result.{DeleteResult, UpdateResult}
 
 import javax.inject.{Inject, Singleton}
@@ -41,6 +41,14 @@ class DataRepository @Inject()(repository: DataRepositoryBase) {
   def find(query: Bson*): Future[Option[DataModel]] = {
     val finalQuery = if (query.isEmpty) empty() else and(query: _*)
     repository.collection.find(finalQuery).headOption()
+  }
+
+  def replaceOne(url: String, updatedFile: DataModel): Future[UpdateResult] = {
+      repository.collection.replaceOne(
+        filter = Filters.equal("_id", url),
+        replacement = updatedFile,
+        options = new ReplaceOptions().upsert(true)
+      ).toFuture()
   }
 
 }
