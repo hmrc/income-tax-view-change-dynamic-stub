@@ -48,9 +48,11 @@ class CalculationUtilsSpec extends  TestSupport{
     }
 
     "fail for nino in wrong format" in {
-      val Left(error) = createCalResponseModel("AAAAYY", Some(taxYear), true)
-      error.isInstanceOf[Throwable] shouldBe true
-      error.getMessage shouldBe "String index out of range: 7"
+      createCalResponseModel("AAAAYY", Some(taxYear), true) match {
+        case Left(error) =>
+          error.getMessage shouldBe "String index out of range: 7"
+        case Right(_) => fail("Failing scenario")
+      }
     }
 
     "getTaxYearRangeEndYear" in {
