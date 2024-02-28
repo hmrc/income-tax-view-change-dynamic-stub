@@ -18,6 +18,7 @@ package models
 
 import play.api.UnexpectedException
 import play.api.libs.json.{JsValue, Json}
+import utils.Utilities._
 
 case class CrystallisationStatus(status: String,
                                  nino: String,
@@ -50,7 +51,7 @@ case class CrystallisationStatus(status: String,
       Json.obj("calculationId" -> "1d35cfe4-cd23-22b2-b074-fae6052024a8",
         "calculationTimestamp" -> s"2024-09-30T09:15:34.0Z",
         "calculationType" -> calculationTypeField) ++
-        Json.obj("taxYear" -> taxYearField) ++
+        ("taxYear", taxYearField) ++
         Json.obj("totalIncomeTaxAndNicsDue" -> 15450,
           "crystallised" -> isCrystallised,
           "intentToCrystallise" -> true,
