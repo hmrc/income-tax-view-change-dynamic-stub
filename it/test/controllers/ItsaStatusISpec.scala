@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package test.conttrollers
+package test.controllers
 
 import helpers.ComponentSpecBase
 
@@ -22,7 +22,7 @@ import helpers.ComponentSpecBase
 class ItsaStatusISpec extends ComponentSpecBase {
   "to do" when {
     "one is always equals one" in {
-      "one" should be eq "one"
+      "one" should be ("one")
     }
   }
 }
