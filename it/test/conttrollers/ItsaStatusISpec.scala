@@ -21,7 +21,7 @@ import helpers.ComponentSpecBase
 // This is a dummy it/test as we have none atm
 class ItsaStatusISpec extends ComponentSpecBase {
   "to do" when {
-    "one is alway equals one" in {
+    "one is always equals one" in {
       "one" should be eq "one"
     }
   }
