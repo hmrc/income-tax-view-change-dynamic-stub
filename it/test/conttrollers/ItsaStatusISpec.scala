@@ -18,7 +18,7 @@ package test.conttrollers
 
 import helpers.ComponentSpecBase
 
-// This is dummy it/test as we have none atm
+// This is a dummy it/test as we have none atm
 class ItsaStatusISpec extends ComponentSpecBase {
   "to do" when {
     "one is alway equals one" in {
