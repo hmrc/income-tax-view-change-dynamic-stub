@@ -22,11 +22,6 @@ GET         /registration/business-details/mtdId/:mtdid                         
 + nocsrf
 PUT         /income-tax/business-detail/income-source                                 controllers.UpdateIncomeSourceController.mapUpdateIncomeSourceStub()
 
-GET         /login                                                                    controllers.home.HomeController.getLogin()
-
-+ nocsrf
-POST        /login                                                                    controllers.home.HomeController.postLogin()
-
 GET         /*url                                                                     controllers.RequestHandlerController.getRequestHandler(url)
 
 + nocsrf

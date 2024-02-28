@@ -60,6 +60,9 @@ lazy val microservice = Project(appName, file("."))
   .settings(majorVersion := 0)
   .settings(RoutesKeys.routesImport -= "controllers.Assets.Asset")
   .settings(scalacOptions += "-Wconf:cat=unused-imports&src=routes/.*:s")
+  .settings(scalacOptions += "-Wconf:cat=lint-multiarg-infix:silent")
+  .settings(scalacOptions += "-Wconf:src=routes/.*:s")
+  .settings(scalacOptions += "-Xfatal-warnings")
   .settings(
     libraryDependencies ++= appDependencies,
     retrieveManaged := true
