@@ -17,14 +17,15 @@
 package models
 
 import play.api.UnexpectedException
+import play.api.http.Status.OK
 import play.api.libs.json.{JsValue, Json}
 import utils.Utilities._
 
 case class CrystallisationStatus(status: String,
                                  nino: String,
-                                 taxYearRange: String) {
+                                 taxYear: TaxYear) {
 
-  val expectedStatusCode: Int = 200
+  val expectedStatusCode: Int = OK
 
   private def isCrystallised: Boolean = status match {
     case "Crystallised" => true
@@ -33,18 +34,16 @@ case class CrystallisationStatus(status: String,
   }
 
   def createOverwriteCalculationListUrl: String = {
-    if (is1896) {
-      s"/income-tax/view/calculations/liability/$taxYearRange/$nino"
+    if (taxYear.is1896) {
+      s"/income-tax/view/calculations/liability/${taxYear.formattedTaxYearRange}/$nino"
     } else {
-      s"/income-tax/list-of-calculation-results/$nino?taxYear=20${taxYearRange.takeRight(2)}"
+      s"/income-tax/list-of-calculation-results/$nino?taxYear=${taxYear.endYearString}"
     }
   }
 
-  private def is1896: Boolean = taxYearRange.takeRight(2).toInt >= 24
+  private def taxYearField: Option[String] = if (taxYear.is1896) None else Some(taxYear.formattedTaxYearRangeLong)
 
-  private def taxYearField: Option[String] = if (is1896) None else Some("20" + taxYearRange)
-
-  private def calculationTypeField: String = if (is1896) "crystallisation" else "finalDeclaration"
+  private def calculationTypeField: String = if (taxYear.is1896) "crystallisation" else "finalDeclaration"
 
   def makeOverwriteJson: JsValue = {
     Json.arr(
@@ -59,7 +58,7 @@ case class CrystallisationStatus(status: String,
   }
 
   private def getSchemaIdValue: String = {
-    if (is1896) {
+    if (taxYear.is1896) {
       "getCalculationListDetailsSuccess"
     } else {
       "getListCalculationDetailsSuccess"

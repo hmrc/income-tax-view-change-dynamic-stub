@@ -16,7 +16,7 @@
 
 package controllers
 
-import models.ItsaStatus
+import models.{ItsaStatus, TaxYear}
 import play.api.Logging
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import repositories.DataRepository
@@ -31,24 +31,34 @@ class ItsaStatusController @Inject()(cc: MessagesControllerComponents,
                                     (implicit val ec: ExecutionContext)
   extends FrontendController(cc) with Logging {
 
-  private def createOverwriteItsaStatusUrl(nino: String, taxYearRange: String): String = {
-    s"/income-tax/$nino/person-itd/itsa-status/$taxYearRange?futureYears=false&history=false"
+  private def createOverwriteItsaStatusUrl(nino: String, taxYear: TaxYear): String = {
+    s"/income-tax/$nino/person-itd/itsa-status/${taxYear.formattedTaxYearRange}?futureYears=false&history=false"
   }
 
   def overwriteItsaStatus(nino: String, taxYearRange: String, itsaStatus: String): Action[AnyContent] = Action.async { _ =>
 
-    val url = createOverwriteItsaStatusUrl(nino = nino, taxYearRange = taxYearRange)
+    TaxYear.createTaxYearGivenTaxYearRange(taxYearRange) match {
+      case Some(taxYear: TaxYear) =>
 
-    val itsaStatusObj = ItsaStatus(itsaStatus, url, taxYearRange)
+        val url = createOverwriteItsaStatusUrl(nino = nino, taxYear = taxYear)
+        val itsaStatusObj = ItsaStatus(itsaStatus, url, taxYear)
 
-    dataRepository.replaceOne(url = url, updatedFile = itsaStatusObj.makeOverwriteDataModel).map { result =>
-      if (result.wasAcknowledged) {
-        Ok("Success")
-      } else {
-        InternalServerError("Write was not acknowledged")
-      }
-    }.recoverWith {
-      case ex => Future.successful(BadRequest(s"Update operation failed $ex"))
+        dataRepository.replaceOne(url = url, updatedFile = itsaStatusObj.makeOverwriteDataModel).map { result =>
+          if (result.wasAcknowledged) {
+            logger.error(s"[ItsaStatusController][overwriteItsaStatus] Overwrite success! For < url: $url >")
+            Ok("Overwrite success! For < url: $url >")
+          } else {
+            logger.error(s"[ItsaStatusController][overwriteItsaStatus] Write was not acknowledged! For < url: $url >")
+            InternalServerError("Write was not acknowledged")
+          }
+        }.recoverWith {
+          case ex =>
+            logger.error(s"[ItsaStatusController][overwriteItsaStatus] Update operation failed. < Exception: $ex >")
+            Future.failed(ex)
+        }
+      case None =>
+        logger.error(s"[ItsaStatusController][overwriteItsaStatus] taxYearRange could not be converted to TaxYear")
+        Future.failed(new Exception("taxYearRange could not be converted to TaxYear"))
     }
   }
 

@@ -18,7 +18,7 @@ package controllers
 
 
 import models.HttpMethod.GET
-import models.{CalcSuccessReponse, CrystallisationStatus, DataModel}
+import models.{CalcSuccessReponse, CrystallisationStatus, DataModel, TaxYear}
 import org.mongodb.scala.model.Filters.equal
 import play.api.libs.json.{JsValue, Json, OWrites}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
@@ -111,19 +111,33 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
   }
 
 
-  def overwriteCalculationListTYS(nino: String, taxYearRange: String, crystallisationStatus: String): Action[AnyContent] = Action.async { _ =>
+  def overwriteCalculationList(nino: String, taxYearRange: String, crystallisationStatus: String): Action[AnyContent] = Action.async { _ =>
+    logger.info(s"Overwriting calculation list data for < nino: $nino > < taxYearRange: $taxYearRange > < crystallisationStatus: $crystallisationStatus >")
 
-    val crystallisationStatusObj = CrystallisationStatus(crystallisationStatus, nino, taxYearRange)
+    TaxYear.createTaxYearGivenTaxYearRange(taxYearRange) match {
+      case Some(taxYear) =>
 
-    dataRepository.replaceOne(url = crystallisationStatusObj.createOverwriteCalculationListUrl, updatedFile = crystallisationStatusObj.makeOverwriteDataModel)
-      .map { result =>
-        if (result.wasAcknowledged) {
-          Ok("Success")
-        } else {
-          InternalServerError("Write was not acknowledged")
+        val crystallisationStatusObj = CrystallisationStatus(crystallisationStatus, nino, taxYear)
+        val url = crystallisationStatusObj.createOverwriteCalculationListUrl
+
+        dataRepository.replaceOne(url = url, updatedFile = crystallisationStatusObj.makeOverwriteDataModel)
+          .map { result =>
+            if (result.wasAcknowledged) {
+              logger.info(s"[CalculationController][overwriteCalculationList] Overwrite success! For < url: $url >")
+              Ok("Success")
+            } else {
+              logger.error(s"[CalculationController][overwriteCalculationList] Write was not acknowledged! For < url: $url >")
+              InternalServerError("Write was not acknowledged")
+            }
+          }.recoverWith {
+          case ex =>
+            logger.error(s"[CalculationController][overwriteCalculationList] Update operation failed. < Exception: $ex >")
+            Future.failed(ex)
         }
-      }.recoverWith {
-      case ex => Future.failed(ex)
+      case None =>
+        logger.error(s"[CalculationController][overwriteCalculationList] taxYearRange could not be converted to TaxYear")
+        Future.failed(new Exception("taxYearRange could not be converted to TaxYear"))
     }
+
   }
 }
