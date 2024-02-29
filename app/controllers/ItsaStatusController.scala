@@ -36,6 +36,7 @@ class ItsaStatusController @Inject()(cc: MessagesControllerComponents,
   }
 
   def overwriteItsaStatus(nino: String, taxYearRange: String, itsaStatus: String): Action[AnyContent] = Action.async { _ =>
+    logger.info(s"Overwriting itsa status data for < nino: $nino > < taxYearRange: $taxYearRange > < itsaStatus: $itsaStatus >")
 
     TaxYear.createTaxYearGivenTaxYearRange(taxYearRange) match {
       case Some(taxYear: TaxYear) =>
@@ -45,7 +46,7 @@ class ItsaStatusController @Inject()(cc: MessagesControllerComponents,
 
         dataRepository.replaceOne(url = url, updatedFile = itsaStatusObj.makeOverwriteDataModel).map { result =>
           if (result.wasAcknowledged) {
-            logger.error(s"[ItsaStatusController][overwriteItsaStatus] Overwrite success! For < url: $url >")
+            logger.info(s"[ItsaStatusController][overwriteItsaStatus] Overwrite success! For < url: $url >")
             Ok("Overwrite success! For < url: $url >")
           } else {
             logger.error(s"[ItsaStatusController][overwriteItsaStatus] Write was not acknowledged! For < url: $url >")
