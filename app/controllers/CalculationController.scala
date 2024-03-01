@@ -18,11 +18,11 @@ package controllers
 
 
 import models.HttpMethod.GET
-import models.{CalcSuccessReponse, CrystallisationStatus, DataModel}
+import models.{CalcSuccessReponse, CrystallisationStatus, DataModel, TaxYear}
 import org.mongodb.scala.model.Filters.equal
 import play.api.libs.json.{JsValue, Json, OWrites}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import play.api.{Configuration, Logging}
+import play.api.{Configuration, Logger, Logging}
 import repositories.{DataRepository, DefaultValues}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.CalculationUtils.{createCalResponseModel, getFallbackUrlLegacy, getFallbackUrlTYS, getTaxYearRangeEndYear}
@@ -49,12 +49,12 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
         case stubData@Some(dataModel: DataModel) =>
           dataModel.response match {
             case Some(_: JsValue) => Future(Status(stubData.head.status)(stubData.head.response.get))
-            case None => logger.info(s"[CalculationController][getCalcLegacy] " +
+            case None => Logger("application").info(s"[CalculationController][getCalcLegacy] " +
               s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
               Future.successful(Status(NO_CONTENT))
           }
         case None =>
-          logger.info(s"[CalculationController][getCalcLegacy] " +
+          Logger("application").info(s"[CalculationController][getCalcLegacy] " +
             s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
           val fallbackUrl: String = getFallbackUrlLegacy(calcId = calcId)
           defaultValues.getDefaultRequestHandler(url = fallbackUrl)
@@ -73,7 +73,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
       requestHandlerController.getRequestHandler(s"/income-tax/view/calculations/liability/$taxYearRange/$nino")
     } else {
       Action.async { _ =>
-        logger.info(s"Generating calculation list for nino: $nino")
+        Logger("application").info(s"Generating calculation list for nino: $nino")
         Future {
           createCalResponseModel(nino, Some(getTaxYearRangeEndYear(taxYearRange)), crystallised = true) match {
             case Right(responseModel) =>
@@ -88,7 +88,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
   }
 
   def getCalculationDetailsTYS(nino: String, calculationId: String, taxYearRange: String): Action[AnyContent] = Action.async { _ =>
-    logger.info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
+    Logger("application").info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
     val id = s"/income-tax/view/calculations/liability/$taxYearRange/$nino/${calculationId.toLowerCase()}"
     dataRepository
       .find(equal("_id", id), equal("method", GET))
@@ -96,12 +96,12 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
         case stubData@Some(dataModel: DataModel) =>
           dataModel.response match {
             case Some(_: JsValue) => Future(Status(stubData.head.status)(stubData.head.response.get))
-            case None => logger.info(s"[CalculationController][getCalculationDetailsTYS] " +
+            case None => Logger("application").info(s"[CalculationController][getCalculationDetailsTYS] " +
               s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
               Future.successful(Status(NO_CONTENT))
           }
         case None =>
-          logger.info(s"[CalculationController][getCalculationDetailsTYS] " +
+          Logger("application").info(s"[CalculationController][getCalculationDetailsTYS] " +
             s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint.")
           val fallbackUrl: String = getFallbackUrlTYS(taxYearRange = taxYearRange)
           defaultValues.getDefaultRequestHandler(url = fallbackUrl)
@@ -110,20 +110,43 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
     }
   }
 
-
-  def overwriteCalculationListTYS(nino: String, taxYearRange: String, crystallisationStatus: String): Action[AnyContent] = Action.async { _ =>
-
-    val crystallisationStatusObj = CrystallisationStatus(crystallisationStatus, nino, taxYearRange)
-
-    dataRepository.replaceOne(url = crystallisationStatusObj.createOverwriteCalculationListUrl, updatedFile = crystallisationStatusObj.makeOverwriteDataModel)
-      .map { result =>
-        if (result.wasAcknowledged) {
-          Ok("Success")
-        } else {
-          InternalServerError("Write was not acknowledged")
-        }
-      }.recoverWith {
-      case ex => Future.failed(ex)
+  def createOverwriteCalculationListUrl(nino: String, taxYear: TaxYear): String = {
+    if (taxYear.endYear >= 2024) {
+      Logger("application").info(s"[CalculationController][createOverwriteCalculationListUrl] Overwriting calculation details TYS")
+      s"/income-tax/view/calculations/liability/${taxYear.rangeShort}/$nino"
+    } else {
+      Logger("application").info(s"[CalculationController][createOverwriteCalculationListUrl] Overwriting calculation details legacy")
+      s"/income-tax/list-of-calculation-results/$nino?taxYear=${taxYear.endYearString}"
     }
+  }
+
+  def overwriteCalculationList(nino: String, taxYearRange: String, crystallisationStatus: String): Action[AnyContent] = Action.async { _ =>
+    Logger("application").info(s"Overwriting calculation list data for < nino: $nino > < taxYearRange: $taxYearRange > < crystallisationStatus: $crystallisationStatus >")
+
+    TaxYear.createTaxYearGivenTaxYearRange(taxYearRange) match {
+      case Some(taxYear) =>
+
+        val url = createOverwriteCalculationListUrl(nino, taxYear)
+        val crystallisationStatusObj = CrystallisationStatus(crystallisationStatus, nino, taxYear, url)
+
+        dataRepository.replaceOne(url = crystallisationStatusObj.url, updatedFile = crystallisationStatusObj.makeOverwriteDataModel)
+          .map { result =>
+            if (result.wasAcknowledged) {
+              Logger("application").info(s"[CalculationController][overwriteCalculationList] Overwrite success! For < url: $url >")
+              Ok("Success")
+            } else {
+              Logger("application").error(s"[CalculationController][overwriteCalculationList] Write was not acknowledged! For < url: $url >")
+              InternalServerError("Write was not acknowledged")
+            }
+          }.recoverWith {
+          case ex =>
+            Logger("application").error(s"[CalculationController][overwriteCalculationList] Update operation failed. < Exception: $ex >")
+            Future.failed(ex)
+        }
+      case None =>
+        Logger("application").error(s"[CalculationController][overwriteCalculationList] taxYearRange could not be converted to TaxYear")
+        Future.failed(new Exception("taxYearRange could not be converted to TaxYear"))
+    }
+
   }
 }

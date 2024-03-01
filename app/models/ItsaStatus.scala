@@ -16,13 +16,14 @@
 
 package models
 
+import play.api.http.Status.OK
 import play.api.libs.json.{JsValue, Json}
 
 case class ItsaStatus(status: String,
                       url: String,
-                      taxYearRange: String) {
+                      taxYear: TaxYear) {
 
-  val expectedStatusCode: Int = 200
+  val expectedStatusCode: Int = OK
 
   private def itsaStatusLong: String = status match {
     case "NoStatus" => "No Status"
@@ -39,11 +40,9 @@ case class ItsaStatus(status: String,
     case _ => "Sign up - no return available"
   }
 
-  private val jsonTaxYearRange: String = s"20$taxYearRange"
-
   def makeOverwriteJson: JsValue = {
     Json.arr(Json.obj(
-      "taxYear" -> jsonTaxYearRange,
+      "taxYear" -> taxYear.rangeLong,
       "itsaStatusDetails" -> Json.arr(Json.obj(
         "submittedOn" -> s"2024-01-10T06:14:00Z",
         "status" -> itsaStatusLong,

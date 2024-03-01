@@ -17,14 +17,16 @@
 package models
 
 import play.api.UnexpectedException
+import play.api.http.Status.OK
 import play.api.libs.json.{JsValue, Json}
 import utils.Utilities._
 
 case class CrystallisationStatus(status: String,
                                  nino: String,
-                                 taxYearRange: String) {
+                                 taxYear: TaxYear,
+                                 url: String) {
 
-  val expectedStatusCode: Int = 200
+  val expectedStatusCode: Int = OK
 
   private def isCrystallised: Boolean = status match {
     case "Crystallised" => true
@@ -32,17 +34,9 @@ case class CrystallisationStatus(status: String,
     case _ => throw UnexpectedException(Some("Status can be only Crystallised or Non-Crystallised"))
   }
 
-  def createOverwriteCalculationListUrl: String = {
-    if (is1896) {
-      s"/income-tax/view/calculations/liability/$taxYearRange/$nino"
-    } else {
-      s"/income-tax/list-of-calculation-results/$nino?taxYear=20${taxYearRange.takeRight(2)}"
-    }
-  }
+  private def is1896: Boolean = taxYear.endYear >= 2024
 
-  private def is1896: Boolean = taxYearRange.takeRight(2).toInt >= 24
-
-  private def taxYearField: Option[String] = if (is1896) None else Some("20" + taxYearRange)
+  private def taxYearField: Option[String] = if (is1896) None else Some(taxYear.rangeLong)
 
   private def calculationTypeField: String = if (is1896) "crystallisation" else "finalDeclaration"
 
@@ -68,7 +62,7 @@ case class CrystallisationStatus(status: String,
 
   def makeOverwriteDataModel: DataModel =
     DataModel(
-      _id = createOverwriteCalculationListUrl,
+      _id = url,
       schemaId = getSchemaIdValue,
       method = "GET",
       status = expectedStatusCode,
