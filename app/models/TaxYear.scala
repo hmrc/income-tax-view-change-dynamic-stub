@@ -29,8 +29,6 @@ case class TaxYear(endYear: Int) {
     s"20${startYear.toString.takeRight(2)}-${endYear.toString.takeRight(2)}"
   }
 
-  def isAfter2023: Boolean = endYear >= 2023
-
 }
 
 object TaxYear {
@@ -41,7 +39,8 @@ object TaxYear {
       // Add 2,000 to convert it to long year. Eg: 23 -> 2023
       Some(TaxYear(taxYearEndString.toInt + 2000))
     } catch {
-      case _: NumberFormatException => None
+      case _: NumberFormatException =>
+        None
     }
   }
 

@@ -20,7 +20,7 @@ import models.DataModel
 import models.HttpMethod.GET
 import org.mongodb.scala.model.Filters.equal
 import parsers.ITSAStatusUrlParser.extractTaxYear
-import play.api.Logging
+import play.api.{Logger, Logging}
 import play.api.libs.json.{JsValue, Json, OWrites}
 import play.api.mvc.{AnyContent, MessagesControllerComponents, MessagesRequest, Result}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -50,7 +50,7 @@ class DefaultValues @Inject()(dataRepository: DataRepository,
       case Some(taxYear) =>
         val taxYearNormalised = s"20$taxYear" // conversion to format 2023-24
         val json = getItsaStatusDefaultJson(taxYearNormalised)
-        logger.info(s"DefaultValues applied: $json - for: $url")
+        Logger("application").info(s"DefaultValues applied: $json - for: $url")
         Status(OK)(json)
       case None =>
         NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}")

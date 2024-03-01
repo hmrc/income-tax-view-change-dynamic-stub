@@ -34,7 +34,7 @@ case class CrystallisationStatus(status: String,
     case _ => throw UnexpectedException(Some("Status can be only Crystallised or Non-Crystallised"))
   }
 
-  private def is1896: Boolean = taxYear.isAfter2023
+  private def is1896: Boolean = taxYear.endYear >= 2024
 
   private def taxYearField: Option[String] = if (is1896) None else Some(taxYear.formattedTaxYearRangeLong)
 
