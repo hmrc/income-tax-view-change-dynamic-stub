@@ -47,7 +47,7 @@ class ItsaStatusController @Inject()(cc: MessagesControllerComponents,
         dataRepository.replaceOne(url = url, updatedFile = itsaStatusObj.makeOverwriteDataModel).map { result =>
           if (result.wasAcknowledged) {
             logger.info(s"[ItsaStatusController][overwriteItsaStatus] Overwrite success! For < url: $url >")
-            Ok("Overwrite success! For < url: $url >")
+            Ok(s"Overwrite success! For < url: $url >")
           } else {
             logger.error(s"[ItsaStatusController][overwriteItsaStatus] Write was not acknowledged! For < url: $url >")
             InternalServerError("Write was not acknowledged")
