@@ -113,7 +113,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
   def createOverwriteCalculationListUrl(nino: String, taxYear: TaxYear): String = {
     if (taxYear.endYear >= 2024) {
       Logger("application").info(s"[CalculationController][createOverwriteCalculationListUrl] Overwriting calculation details TYS")
-      s"/income-tax/view/calculations/liability/${taxYear.formattedTaxYearRange}/$nino"
+      s"/income-tax/view/calculations/liability/${taxYear.rangeShort}/$nino"
     } else {
       Logger("application").info(s"[CalculationController][createOverwriteCalculationListUrl] Overwriting calculation details legacy")
       s"/income-tax/list-of-calculation-results/$nino?taxYear=${taxYear.endYearString}"

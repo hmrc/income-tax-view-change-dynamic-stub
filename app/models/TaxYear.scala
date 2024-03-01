@@ -21,11 +21,11 @@ case class TaxYear(endYear: Int) {
   val startYear: Int = endYear - 1
   val endYearString: String = endYear.toString
 
-  def formattedTaxYearRange: String = {
+  def rangeShort: String = {
     s"${startYear.toString.takeRight(2)}-${endYear.toString.takeRight(2)}"
   }
 
-  def formattedTaxYearRangeLong: String = {
+  def rangeLong: String = {
     s"20${startYear.toString.takeRight(2)}-${endYear.toString.takeRight(2)}"
   }
 

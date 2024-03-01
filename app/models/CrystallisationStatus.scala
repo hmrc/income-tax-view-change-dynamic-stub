@@ -36,7 +36,7 @@ case class CrystallisationStatus(status: String,
 
   private def is1896: Boolean = taxYear.endYear >= 2024
 
-  private def taxYearField: Option[String] = if (is1896) None else Some(taxYear.formattedTaxYearRangeLong)
+  private def taxYearField: Option[String] = if (is1896) None else Some(taxYear.rangeLong)
 
   private def calculationTypeField: String = if (is1896) "crystallisation" else "finalDeclaration"
 

@@ -42,7 +42,7 @@ case class ItsaStatus(status: String,
 
   def makeOverwriteJson: JsValue = {
     Json.arr(Json.obj(
-      "taxYear" -> taxYear.formattedTaxYearRangeLong,
+      "taxYear" -> taxYear.rangeLong,
       "itsaStatusDetails" -> Json.arr(Json.obj(
         "submittedOn" -> s"2024-01-10T06:14:00Z",
         "status" -> itsaStatusLong,

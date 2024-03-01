@@ -32,7 +32,7 @@ class ItsaStatusController @Inject()(cc: MessagesControllerComponents,
   extends FrontendController(cc) with Logging {
 
   private def createOverwriteItsaStatusUrl(nino: String, taxYear: TaxYear): String = {
-    s"/income-tax/$nino/person-itd/itsa-status/${taxYear.formattedTaxYearRange}?futureYears=false&history=false"
+    s"/income-tax/$nino/person-itd/itsa-status/${taxYear.rangeShort}?futureYears=false&history=false"
   }
 
   def overwriteItsaStatus(nino: String, taxYearRange: String, itsaStatus: String): Action[AnyContent] = Action.async { _ =>
