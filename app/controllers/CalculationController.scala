@@ -110,6 +110,15 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
     }
   }
 
+  def createOverwriteCalculationListUrl(nino: String, taxYear: TaxYear): String = {
+    if (taxYear.isAfter2023) {
+      logger.info(s"[CalculationController][createOverwriteCalculationListUrl] Overwriting calculation details TYS")
+      s"/income-tax/view/calculations/liability/${taxYear.formattedTaxYearRange}/$nino"
+    } else {
+      logger.info(s"[CalculationController][createOverwriteCalculationListUrl] Overwriting calculation details legacy")
+      s"/income-tax/list-of-calculation-results/$nino?taxYear=${taxYear.endYearString}"
+    }
+  }
 
   def overwriteCalculationList(nino: String, taxYearRange: String, crystallisationStatus: String): Action[AnyContent] = Action.async { _ =>
     logger.info(s"Overwriting calculation list data for < nino: $nino > < taxYearRange: $taxYearRange > < crystallisationStatus: $crystallisationStatus >")
@@ -117,10 +126,10 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
     TaxYear.createTaxYearGivenTaxYearRange(taxYearRange) match {
       case Some(taxYear) =>
 
-        val crystallisationStatusObj = CrystallisationStatus(crystallisationStatus, nino, taxYear)
-        val url = crystallisationStatusObj.createOverwriteCalculationListUrl
+        val url = createOverwriteCalculationListUrl(nino, taxYear)
+        val crystallisationStatusObj = CrystallisationStatus(crystallisationStatus, nino, taxYear, url)
 
-        dataRepository.replaceOne(url = url, updatedFile = crystallisationStatusObj.makeOverwriteDataModel)
+        dataRepository.replaceOne(url = crystallisationStatusObj.url, updatedFile = crystallisationStatusObj.makeOverwriteDataModel)
           .map { result =>
             if (result.wasAcknowledged) {
               logger.info(s"[CalculationController][overwriteCalculationList] Overwrite success! For < url: $url >")

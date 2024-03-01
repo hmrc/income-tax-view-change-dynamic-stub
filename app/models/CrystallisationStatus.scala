@@ -23,7 +23,8 @@ import utils.Utilities._
 
 case class CrystallisationStatus(status: String,
                                  nino: String,
-                                 taxYear: TaxYear) {
+                                 taxYear: TaxYear,
+                                 url: String) {
 
   val expectedStatusCode: Int = OK
 
@@ -33,17 +34,11 @@ case class CrystallisationStatus(status: String,
     case _ => throw UnexpectedException(Some("Status can be only Crystallised or Non-Crystallised"))
   }
 
-  def createOverwriteCalculationListUrl: String = {
-    if (taxYear.is1896) {
-      s"/income-tax/view/calculations/liability/${taxYear.formattedTaxYearRange}/$nino"
-    } else {
-      s"/income-tax/list-of-calculation-results/$nino?taxYear=${taxYear.endYearString}"
-    }
-  }
+  private def is1896: Boolean = taxYear.isAfter2023
 
-  private def taxYearField: Option[String] = if (taxYear.is1896) None else Some(taxYear.formattedTaxYearRangeLong)
+  private def taxYearField: Option[String] = if (is1896) None else Some(taxYear.formattedTaxYearRangeLong)
 
-  private def calculationTypeField: String = if (taxYear.is1896) "crystallisation" else "finalDeclaration"
+  private def calculationTypeField: String = if (is1896) "crystallisation" else "finalDeclaration"
 
   def makeOverwriteJson: JsValue = {
     Json.arr(
@@ -58,7 +53,7 @@ case class CrystallisationStatus(status: String,
   }
 
   private def getSchemaIdValue: String = {
-    if (taxYear.is1896) {
+    if (is1896) {
       "getCalculationListDetailsSuccess"
     } else {
       "getListCalculationDetailsSuccess"
@@ -67,7 +62,7 @@ case class CrystallisationStatus(status: String,
 
   def makeOverwriteDataModel: DataModel =
     DataModel(
-      _id = createOverwriteCalculationListUrl,
+      _id = url,
       schemaId = getSchemaIdValue,
       method = "GET",
       status = expectedStatusCode,
