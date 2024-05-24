@@ -22,6 +22,9 @@ GET         /registration/business-details/mtdId/:mtdid                         
 + nocsrf
 PUT         /income-tax/business-detail/income-source                                 controllers.UpdateIncomeSourceController.mapUpdateIncomeSourceStub()
 
++nocsrf
+PUT         /income-tax/calculations/POA/ClaimToAdjust                                controllers.SubmitPoaController.interceptSubmitForErrorUser()
+
 GET         /*url                                                                     controllers.RequestHandlerController.getRequestHandler(url)
 
 + nocsrf
