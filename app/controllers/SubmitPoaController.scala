@@ -16,7 +16,7 @@
 
 package controllers
 
-import play.api.Configuration
+import play.api.{Configuration, Logger, Logging}
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -28,7 +28,7 @@ import scala.concurrent.Future
 class SubmitPoaController @Inject()(cc: MessagesControllerComponents,
                                     requestHandlerController: RequestHandlerController,
                                     configuration: Configuration
-                                   ) extends FrontendController(cc) {
+                                   ) extends FrontendController(cc) with Logging {
 
   val error1773Ninos: Seq[String] = configuration.getOptional[Seq[String]]("api1773ErrorResponseNinos")
     .getOrElse(Seq.empty)
@@ -45,11 +45,13 @@ class SubmitPoaController @Inject()(cc: MessagesControllerComponents,
         ninoOpt match {
           case Some(nino) =>
             val newRequest =
-              if (error1773Ninos.contains(nino)) {
+              if (error1773Ninos.contains(nino.toUpperCase)) {
                 // Retrieve stubbed error response from ATs
+                Logger("application").info(s"Returning stubbed API#1773 error response for nino: $nino")
                 request.withTarget(request.target.withUri(URI.create(request.uri + s"?nino=$nino")))
               } else {
                 // Retrieve stubbed success response from ATs
+                Logger("application").info(s"Returning stubbed API#1773 success response for nino: $nino")
                 request
               }
             requestHandlerController.postRequestHandler(newRequest.uri).apply(newRequest)
