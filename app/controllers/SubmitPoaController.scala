@@ -39,13 +39,13 @@ class SubmitPoaController @Inject()(cc: MessagesControllerComponents,
         ninoOpt match {
           case Some(nino) =>
             val newRequest =
-              if (nino.toLowerCase.equals("PA000006A")) {
-              // Retrieve stubbed error response from ATs
-              request.withTarget(request.target.withUri(URI.create(request.uri + s"?nino=$nino")))
-            } else {
-              // Retrieve stubbed success response from ATs
-              request
-            }
+              if (nino.toUpperCase.equals("PA000006A")) {
+                // Retrieve stubbed error response from ATs
+                request.withTarget(request.target.withUri(URI.create(request.uri + s"?nino=$nino")))
+              } else {
+                // Retrieve stubbed success response from ATs
+                request
+              }
             requestHandlerController.postRequestHandler(newRequest.uri).apply(newRequest)
           case None => Future.successful(NoNinoError)
         }
