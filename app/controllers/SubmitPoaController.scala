@@ -27,7 +27,7 @@ import scala.concurrent.Future
 
 class SubmitPoaController @Inject()(cc: MessagesControllerComponents,
                                     requestHandlerController: RequestHandlerController,
-                                    configuration: Configuration,
+                                    configuration: Configuration
                                    ) extends FrontendController(cc) {
 
   val error1773Ninos: Seq[String] = configuration.getOptional[Seq[String]]("api1773ErrorResponseNinos")
