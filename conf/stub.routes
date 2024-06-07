@@ -23,9 +23,9 @@ GET         /registration/business-details/mtdId/:mtdid                         
 + nocsrf
 PUT         /income-tax/business-detail/income-source                                 controllers.UpdateIncomeSourceController.mapUpdateIncomeSourceStub()
 
-### Intercepting API #1773 Submit POA data for error response ###
+### Intercepting API #1773 Submit POA data for error response/success page ###
 +nocsrf
-POST        /income-tax/calculations/POA/ClaimToAdjust                                controllers.SubmitPoaController.interceptSubmitForErrorUser()
+POST        /income-tax/calculations/POA/ClaimToAdjust                                controllers.SubmitPoaController.interceptPoaSubmit()
 
 GET         /*url                                                                     controllers.RequestHandlerController.getRequestHandler(url)
 
