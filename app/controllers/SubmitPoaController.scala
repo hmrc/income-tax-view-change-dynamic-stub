@@ -16,15 +16,15 @@
 
 package controllers
 
-import models.{DataModel, TaxYear}
+import models.TaxYear
 import org.mongodb.scala.model.Filters.equal
-import play.api.libs.json.{JsObject, JsValue}
+import org.mongodb.scala.result
+import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.api.{Configuration, Logger, Logging}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import play.api.libs.json._
-import play.api.libs.json.Reads._
+import utils.PoaUtils
 
 import java.net.URI
 import javax.inject.Inject
@@ -35,7 +35,7 @@ class SubmitPoaController @Inject()(cc: MessagesControllerComponents,
                                     configuration: Configuration,
                                     dataRepository: DataRepository
                                    )(implicit val ec: ExecutionContext)
-  extends FrontendController(cc) with Logging {
+  extends FrontendController(cc) with Logging with PoaUtils {
 
   private val error1773Ninos: Seq[String] = configuration.getOptional[Seq[String]]("api1773ErrorResponseNinos")
     .getOrElse(Seq.empty)
@@ -72,145 +72,54 @@ class SubmitPoaController @Inject()(cc: MessagesControllerComponents,
 
   private def overwriteTotalAmount(nino: String, json: JsValue): Unit = {
     (extractPoAAmount(json), extractTaxYear(json)) match {
-      case (Some(amount), Some(taxYearString)) => {
+      case (Some(amount), Some(taxYearString)) =>
         TaxYear.createTaxYearGivenTaxYearRange(taxYearString) match {
-          case Some(taxYear) => {
+          case Some(taxYear) =>
             val financialUrl = getFinancialDetailsUrl(nino, taxYear)
             val financialDetailsResponse = dataRepository.find(equal("_id", financialUrl))
             financialDetailsResponse.map {
               case Some(value) => value.response match {
                 case Some(response) =>
-                  //extract chargeReference for 1554 data changes
-                  val chargeRef = extractChargeRef(response).getOrElse("None")
-                  //Create new 1553 data with totalAmount overwritten with new poa amount
-                  val newResponse = response.transform(transformDocDetails(amount.toInt)).getOrElse(response)
-                  //IF chargeRef exists, just update the totalAmount
-                  //Otherwise, add a chargeRef to 1553, and create 1554 data
-                  if (chargeRef == "None") {
-                    //Create a charge reference, and add it to the financial details
-                    val newChargeRef = nino + "1234"
-                    val responseWithChargeRef = newResponse.transform(transformFinDetails(newChargeRef)).getOrElse(newResponse)
-                    //replace the old 1553 data with the new data, with updated amount and added chargeReference
-                    dataRepository.replaceOne(url = financialUrl, updatedFile = getFinDetailsDataModel(responseWithChargeRef, financialUrl))
-                    //create new 1554 data using that charge reference and new amount
-                    val chargeHistoryUrl = getChargeHistoryUrl(nino, newChargeRef)
-                    dataRepository.addEntry(getChargeHistoryDataModel(chargeHistoryUrl, nino, amount.toInt))
-                  }
-                  else {
-                    //Overwrite existing 1553 data with the new poa amount
-                    dataRepository.replaceOne(url = financialUrl, updatedFile = getFinDetailsDataModel(newResponse, financialUrl))
-                  }
+                  performDataChanges(response, amount, financialUrl)
                 case None =>
                   Future.failed(new Exception("Could not find response in financial details 1553 data for this nino"))
               }
               case None => Future.failed(new Exception("Could not find financial details 1553 data for this nino"))
             }
-          }
           case None => Future.failed(new Exception("Failed to create tax year from request"))
         }
-      }
       case _ => Future.failed(new Exception("Could not extract poa amount or tax year from request"))
     }
   }
 
-  private def extractNino(json: JsValue): Option[String] = {
-    (json \ "nino").asOpt[String]
+  private def performDataChanges(response: JsValue, amount: BigDecimal, financialUrl: String): Future[result.UpdateResult] = {
+    //Create new 1553 data with totalAmount overwritten with new poa amount
+    val newResponse = response.transform(transformDocDetails(amount.toInt)).getOrElse(response)
+    //Overwrite existing 1553 data with the new poa amount
+    dataRepository.replaceOne(url = financialUrl, updatedFile = getFinDetailsDataModel(newResponse, financialUrl))
   }
 
-  private def extractPoAAmount(json: JsValue): Option[BigDecimal] = {
-    (json \ "amount").asOpt[BigDecimal]
-  }
+  //  def performDataChangesWith1554(response: JsValue, amount: BigDecimal, nino: String, financialUrl: String) = {
+  //    //extract chargeReference for 1554 data changes
+  //    val chargeRef = extractChargeRef(response)
+  //    //Create new 1553 data with totalAmount overwritten with new poa amount
+  //    val newResponse = response.transform(transformDocDetails(amount.toInt)).getOrElse(response)
+  //    //IF chargeRef exists, just update the totalAmount
+  //    //Otherwise, add a chargeRef to 1553, and create 1554 data
+  //    if (chargeRef.isEmpty) {
+  //      //Create a charge reference, and add it to the financial details
+  //      val newChargeRef = nino + "1234"
+  //      val responseWithChargeRef = newResponse.transform(transformFinDetails(newChargeRef)).getOrElse(newResponse)
+  //      //replace the old 1553 data with the new data, with updated amount and added chargeReference
+  //      dataRepository.replaceOne(url = financialUrl, updatedFile = getFinDetailsDataModel(responseWithChargeRef, financialUrl))
+  //      //create new 1554 data using that charge reference and new amount
+  //      val chargeHistoryUrl = getChargeHistoryUrl(nino, newChargeRef)
+  //      dataRepository.addEntry(getChargeHistoryDataModel(chargeHistoryUrl, nino, amount.toInt))
+  //    }
+  //    else {
+  //      //Overwrite existing 1553 data with the new poa amount
+  //      dataRepository.replaceOne(url = financialUrl, updatedFile = getFinDetailsDataModel(newResponse, financialUrl))
+  //    }
+  //  }
 
-  private def extractTaxYear(json: JsValue): Option[String] = {
-    (json \ "taxYear").asOpt[String]
-  }
-
-  private def extractChargeRef(json: JsValue): Option[String] = {
-    (json \ "financialDetails" \ 0 \ "chargeReference").asOpt[String]
-  }
-
-  private def getFinancialDetailsUrl(nino: String, taxYear: TaxYear): String = {
-    s"/enterprise/02.00.00/financial-data/NINO/$nino/ITSA?dateFrom=${taxYear.startYear}-04-06&dateTo=${taxYear.endYear}-04-05&onlyOpenItems=false&includeLocks=true&calculateAccruedInterest=true&removePOA=false&customerPaymentInformation=true&includeStatistical=false"
-  }
-
-  private def getChargeHistoryUrl(nino: String, chargeReference: String) = {
-    s"/cross-regime/charges/NINO/$nino/ITSA?chargeReference=$chargeReference"
-  }
-
-  private def transformDocDetails(amount: Int): Reads[JsObject] = {
-    (__ \ "documentDetails").json.update(
-      of[JsArray].map {
-        case JsArray(arr) =>
-          JsArray(arr.map(item => item.transform(transformAmount(amount)).getOrElse(item)))
-      }
-    )
-  }
-
-  private def transformAmount(amount: Int): Reads[JsObject] = {
-    (__ \ "totalAmount").json.update(
-      of[JsNumber].map {
-        case JsNumber(_) =>
-          JsNumber(amount)
-      }
-    )
-  }
-
-  private def transformFinDetails(chargeRef: String): Reads[JsObject] = {
-    (__ \ "financialDetails").json.update(
-      of[JsArray].map {
-        case JsArray(arr) =>
-          JsArray(arr.map(item => item.transform(transformChargeRef(chargeRef)).getOrElse(item)))
-      }
-    )
-  }
-
-  private def transformChargeRef(chargeRef: String): Reads[JsObject] = {
-    __.json.update(
-      __.read[JsObject].map{ o => o ++ Json.obj( "chargeReference" -> chargeRef ) }
-    )
-  }
-
-  def getFinDetailsDataModel(request: JsValue, url: String): DataModel = DataModel(
-    _id = url,
-    schemaId = "getFinancialDetailsSuccess",
-    method = "GET",
-    status = 200,
-    response = Some(request)
-  )
-
-  def getChargeHistoryDataModel(url: String, nino: String, amount: Int): DataModel = DataModel(
-    _id = url,
-    schemaId = "getChargesHistorySuccess",
-    method = "GET",
-    status = 200,
-    response = Some(chargeHistoryRequest(nino, amount))
-  )
-
-  def chargeHistoryRequest(nino: String, amount: Int): JsValue = Json.obj(
-    "idType" -> "NINO",
-    "idValue" -> nino,
-    "regimeType" -> "ITSA",
-    "chargeHistoryDetails" -> Json.arr(
-      Json.obj(
-        "taxYear" -> "2019",
-        "documentId" -> "12345678",
-        "documentDate" -> "2018-02-14",
-        "documentDescription" -> "ITSA - POA 1",
-        "totalAmount" -> amount,
-        "reversalDate" -> "2019-02-14",
-        "reversalReason" -> "Customer Request",
-        "poaAdjustmentReason" ->  "002"
-      ),
-      Json.obj(
-        "taxYear" -> "2019",
-        "documentId" -> "12345678",
-        "documentDate" -> "2018-02-14",
-        "documentDescription" -> "ITSA - POA 2",
-        "totalAmount" -> amount,
-        "reversalDate" -> "2019-02-14",
-        "reversalReason" -> "Customer Request",
-        "poaAdjustmentReason" ->  "002"
-      )
-    )
-  )
 }
