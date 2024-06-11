@@ -39,7 +39,7 @@ trait PoaUtils {
   }
 
   def getFinancialDetailsUrl(nino: String, taxYear: TaxYear): String = {
-    s"/enterprise/02.00.00/financial-data/NINO/$nino/ITSA?dateFrom=${taxYear.startYear}-04-06&dateTo=${taxYear.endYear}-04-05&onlyOpenItems=false&includeLocks=true&calculateAccruedInterest=true&removePOA=false&customerPaymentInformation=true&includeStatistical=false"
+    s"/enterprise/02.00.00/financial-data/NINO/$nino/ITSA?dateFrom=${taxYear.startYear}-04-06&dateTo=${taxYear.endYear}-04-05&onlyOpenItems=false&includeLocks=true&calculateAccruedInterest=true&removePOA=false&customerPaymentInformation=true&includeStatistical=false&afterPoaAmountAdjusted=true"
   }
 
   def getChargeHistoryUrl(nino: String, chargeReference: String) = {

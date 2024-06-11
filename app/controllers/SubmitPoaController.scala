@@ -81,6 +81,7 @@ class SubmitPoaController @Inject()(cc: MessagesControllerComponents,
               case Some(value) => value.response match {
                 case Some(response) =>
                   performDataChanges(response, amount, financialUrl)
+                  Logger("application").info(s"Overwrote totalAmount data for $nino with new amount $amount")
                 case None =>
                   Future.failed(new Exception("Could not find response in financial details 1553 data for this nino"))
               }
