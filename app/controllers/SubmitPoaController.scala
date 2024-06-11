@@ -95,32 +95,9 @@ class SubmitPoaController @Inject()(cc: MessagesControllerComponents,
 
   private def performDataChanges(response: JsValue, amount: BigDecimal, financialUrl: String): Future[result.UpdateResult] = {
     //Create new 1553 data with totalAmount overwritten with new poa amount
-    val newResponse = response.transform(transformDocDetails(amount.toInt)).getOrElse(response)
+    val newResponse = response.transform(transformDocDetails(amount)).getOrElse(response)
     //Overwrite existing 1553 data with the new poa amount
     dataRepository.replaceOne(url = financialUrl, updatedFile = getFinDetailsDataModel(newResponse, financialUrl))
   }
-
-  //  def performDataChangesWith1554(response: JsValue, amount: BigDecimal, nino: String, financialUrl: String) = {
-  //    //extract chargeReference for 1554 data changes
-  //    val chargeRef = extractChargeRef(response)
-  //    //Create new 1553 data with totalAmount overwritten with new poa amount
-  //    val newResponse = response.transform(transformDocDetails(amount.toInt)).getOrElse(response)
-  //    //IF chargeRef exists, just update the totalAmount
-  //    //Otherwise, add a chargeRef to 1553, and create 1554 data
-  //    if (chargeRef.isEmpty) {
-  //      //Create a charge reference, and add it to the financial details
-  //      val newChargeRef = nino + "1234"
-  //      val responseWithChargeRef = newResponse.transform(transformFinDetails(newChargeRef)).getOrElse(newResponse)
-  //      //replace the old 1553 data with the new data, with updated amount and added chargeReference
-  //      dataRepository.replaceOne(url = financialUrl, updatedFile = getFinDetailsDataModel(responseWithChargeRef, financialUrl))
-  //      //create new 1554 data using that charge reference and new amount
-  //      val chargeHistoryUrl = getChargeHistoryUrl(nino, newChargeRef)
-  //      dataRepository.addEntry(getChargeHistoryDataModel(chargeHistoryUrl, nino, amount.toInt))
-  //    }
-  //    else {
-  //      //Overwrite existing 1553 data with the new poa amount
-  //      dataRepository.replaceOne(url = financialUrl, updatedFile = getFinDetailsDataModel(newResponse, financialUrl))
-  //    }
-  //  }
 
 }

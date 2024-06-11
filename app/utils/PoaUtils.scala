@@ -38,7 +38,7 @@ trait PoaUtils {
     s"/enterprise/02.00.00/financial-data/NINO/$nino/ITSA?dateFrom=${taxYear.startYear}-04-06&dateTo=${taxYear.endYear}-04-05&onlyOpenItems=false&includeLocks=true&calculateAccruedInterest=true&removePOA=false&customerPaymentInformation=true&includeStatistical=false&afterPoaAmountAdjusted=true"
   }
 
-  def transformDocDetails(amount: Int): Reads[JsObject] = {
+  def transformDocDetails(amount: BigDecimal): Reads[JsObject] = {
     (__ \ "documentDetails").json.update(
       of[JsArray].map {
         case JsArray(arr) =>
@@ -47,7 +47,7 @@ trait PoaUtils {
     )
   }
 
-  def transformAmount(amount: Int): Reads[JsObject] = {
+  def transformAmount(amount: BigDecimal): Reads[JsObject] = {
     (__ \ "totalAmount").json.update(
       of[JsNumber].map {
         case JsNumber(_) =>
