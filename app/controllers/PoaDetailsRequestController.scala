@@ -29,17 +29,14 @@ class PoaDetailsRequestController @Inject()(cc: MessagesControllerComponents,
 
   private def addSuffixToRequest(key: String, suffix: String)(implicit request: MessagesRequest[AnyContent]) = {
     val testHeader = request.headers.get("Gov-Test-Scenario")
-    println("TestHeader?" + testHeader)
     val computedSuffix = if (testHeader.contains(key)) s"&$suffix" else ""
     val uri = request.uri + computedSuffix
-    println("REQUEST URI " + uri)
     val newRequest = request.withTarget(request.target.withUri(URI.create(uri)))
     requestHandlerController.getRequestHandler(uri).apply(newRequest)
   }
 
   def transform(nino: String): Action[AnyContent] = Action.async {
     implicit request =>
-      println("BEEP BEEP INTERCEPT " + request.headers)
       addSuffixToRequest("afterPoaAmountAdjusted", "afterPoaAmountAdjusted=true")
   }
 
