@@ -16,24 +16,31 @@
 
 package controllers
 
-import play.api.{Configuration, Logger, Logging}
+import models.TaxYear
+import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.result
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.{Configuration, Logger, Logging}
+import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import utils.PoaUtils
 
 import java.net.URI
 import javax.inject.Inject
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class SubmitPoaController @Inject()(cc: MessagesControllerComponents,
                                     requestHandlerController: RequestHandlerController,
-                                    configuration: Configuration
-                                   ) extends FrontendController(cc) with Logging {
+                                    configuration: Configuration,
+                                    dataRepository: DataRepository
+                                   )(implicit val ec: ExecutionContext)
+  extends FrontendController(cc) with Logging with PoaUtils {
 
-  val error1773Ninos: Seq[String] = configuration.getOptional[Seq[String]]("api1773ErrorResponseNinos")
+  private val error1773Ninos: Seq[String] = configuration.getOptional[Seq[String]]("api1773ErrorResponseNinos")
     .getOrElse(Seq.empty)
 
-  def interceptSubmitForErrorUser(): Action[AnyContent] = Action.async { implicit request =>
+  def interceptPoaSubmit(): Action[AnyContent] = Action.async { implicit request =>
 
     val bodyOption: Option[JsValue] = request.body.asJson
     val InvalidJsonError = BadRequest("Invalid JSON in the UpdateIncomeSourceRequest body")
@@ -50,6 +57,8 @@ class SubmitPoaController @Inject()(cc: MessagesControllerComponents,
                 Logger("application").info(s"Returning stubbed API#1773 error response for nino: $nino")
                 request.withTarget(request.target.withUri(URI.create(request.uri + s"?nino=$nino")))
               } else {
+                //Replace poa amount with new amount
+                overwriteTotalAmount(nino, body)
                 // Retrieve stubbed success response from ATs
                 Logger("application").info(s"Returning stubbed API#1773 success response for nino: $nino")
                 request
@@ -61,7 +70,34 @@ class SubmitPoaController @Inject()(cc: MessagesControllerComponents,
     }
   }
 
-  def extractNino(json: JsValue): Option[String] = {
-    (json \ "nino").asOpt[String]
+  private def overwriteTotalAmount(nino: String, json: JsValue): Unit = {
+    (extractPoAAmount(json), extractTaxYear(json)) match {
+      case (Some(amount), Some(taxYearString)) =>
+        TaxYear.createTaxYearGivenTaxYearRange(taxYearString) match {
+          case Some(taxYear) =>
+            val financialUrl = getFinancialDetailsUrl(nino, taxYear)
+            val financialDetailsResponse = dataRepository.find(equal("_id", financialUrl))
+            financialDetailsResponse.map {
+              case Some(value) => value.response match {
+                case Some(response) =>
+                  performDataChanges(response, amount, financialUrl)
+                  Logger("application").info(s"Overwrote totalAmount data for $nino with new amount $amount")
+                case None =>
+                  Future.failed(new Exception("Could not find response in financial details 1553 data for this nino"))
+              }
+              case None => Future.failed(new Exception("Could not find financial details 1553 data for this nino"))
+            }
+          case None => Future.failed(new Exception("Failed to create tax year from request"))
+        }
+      case _ => Future.failed(new Exception("Could not extract poa amount or tax year from request"))
+    }
   }
+
+  private def performDataChanges(response: JsValue, amount: BigDecimal, financialUrl: String): Future[result.UpdateResult] = {
+    //Create new 1553 data with totalAmount overwritten with new poa amount
+    val newResponse = response.transform(transformDocDetails(amount)).getOrElse(response)
+    //Overwrite existing 1553 data with the new poa amount
+    dataRepository.replaceOne(url = financialUrl, updatedFile = getFinDetailsDataModel(newResponse, financialUrl))
+  }
+
 }

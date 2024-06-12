@@ -19,13 +19,16 @@ GET         /income-tax-view-change/itsa-status/:nino/$taxYearRange<[0-9]{2}-[0-
 GET         /registration/business-details/mtdbsa/:mtdid                              controllers.BusinessDetailsRequestController.transform(mtdid: String)
 GET         /registration/business-details/mtdId/:mtdid                               controllers.BusinessDetailsRequestController.transform(mtdid: String)
 
+### Intercepting API #1553 after Poa Amount updated
+GET         /enterprise/02.00.00/financial-data/NINO/:nino/ITSA                            controllers.PoaDetailsRequestController.transform(nino: String)
+
 ### Intercepting API #1776 Submit Income Sources data for error response ###
 + nocsrf
 PUT         /income-tax/business-detail/income-source                                 controllers.UpdateIncomeSourceController.mapUpdateIncomeSourceStub()
 
-### Intercepting API #1773 Submit POA data for error response ###
+### Intercepting API #1773 Submit POA data for error response/success page ###
 +nocsrf
-POST        /income-tax/calculations/POA/ClaimToAdjust                                controllers.SubmitPoaController.interceptSubmitForErrorUser()
+POST        /income-tax/calculations/POA/ClaimToAdjust                                controllers.SubmitPoaController.interceptPoaSubmit()
 
 GET         /*url                                                                     controllers.RequestHandlerController.getRequestHandler(url)
 
