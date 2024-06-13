@@ -16,7 +16,7 @@
 
 package controllers
 
-import models.TaxYear
+import models.{DataModel, TaxYear}
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.result
 import play.api.libs.json.JsValue
@@ -77,23 +77,30 @@ class SubmitPoaController @Inject()(cc: MessagesControllerComponents,
           case Some(taxYear) =>
             val financialUrl = getFinancialDetailsUrl(nino, taxYear)
             val financialDetailsResponse = dataRepository.find(equal("_id", financialUrl))
-            financialDetailsResponse.map {
-              case Some(value) => value.response match {
-                case Some(response) =>
-                  performDataChanges(response, amount, financialUrl)
-                  Logger("application").info(s"Overwrote totalAmount data for $nino with new amount $amount")
-                case None =>
-                  Future.failed(new Exception("Could not find response in financial details 1553 data for this nino"))
-              }
-              case None => Future.failed(new Exception("Could not find financial details 1553 data for this nino"))
-            }
-          case None => Future.failed(new Exception("Failed to create tax year from request"))
+            transformFinancialDetailsResponse(amount, financialUrl, nino, financialDetailsResponse)
+          case None =>
+            Future.failed(new Exception("Failed to create tax year from request"))
         }
       case _ => Future.failed(new Exception("Could not extract poa amount or tax year from request"))
     }
   }
 
-  private def performDataChanges(response: JsValue, amount: BigDecimal, financialUrl: String): Future[result.UpdateResult] = {
+  private def transformFinancialDetailsResponse(amount: BigDecimal, financialUrl: String, nino:String,
+                                                financialDetailsResponse: Future[Option[DataModel]]): Unit = {
+    financialDetailsResponse.map {
+      case Some(value) => value.response match {
+        case Some(response) =>
+          performDataChanges(response, amount, financialUrl)
+          Logger("application").info(s"Overwrote totalAmount data for $nino with new amount $amount")
+        case None =>
+          Future.failed(new Exception("Could not find response in financial details 1553 data for this nino"))
+      }
+      case None => Future.failed(new Exception("Could not find financial details 1553 data for this nino"))
+    }
+  }
+
+  private def performDataChanges(response: JsValue, amount: BigDecimal,
+                                 financialUrl: String): Future[result.UpdateResult] = {
     //Create new 1553 data with totalAmount overwritten with new poa amount
     val newResponse = response.transform(transformDocDetails(amount)).getOrElse(response)
     //Overwrite existing 1553 data with the new poa amount
