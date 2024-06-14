@@ -40,7 +40,7 @@ class DefaultValues @Inject()(dataRepository: DataRepository,
 
   private def getItsaStatusDefaultJson(taxYear: String): JsValue = {
     val itsaAStatus = List(ITSAStatus(taxYear = taxYear, itsaStatusDetails = List(
-      ITSAStatusDetails(submittedOn = "2022-01-10T06:14:00Z", status = "Voluntary",
+      ITSAStatusDetails(submittedOn = "2022-01-10T06:14:00Z", status = "MTD Voluntary",
         statusReason = "Sign up - return available"))))
     Json.toJson(itsaAStatus)
   }
