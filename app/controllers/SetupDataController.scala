@@ -19,12 +19,12 @@ package controllers
 import com.typesafe.config.Config
 import models.DataModel
 import models.HttpMethod._
+import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import repositories.DataRepository
-import play.api.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import utils.SchemaValidation
+import utils.{PopulateYear, SchemaValidation}
 
 import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
@@ -36,7 +36,7 @@ class SetupDataController @Inject()(
                                      dataRepository: DataRepository,
                                      cc: MessagesControllerComponents,
                                      applicationConfig: Config
-                                   ) (implicit val ec: ExecutionContext) extends FrontendController(cc) with Logging {
+                                   )(implicit val ec: ExecutionContext) extends FrontendController(cc) with Logging {
 
   val ignoreJsonValidation: Boolean = applicationConfig.getBoolean("schemaValidation.ignoreJsonValidation")
 
@@ -49,7 +49,9 @@ class SetupDataController @Inject()(
               case true =>
                 schemaValidation.validateResponseJson(json.schemaId, json.response) flatMap {
                   case true if json.schemaId == "getDesObligations" => addStubDataToDB(updateObligationsWithDateParameters(json))
-                  case true | `ignoreJsonValidation` => addStubDataToDB(json)
+                  case true | `ignoreJsonValidation` =>
+                    val modifiedJson = PopulateYear(Json.toJson(json)).as[DataModel]
+                    addStubDataToDB(modifiedJson)
                   case false =>
                     logger.error("[SetupDataController][addData] validateResponseJson failed" + json._id)
                     Future.successful(BadRequest(s"The Json Body:\n\n${json.response.get} did not validate against the Schema Definition"))
@@ -81,7 +83,9 @@ class SetupDataController @Inject()(
   private def addStubDataToDB(json: DataModel): Future[Result] = {
     dataRepository.addEntry(json).map(_.wasAcknowledged() match {
       case true => Ok(s"The following JSON was added to the stub: \n\n${Json.toJson(json)}")
-      case _ => InternalServerError(s"Failed to add data to Stub.")
+      case _ =>
+        logger.error("[SetupDataController][addStubDataToDB] Failed to add data to Stub::" + json)
+        InternalServerError(s"Failed to add data to Stub.")
     })
   }
 
