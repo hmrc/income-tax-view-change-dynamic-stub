@@ -31,7 +31,7 @@ case class TaxYear(endYear: Int) {
     LocalDate.of(this.startYear, April, Sixths)
   }
 
-  def toFinancialYearEnd: LocalDate = {
+  def   toFinancialYearEnd: LocalDate = {
     LocalDate.of(this.endYear, April, Fifth)
   }
 
@@ -60,7 +60,7 @@ object TaxYear {
 
   def getStartYear(localDate: LocalDate): Int = {
     val taxYear = TaxYear(localDate.getYear)
-    if(taxYear.toFinancialYearEnd.isAfter(localDate))
+    if(localDate.isAfter(taxYear.toFinancialYearEnd))
       taxYear.toFinancialYearEnd.getYear
     else
       taxYear.toFinancialYearStart.getYear
