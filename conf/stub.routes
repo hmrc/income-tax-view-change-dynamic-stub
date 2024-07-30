@@ -22,6 +22,9 @@ GET         /registration/business-details/mtdId/:mtdid                         
 ### Intercepting API #1553 after Poa Amount updated
 GET         /enterprise/02.00.00/financial-data/NINO/:nino/ITSA                            controllers.PoaDetailsRequestController.transform(nino: String)
 
+### Enrolment Store Proxy route
+GET         /enrolment-store-proxy/enrolment-store/groups/:groupId/enrolments         controllers.EnrolmentStoreProxyController.getUTRList(groupId: String)
+
 ### Intercepting API #1776 Submit Income Sources data for error response ###
 + nocsrf
 PUT         /income-tax/business-detail/income-source                                 controllers.UpdateIncomeSourceController.mapUpdateIncomeSourceStub()
