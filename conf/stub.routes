@@ -23,6 +23,7 @@ GET         /registration/business-details/mtdId/:mtdid                         
 GET         /enterprise/02.00.00/financial-data/NINO/:nino/ITSA                            controllers.PoaDetailsRequestController.transform(nino: String)
 
 ### Enrolment Store Proxy route
++ nocsrf
 GET         /enrolment-store-proxy/enrolment-store/groups/:groupId/enrolments         controllers.EnrolmentStoreProxyController.getUTRList(groupId: String)
 
 ### Intercepting API #1776 Submit Income Sources data for error response ###
