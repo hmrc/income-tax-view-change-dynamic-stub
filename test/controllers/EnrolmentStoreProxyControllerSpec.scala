@@ -17,7 +17,7 @@
 package controllers
 
 import org.scalatest.concurrent.ScalaFutures
-import play.api.http.Status.OK
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import testUtils.TestSupport
@@ -35,6 +35,12 @@ class EnrolmentStoreProxyControllerSpec extends TestSupport with ScalaFutures {
       val result = TestEnrolmentStoreProxyController.getUTRList(groupId)(FakeRequest())
       status(result) shouldBe OK
       contentAsJson(result) shouldBe expectedJson
+    }
+
+    "return status InternalServerError when an invalid groupId is provided" in {
+      val groupId = ""
+      val result = TestEnrolmentStoreProxyController.getUTRList(groupId)(FakeRequest())
+      status(result) shouldBe INTERNAL_SERVER_ERROR
     }
   }
 }

@@ -28,9 +28,13 @@ import scala.concurrent.Future
 class EnrolmentStoreProxyController @Inject()(cc: MessagesControllerComponents) extends FrontendController(cc) {
 
   def getUTRList(groupId: String): Action[AnyContent] = Action.async {
-    Logger("application").info(s"${Console.YELLOW} agent groupIdOpt found: $groupId" + Console.WHITE)
-    val responseJson = EnrolmentStoreProxyResponse.generateResponse
-    Logger("application").info(s"${Console.YELLOW} responseJson: $responseJson" + Console.WHITE)
-    Future.successful(Ok(responseJson))
+    Logger("application").info(s"${Console.YELLOW} agent groupid found: $groupId" + Console.WHITE)
+    if (groupId.isEmpty) {
+      Future.successful(InternalServerError("Invalid groupId"))
+    } else {
+      val responseJson = EnrolmentStoreProxyResponse.generateResponse
+      Logger("application").info(s"${Console.YELLOW} responseJson: $responseJson" + Console.WHITE)
+      Future.successful(Ok(responseJson))
+    }
   }
 }
