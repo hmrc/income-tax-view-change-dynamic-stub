@@ -25,7 +25,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.api.{Configuration, Logger, Logging}
 import repositories.{DataRepository, DefaultValues}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import utils.CalculationUtils.{createCalResponseModel, getFallbackUrlLegacy, getFallbackUrlTYS, getTaxYearRangeEndYear}
+import utils.CalculationUtils._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,6 +40,7 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
   extends FrontendController(cc) with Logging {
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
+  val ninoMatchCharacters: String => String = (nino: String) => s"${nino.charAt(0)}${nino.charAt(7)}"
 
   def getCalcLegacy(nino: String, calcId: String): Action[AnyContent] = Action.async { _ =>
     val id = s"/income-tax/view/calculations/liability/$nino/$calcId"
@@ -59,8 +60,8 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
           val fallbackUrl: String = getFallbackUrlLegacy(calcId = calcId)
           defaultValues.getDefaultRequestHandler(url = fallbackUrl)
       }.recoverWith {
-      case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
-    }
+        case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
+      }
   }
 
   def generateCalculationListTYS(nino: String, taxYearRange: String): Action[AnyContent] = {
@@ -106,8 +107,8 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
           val fallbackUrl: String = getFallbackUrlTYS(taxYearRange = taxYearRange)
           defaultValues.getDefaultRequestHandler(url = fallbackUrl)
       }.recoverWith {
-      case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
-    }
+        case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
+      }
   }
 
   def createOverwriteCalculationListUrl(nino: String, taxYear: TaxYear): String = {
@@ -139,14 +140,29 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
               InternalServerError("Write was not acknowledged")
             }
           }.recoverWith {
-          case ex =>
-            Logger("application").error(s"[CalculationController][overwriteCalculationList] Update operation failed. < Exception: $ex >")
-            Future.failed(ex)
-        }
+            case ex =>
+              Logger("application").error(s"[CalculationController][overwriteCalculationList] Update operation failed. < Exception: $ex >")
+              Future.failed(ex)
+          }
       case None =>
         Logger("application").error(s"[CalculationController][overwriteCalculationList] taxYearRange could not be converted to TaxYear")
         Future.failed(new Exception("taxYearRange could not be converted to TaxYear"))
     }
 
+  }
+
+  // IF #1404 - v3.0.1 //
+  def generateCalculationList(nino: String, taxYear: Option[Int]): Action[AnyContent] = Action.async { _ =>
+    logger.info(s"Generating calculation list for nino: $nino, taxYear: $taxYear")
+    ninoMatchCharacters(nino) match {
+      case "L2" => Future(
+        InternalServerError("""{"code": "SERVER_ERROR", "reason": "IF is currently experiencing problems that require live service intervention."}"""))
+      case matchChars if matchChars.startsWith("L") => Future(
+        NotFound("""{"code": "NOT_FOUND", "reason": "The remote endpoint has indicated that no data can be found."}"""))
+      case "A1" => Future(Ok(Json.parse(getCalculationListSuccessResponse(ninoMatchCharacters(nino).toLowerCase, taxYear, crystallised = true))))
+      //S0 is an exception as calculation ID only accepts characters from a-f
+      case "S0" => Future(Ok(Json.parse(getCalculationListSuccessResponse("c9", taxYear, crystallised = true))))
+      case _ => Future(Ok(Json.parse(getCalculationListSuccessResponse(ninoMatchCharacters(nino).toLowerCase, taxYear))))
+    }
   }
 }
