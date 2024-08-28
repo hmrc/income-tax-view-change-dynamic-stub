@@ -6,7 +6,7 @@ import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 
 val appName = "income-tax-view-change-dynamic-stub"
 val playFrontendHMRCVersion = "10.10.0"
-val bootstrapPlayVersion = "8.1.0"
+val bootstrapPlayVersion = "9.3.0"
 val scalaMockVersion = "5.2.0"
 val hmrcMongoPlayVersion = "2.2.0"
 val scalaTestVersion = "3.1.1.0"
