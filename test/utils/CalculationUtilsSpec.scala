@@ -50,7 +50,7 @@ class CalculationUtilsSpec extends  TestSupport{
     "fail for nino in wrong format" in {
       createCalResponseModel("AAAAYY", Some(taxYear), true) match {
         case Left(error) =>
-          error.getMessage shouldBe "String index out of range: 7"
+          error.getMessage should  fullyMatch regex """([String\sindex\sout\sof\srange:\s7|Index\s7\sout\sof\sbounds\sfor\slength\s6]+)+"""
         case Right(_) => fail("Failing scenario")
       }
     }
