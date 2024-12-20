@@ -18,7 +18,9 @@ package controllers
 
 import models.HttpMethod
 import models.HttpMethod._
+import org.joda.time.LocalDate
 import org.mongodb.scala.model.Filters._
+import play.api.Logging
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import repositories.{DataRepository, DefaultValues}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -33,23 +35,58 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
                                          cc: MessagesControllerComponents,
                                          defaultValues: DefaultValues)
                                         (implicit val ec: ExecutionContext)
-  extends FrontendController(cc) {
+  extends FrontendController(cc) with Logging {
 
   def getRequestHandler(url: String): Action[AnyContent] = Action.async {
     implicit request => {
-      dataRepository.find(equal("_id", request.uri), equal("method", GET)).map {
-        stubData =>
-          if (stubData.nonEmpty) {
-            if (stubData.head.response.isEmpty) {
-              Status(stubData.head.status)
-            } else {
-              Status(stubData.head.status)(stubData.head.response.get)
-            }
-          } else {
-            defaultValues.getResponse(url)
+      // Detect 1553 calls
+      if (url.contains("financial-data")){
+        val fromDate = request.getQueryString("dateFrom")
+        val toDate = request.getQueryString("dateTo")
+        val from = LocalDate.parse(fromDate.get)
+        val to = LocalDate.parse(toDate.get)
+        logger.error(s"RequestHandlerController-1553: $url - ${fromDate} - ${toDate}")
+        if (from.getYear - to.getYear > 1) {
+          // TODO: inject logic her
+          dataRepository.find(equal("_id", request.uri), equal("method", GET)).map {
+            stubData =>
+              if (stubData.nonEmpty) {
+                if (stubData.head.response.isEmpty) {
+                  Status(stubData.head.status)
+                } else {
+                  Status(stubData.head.status)(stubData.head.response.get)
+                }
+              } else {
+                defaultValues.getResponse(url)
+              }
           }
+        }
+        dataRepository.find(equal("_id", request.uri), equal("method", GET)).map {
+          stubData =>
+            if (stubData.nonEmpty) {
+              if (stubData.head.response.isEmpty) {
+                Status(stubData.head.status)
+              } else {
+                Status(stubData.head.status)(stubData.head.response.get)
+              }
+            } else {
+              defaultValues.getResponse(url)
+            }
+        }
+      } else {
+        dataRepository.find(equal("_id", request.uri), equal("method", GET)).map {
+          stubData =>
+            if (stubData.nonEmpty) {
+              if (stubData.head.response.isEmpty) {
+                Status(stubData.head.status)
+              } else {
+                Status(stubData.head.status)(stubData.head.response.get)
+              }
+            } else {
+              defaultValues.getResponse(url)
+            }
+        }
       }
-
     }
   }
 
