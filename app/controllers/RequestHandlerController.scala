@@ -67,7 +67,7 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
                 .replace("TaxYearFrom", f.format(DateTimeFormatter.ISO_DATE))
                 .replace("TaxYearTo", t.format(DateTimeFormatter.ISO_DATE))
             }.map(mongoUrl => {
-              logger.error(s"RequestHandlerController-MongoUrl: $mongoUrl")
+              //logger.error(s"RequestHandlerController-MongoUrl: $mongoUrl")
               dataRepository.find(equal("_id", mongoUrl), equal("method", GET)).map {
                 stubData =>
                   if (stubData.nonEmpty) {
@@ -96,7 +96,7 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
             } yield {
               // Circe Json processing logic
               //val doc = io. parse(json).getOrElse(Json.Null)
-              logger.error(s"RequestHandlerController-33/ ->")
+              //logger.error(s"RequestHandlerController-33/ ->")
 
               // Get list of all documentDetails
               val dds = ls.map{
@@ -120,7 +120,7 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
                 }
               }.flatten
 
-              logger.error(s"RequestHandlerController-22/ -> ${dds}")
+              //logger.error(s"RequestHandlerController-22/ -> ${dds}")
               // Get any 1553 response from the list ? lets take last one
               // balanceDetails must be the same across all these responses???
               val doc = io.circe.parser.parse(ls.last).getOrElse(Json.Null)
@@ -137,8 +137,13 @@ class RequestHandlerController @Inject()(schemaValidation: SchemaValidation,
               // Get top document
               val finalJsonDocumentAsString: String = financialDetails.top.getOrElse(Json.Null).toString()
 
-              logger.error(s"RequestHandlerController-Res22: ${finalJsonDocumentAsString}")
+              logger.error(s"RequestHandlerController-FinalJson: ${finalJsonDocumentAsString}")
               val js =  play.api.libs.json.Json.parse(finalJsonDocumentAsString)
+
+// For debug only
+//              import java.nio.charset.StandardCharsets
+//              import java.nio.file.{Files, Paths}
+//              Files.write( Paths.get("1553_final_response.json"), finalJsonDocumentAsString.getBytes(StandardCharsets.UTF_8) )
 
               Future.successful(Status(200)(js))
             }
