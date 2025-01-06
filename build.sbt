@@ -13,6 +13,7 @@ val scalaTestVersion = "3.1.1.0"
 val pegdownVersion = "1.6.0"
 val scalaTestPlusVersion = "7.0.0"
 val currentScalaVersion = "2.13.12"
+val circeVersion = "0.14.10"
 
 val compile: Seq[ModuleID] = Seq(
   "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-30" % hmrcMongoPlayVersion,
@@ -24,7 +25,7 @@ val compile: Seq[ModuleID] = Seq(
 
 def test(scope: String = "test"): Seq[ModuleID] = Seq(
   "uk.gov.hmrc" %% "bootstrap-backend-play-30" % bootstrapPlayVersion % scope,
-  "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-30" % hmrcMongoPlayVersion  % scope,
+  "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-30" % hmrcMongoPlayVersion % scope,
   "org.pegdown" % "pegdown" % pegdownVersion % scope,
   "org.jsoup" % "jsoup" % "1.11.3" % scope,
   "uk.gov.hmrc" %% "bootstrap-test-play-30" % bootstrapPlayVersion % scope,
@@ -37,7 +38,7 @@ def test(scope: String = "test"): Seq[ModuleID] = Seq(
 
 def it(scope: String = "it"): Seq[ModuleID] = Seq(
   "uk.gov.hmrc" %% "bootstrap-backend-play-30" % bootstrapPlayVersion % scope,
-  "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-30" % hmrcMongoPlayVersion  % scope,
+  "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-30" % hmrcMongoPlayVersion % scope,
   "org.pegdown" % "pegdown" % pegdownVersion % scope,
   "org.jsoup" % "jsoup" % "1.11.3" % scope,
   "uk.gov.hmrc" %% "bootstrap-test-play-30" % bootstrapPlayVersion % scope,
@@ -80,6 +81,13 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     libraryDependencies ++= appDependencies,
     retrieveManaged := true
+  )
+  .settings(
+    libraryDependencies ++= Seq(
+      "io.circe" %% "circe-core",
+      "io.circe" %% "circe-generic",
+      "io.circe" %% "circe-parser"
+    ).map(_ % circeVersion)
   )
   .settings(
     TwirlKeys.templateImports ++= Seq(

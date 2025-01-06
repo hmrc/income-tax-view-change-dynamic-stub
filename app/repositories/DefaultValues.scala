@@ -22,7 +22,7 @@ import org.mongodb.scala.model.Filters.equal
 import parsers.ITSAStatusUrlParser.extractTaxYear
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json, OWrites}
-import play.api.mvc.{AnyContent, MessagesControllerComponents, MessagesRequest, Result}
+import play.api.mvc.{AnyContent, MessagesControllerComponents, Result, WrappedRequest}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.Inject
@@ -45,7 +45,7 @@ class DefaultValues @Inject()(dataRepository: DataRepository,
     Json.toJson(itsaAStatus)
   }
 
-  def getResponse(url: String)(implicit request: MessagesRequest[AnyContent]): Result = {
+  def getResponse(url: String)(implicit request: WrappedRequest[AnyContent]): Result = {
     extractTaxYear(url) match {
       case Some(taxYear) =>
         val taxYearNormalised = s"20$taxYear" // conversion to format 2023-24
