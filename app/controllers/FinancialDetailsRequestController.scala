@@ -68,32 +68,7 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
 
       // Call mongoDb for the give range of taxYears
       val baseUrl = request.uri.replace(fromDate, "TaxYearFrom").replace(toDate, "TaxYearTo")
-
-      val mongoResponses: Future[IndexedSeq[Option[JsValue]]] = Future.sequence({
-        (0 to (to.getYear - from.getYear) - 1)
-          .map { delta =>
-            val f = from.plusYears(delta)
-            val t = from.plusYears(delta + 1).plusDays(-1)
-            //logger.error(s"RequestHandlerController-Range: $f - $t")
-            baseUrl
-              .replace("TaxYearFrom", f.format(DateTimeFormatter.ISO_DATE))
-              .replace("TaxYearTo", t.format(DateTimeFormatter.ISO_DATE))
-          }.map(mongoUrl => {
-            //logger.error(s"RequestHandlerController-MongoUrl: $mongoUrl")
-            dataRepository.find(equal("_id", mongoUrl), equal("method", GET)).map {
-              stubData =>
-                if (stubData.nonEmpty) {
-                  if (stubData.head.response.isEmpty) {
-                    None
-                  } else {
-                    stubData.head.response
-                  }
-                } else {
-                  None
-                }
-            }
-          })
-      })
+      val mongoResponses: Future[IndexedSeq[Option[JsValue]]] = getSingleResponseFromMongo(baseUrl, from, to)
 
       val jsonListOfStrings: Future[List[String]] = mongoResponses.flatMap { x =>
         Future.successful(x.toList.map { y =>
@@ -106,58 +81,12 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
         for {
           ls <- jsonListOfStrings
         } yield {
-          // Circe Json processing logic
-          //val doc = io. parse(json).getOrElse(Json.Null)
-          //logger.error(s"RequestHandlerController-33/ ->")
-
-          // Get list of all documentDetails
-          val dds = ls.flatMap {
-            json => {
-              val doc = io.circe.parser.parse(json).getOrElse(Json.Null)
-              val cursor: HCursor = doc.hcursor
-              val documentDetails = cursor.downField("documentDetails").values.getOrElse(List.empty).toList
-              //TODO: Add filtering for only one instance of each DOCID here
-              //logger.error(s"RequestHandlerController-DocDetails: ${documentDetails.values.get.toList}")
-              documentDetails
-            }
-          }
-
-          // Get list of all financialDetails
-          val fds = ls.flatMap {
-            json => {
-              val doc = io.circe.parser.parse(json).getOrElse(Json.Null)
-              val cursor: HCursor = doc.hcursor
-              val financialDetails = cursor.downField("financialDetails").values.getOrElse(List.empty).toList
-              //logger.error(s"RequestHandlerController-DocDetails: ${documentDetails.values.get.toList}")
-              //TODO: Add filtering for only one instance of each DOCID here
-              financialDetails
-            }
-          }
-
-          //logger.error(s"RequestHandlerController-22/ -> ${dds}")
-          // Get any 1553 response from the list ? lets take last one
-          // balanceDetails must be the same across all these responses???
-          val doc = io.circe.parser.parse(ls.last).getOrElse(Json.Null)
-
-          // Replace DocumentDetails
-          val documentDetails = doc.hcursor.downField("documentDetails")
-            .withFocus(_ => Json.fromValues(dds))
-
-          // Replace FinancialDetails
-          val financialDetails = documentDetails.top.getOrElse(Json.Null)
-            .hcursor.downField("financialDetails")
-            .withFocus(_ => Json.fromValues(fds))
-
-          // Get top document
-          val finalJsonDocumentAsString: String = financialDetails.top.getOrElse(Json.Null).toString()
-
-          logger.error(s"RequestHandlerController-FinalJson: ${finalJsonDocumentAsString}")
-          val js = play.api.libs.json.Json.parse(finalJsonDocumentAsString)
+          val js: JsValue = jsonMerge(ls)
 
           // For debug only
-          //              import java.nio.charset.StandardCharsets
-          //              import java.nio.file.{Files, Paths}
-          //              Files.write( Paths.get("1553_final_response.json"), finalJsonDocumentAsString.getBytes(StandardCharsets.UTF_8) )
+          // import java.nio.charset.StandardCharsets
+          // import java.nio.file.{Files, Paths}
+          // Files.write( Paths.get("1553_final_response.json"), finalJsonDocumentAsString.getBytes(StandardCharsets.UTF_8) )
 
           Future.successful(Status(200)(js))
         }
@@ -177,5 +106,85 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
           }
       }
     }
+  }
+
+  private def jsonMerge(jsons: List[String]): JsValue = {
+    // Circe Json processing logic
+    //val doc = io. parse(json).getOrElse(Json.Null)
+    //logger.error(s"RequestHandlerController-33/ ->")
+
+    // Get list of all documentDetails
+    val dds = jsons.flatMap {
+      json => {
+        val doc = io.circe.parser.parse(json).getOrElse(Json.Null)
+        val cursor: HCursor = doc.hcursor
+        val documentDetails = cursor.downField("documentDetails").values.getOrElse(List.empty).toList
+        //TODO: Add filtering for only one instance of each DOCID here
+        //logger.error(s"RequestHandlerController-DocDetails: ${documentDetails.values.get.toList}")
+        documentDetails
+      }
+    }
+
+    // Get list of all financialDetails
+    val fds = jsons.flatMap {
+      json => {
+        val doc = io.circe.parser.parse(json).getOrElse(Json.Null)
+        val cursor: HCursor = doc.hcursor
+        val financialDetails = cursor.downField("financialDetails").values.getOrElse(List.empty).toList
+        //logger.error(s"RequestHandlerController-DocDetails: ${documentDetails.values.get.toList}")
+        //TODO: Add filtering for only one instance of each DOCID here
+        financialDetails
+      }
+    }
+
+    //logger.error(s"RequestHandlerController-22/ -> ${dds}")
+    // Get any 1553 response from the list ? lets take last one
+    // balanceDetails must be the same across all these responses???
+    val doc = io.circe.parser.parse(jsons.last).getOrElse(Json.Null)
+
+    // Replace DocumentDetails
+    val documentDetails = doc.hcursor.downField("documentDetails")
+      .withFocus(_ => Json.fromValues(dds))
+
+    // Replace FinancialDetails
+    val financialDetails = documentDetails.top.getOrElse(Json.Null)
+      .hcursor.downField("financialDetails")
+      .withFocus(_ => Json.fromValues(fds))
+
+    // Get top document
+    val finalJsonDocumentAsString: String = financialDetails.top.getOrElse(Json.Null).toString()
+
+    logger.error(s"RequestHandlerController-FinalJson: ${finalJsonDocumentAsString}")
+    val js = play.api.libs.json.Json.parse(finalJsonDocumentAsString)
+    js
+  }
+
+  private def getSingleResponseFromMongo(baseUrl: String, from: LocalDate, to: LocalDate) = {
+    val mongoResponses: Future[IndexedSeq[Option[JsValue]]] = Future.sequence({
+      (0 to (to.getYear - from.getYear) - 1)
+        .map { delta =>
+          val f = from.plusYears(delta)
+          val t = from.plusYears(delta + 1).plusDays(-1)
+          //logger.error(s"RequestHandlerController-Range: $f - $t")
+          baseUrl
+            .replace("TaxYearFrom", f.format(DateTimeFormatter.ISO_DATE))
+            .replace("TaxYearTo", t.format(DateTimeFormatter.ISO_DATE))
+        }.map(mongoUrl => {
+          //logger.error(s"RequestHandlerController-MongoUrl: $mongoUrl")
+          dataRepository.find(equal("_id", mongoUrl), equal("method", GET)).map {
+            stubData =>
+              if (stubData.nonEmpty) {
+                if (stubData.head.response.isEmpty) {
+                  None
+                } else {
+                  stubData.head.response
+                }
+              } else {
+                None
+              }
+          }
+        })
+    })
+    mongoResponses
   }
 }
