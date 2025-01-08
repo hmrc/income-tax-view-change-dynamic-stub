@@ -49,7 +49,12 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
   def transform(nino: String): Action[AnyContent] = Action.async {
     implicit request =>
       println("ACK")
-      callIndividualYears(nino)(addSuffixToRequest("afterPoaAmountAdjusted", "afterPoaAmountAdjusted=true"))
+      if (request.uri.contains("dateFrom")) {
+        callIndividualYears(nino)(addSuffixToRequest("afterPoaAmountAdjusted", "afterPoaAmountAdjusted=true"))
+      }
+      else{
+        requestHandlerController.getRequestHandler(request.uri).apply(request)
+      }
   }
 
   def callIndividualYears(nino: String)(implicit request: WrappedRequest[AnyContent]): Future[Result] = {
@@ -115,6 +120,7 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
               val doc = io.circe.parser.parse(json).getOrElse(Json.Null)
               val cursor: HCursor = doc.hcursor
               val documentDetails = cursor.downField("documentDetails").values.getOrElse(List.empty).toList
+              //TODO: Add filtering for only one instance of each DOCID here
               //logger.error(s"RequestHandlerController-DocDetails: ${documentDetails.values.get.toList}")
               documentDetails
             }
@@ -129,6 +135,7 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
               val cursor: HCursor = doc.hcursor
               val financialDetails = cursor.downField("financialDetails").values.getOrElse(List.empty).toList
               //logger.error(s"RequestHandlerController-DocDetails: ${documentDetails.values.get.toList}")
+              //TODO: Add filtering for only one instance of each DOCID here
               financialDetails
             }
           }
