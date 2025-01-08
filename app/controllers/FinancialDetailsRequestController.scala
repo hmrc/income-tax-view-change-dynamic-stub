@@ -48,7 +48,6 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
 
   def transform(nino: String): Action[AnyContent] = Action.async {
     implicit request =>
-      println("ACK")
       if (request.uri.contains("dateFrom")) {
         callIndividualYears(nino)(addSuffixToRequest("afterPoaAmountAdjusted", "afterPoaAmountAdjusted=true"))
       }
@@ -69,7 +68,6 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
 
       // Call mongoDb for the give range of taxYears
       val baseUrl = request.uri.replace(fromDate, "TaxYearFrom").replace(toDate, "TaxYearTo")
-      println("BASE " + baseUrl)
 
       val mongoResponses: Future[IndexedSeq[Option[JsValue]]] = Future.sequence({
         (0 to (to.getYear - from.getYear) - 1)
@@ -96,8 +94,6 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
             }
           })
       })
-      Thread.sleep(1000)
-      println("MONGO "+ mongoResponses)
 
       val jsonListOfStrings: Future[List[String]] = mongoResponses.flatMap { x =>
         Future.successful(x.toList.map { y =>
@@ -126,8 +122,6 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
             }
           }
 
-          println("DDS "+ dds)
-
           // Get list of all financialDetails
           val fds = ls.flatMap {
             json => {
@@ -139,7 +133,6 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
               financialDetails
             }
           }
-          println("FDS "+fds)
 
           //logger.error(s"RequestHandlerController-22/ -> ${dds}")
           // Get any 1553 response from the list ? lets take last one
@@ -149,25 +142,17 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
           // Replace DocumentDetails
           val documentDetails = doc.hcursor.downField("documentDetails")
             .withFocus(_ => Json.fromValues(dds))
-          documentDetails match {
-            case x: FailedCursor => println("DOCD "+ x.incorrectFocus + x.missingField)
-            case _ => println("DOCD "+documentDetails)
-          }
-          println(doc)
 
           // Replace FinancialDetails
           val financialDetails = documentDetails.top.getOrElse(Json.Null)
             .hcursor.downField("financialDetails")
             .withFocus(_ => Json.fromValues(fds))
-          println("FIND "+financialDetails)
 
           // Get top document
           val finalJsonDocumentAsString: String = financialDetails.top.getOrElse(Json.Null).toString()
 
           logger.error(s"RequestHandlerController-FinalJson: ${finalJsonDocumentAsString}")
           val js = play.api.libs.json.Json.parse(finalJsonDocumentAsString)
-
-          println("JS "+js)
 
           // For debug only
           //              import java.nio.charset.StandardCharsets
