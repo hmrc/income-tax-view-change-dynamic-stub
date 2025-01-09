@@ -81,14 +81,20 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
         for {
           ls <- jsonListOfStrings
         } yield {
-          val js: JsValue = jsonMerge(ls)
+          if (ls.isEmpty) {
+            //If we found no data, return 404
+            Future.successful(Status(404))
+          }
+          else {
+            val js: JsValue = jsonMerge(ls)
 
-          // For debug only
-          // import java.nio.charset.StandardCharsets
-          // import java.nio.file.{Files, Paths}
-          // Files.write( Paths.get("1553_final_response.json"), finalJsonDocumentAsString.getBytes(StandardCharsets.UTF_8) )
+            // For debug only
+            // import java.nio.charset.StandardCharsets
+            // import java.nio.file.{Files, Paths}
+            // Files.write( Paths.get("1553_final_response.json"), finalJsonDocumentAsString.getBytes(StandardCharsets.UTF_8) )
 
-          Future.successful(Status(200)(js))
+            Future.successful(Status(200)(js))
+          }
         }
       }.flatten
     } else {
@@ -154,7 +160,7 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
     // Get top document
     val finalJsonDocumentAsString: String = financialDetails.top.getOrElse(Json.Null).toString()
 
-    logger.error(s"RequestHandlerController-FinalJson: ${finalJsonDocumentAsString}")
+    logger.debug(s"RequestHandlerController-FinalJson: ${finalJsonDocumentAsString}")
     val js = play.api.libs.json.Json.parse(finalJsonDocumentAsString)
     js
   }
