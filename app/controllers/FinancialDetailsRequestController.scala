@@ -114,21 +114,24 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
     }
   }
 
+  private case class Accumulator(jsons: List[Json], docIds: List[String])
+
   private def filterByUniqueDocumentId(unfiltered: List[Json]): List[Json] = {
-    unfiltered.foldLeft((List[Json](), List[String]()))((acc, next) => {
+    //the List[Json] accumulates the raw JSons for the unique entries, and the List[String] accumulates all the different documentIds so far, to check against
+    unfiltered.foldLeft(Accumulator(List(), List()))((acc, next) => {
       val cursor = next.hcursor
       cursor.getOrElse("documentId")("failed") match {
         case Left(_) => acc
         case Right(docIdString) =>
-          if (docIdString == "failed" || acc._2.contains(docIdString)) {
+          if (docIdString == "failed" || acc.docIds.contains(docIdString)) {
             acc
           }
           else {
-            (acc._1.appended(next), acc._2.appended(docIdString))
+            Accumulator(acc.jsons.appended(next), acc.docIds.appended(docIdString))
           }
       }
     }
-    )._1
+    ).jsons
   }
 
   private def jsonMerge(jsons: List[String]): JsValue = {
