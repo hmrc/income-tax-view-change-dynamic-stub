@@ -117,12 +117,15 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
   private def filterByUniqueDocumentId(unfiltered: List[Json]): List[Json] = {
     unfiltered.foldLeft((List[Json](), List[String]()))((acc, next) => {
       val cursor = next.hcursor
-      val docId = cursor.downField("documentId").values.getOrElse(List.empty).toList.headOption.getOrElse(Json.Null)
-      if (docId == Json.Null || acc._2.contains(docId.toString())) {
-        acc
-      }
-      else {
-        (acc._1.appended(next), acc._2.appended(docId.toString()))
+      cursor.getOrElse("documentId")("failed") match {
+        case Left(_) => acc
+        case Right(docIdString) =>
+          if (docIdString == "failed" || acc._2.contains(docIdString)) {
+            acc
+          }
+          else {
+            (acc._1.appended(next), acc._2.appended(docIdString))
+          }
       }
     }
     )._1
