@@ -116,8 +116,8 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
 
   private def filterByUniqueDocumentId(unfiltered: List[Json]): List[Json] = {
     unfiltered.foldLeft((List[Json](), List[String]()))((acc, next) => {
-      val cursorX = next.hcursor
-      val docId = cursorX.downField("documentId").values.getOrElse(List.empty).toList.headOption.getOrElse(Json.Null)
+      val cursor = next.hcursor
+      val docId = cursor.downField("documentId").values.getOrElse(List.empty).toList.headOption.getOrElse(Json.Null)
       if (docId == Json.Null || acc._2.contains(docId.toString())) {
         acc
       }
