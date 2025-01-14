@@ -51,7 +51,7 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
       if (request.uri.contains("dateFrom")) {
         callIndividualYears(nino)(addSuffixToRequest("afterPoaAmountAdjusted", "afterPoaAmountAdjusted=true"))
       }
-      else{
+      else {
         requestHandlerController.getRequestHandler(request.uri).apply(request)
       }
   }
@@ -114,6 +114,19 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
     }
   }
 
+  private def filterByUniqueDocumentId(unfiltered: List[Json], cursor: HCursor): List[Json] = {
+    unfiltered.foldLeft((List[Json](), List[String]()))((acc, next) => {
+      val docId = cursor.downField("documentId").values.getOrElse(List.empty).toList.headOption.getOrElse(Json.Null)
+      if (docId == Json.Null || acc._2.contains(docId.toString())) {
+        acc
+      }
+      else {
+        (acc._1.appended(next), acc._2.appended(docId.toString()))
+      }
+    }
+    )._1
+  }
+
   private def jsonMerge(jsons: List[String]): JsValue = {
     // Circe Json processing logic
     //val doc = io. parse(json).getOrElse(Json.Null)
@@ -125,9 +138,9 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
         val doc = io.circe.parser.parse(json).getOrElse(Json.Null)
         val cursor: HCursor = doc.hcursor
         val documentDetails = cursor.downField("documentDetails").values.getOrElse(List.empty).toList
-        //TODO: Add filtering for only one instance of each DOCID here
+        val uniqueDocumentDetails: List[Json] = filterByUniqueDocumentId(documentDetails, cursor)
         //logger.error(s"RequestHandlerController-DocDetails: ${documentDetails.values.get.toList}")
-        documentDetails
+        uniqueDocumentDetails
       }
     }
 
@@ -137,9 +150,9 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
         val doc = io.circe.parser.parse(json).getOrElse(Json.Null)
         val cursor: HCursor = doc.hcursor
         val financialDetails = cursor.downField("financialDetails").values.getOrElse(List.empty).toList
+        val uniqueFinancialDetails: List[Json] = filterByUniqueDocumentId(financialDetails, cursor)
         //logger.error(s"RequestHandlerController-DocDetails: ${documentDetails.values.get.toList}")
-        //TODO: Add filtering for only one instance of each DOCID here
-        financialDetails
+        uniqueFinancialDetails
       }
     }
 
