@@ -114,9 +114,10 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
     }
   }
 
-  private def filterByUniqueDocumentId(unfiltered: List[Json], cursor: HCursor): List[Json] = {
+  private def filterByUniqueDocumentId(unfiltered: List[Json]): List[Json] = {
     unfiltered.foldLeft((List[Json](), List[String]()))((acc, next) => {
-      val docId = cursor.downField("documentId").values.getOrElse(List.empty).toList.headOption.getOrElse(Json.Null)
+      val cursorX = next.hcursor
+      val docId = cursorX.downField("documentId").values.getOrElse(List.empty).toList.headOption.getOrElse(Json.Null)
       if (docId == Json.Null || acc._2.contains(docId.toString())) {
         acc
       }
@@ -138,11 +139,11 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
         val doc = io.circe.parser.parse(json).getOrElse(Json.Null)
         val cursor: HCursor = doc.hcursor
         val documentDetails = cursor.downField("documentDetails").values.getOrElse(List.empty).toList
-        val uniqueDocumentDetails: List[Json] = filterByUniqueDocumentId(documentDetails, cursor)
         //logger.error(s"RequestHandlerController-DocDetails: ${documentDetails.values.get.toList}")
-        uniqueDocumentDetails
+        documentDetails
       }
     }
+    val uniqueDds = filterByUniqueDocumentId(dds)
 
     // Get list of all financialDetails
     val fds = jsons.flatMap {
@@ -150,11 +151,11 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
         val doc = io.circe.parser.parse(json).getOrElse(Json.Null)
         val cursor: HCursor = doc.hcursor
         val financialDetails = cursor.downField("financialDetails").values.getOrElse(List.empty).toList
-        val uniqueFinancialDetails: List[Json] = filterByUniqueDocumentId(financialDetails, cursor)
         //logger.error(s"RequestHandlerController-DocDetails: ${documentDetails.values.get.toList}")
-        uniqueFinancialDetails
+        financialDetails
       }
     }
+    val uniqueFds = filterByUniqueDocumentId(fds)
 
     //logger.error(s"RequestHandlerController-22/ -> ${dds}")
     // Get any 1553 response from the list ? lets take last one
@@ -163,12 +164,12 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
 
     // Replace DocumentDetails
     val documentDetails = doc.hcursor.downField("documentDetails")
-      .withFocus(_ => Json.fromValues(dds))
+      .withFocus(_ => Json.fromValues(uniqueDds))
 
     // Replace FinancialDetails
     val financialDetails = documentDetails.top.getOrElse(Json.Null)
       .hcursor.downField("financialDetails")
-      .withFocus(_ => Json.fromValues(fds))
+      .withFocus(_ => Json.fromValues(uniqueFds))
 
     // Get top document
     val finalJsonDocumentAsString: String = financialDetails.top.getOrElse(Json.Null).toString()
