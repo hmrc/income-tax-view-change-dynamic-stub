@@ -51,7 +51,7 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
       if (request.uri.contains("dateFrom")) {
         callIndividualYears(nino)(addSuffixToRequest("afterPoaAmountAdjusted", "afterPoaAmountAdjusted=true"))
       }
-      else{
+      else {
         requestHandlerController.getRequestHandler(request.uri).apply(request)
       }
   }
@@ -114,6 +114,27 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
     }
   }
 
+  private case class Accumulator(jsons: Set[Json], docIds: Set[String])
+
+  private def filterByUniqueDocumentId(unfiltered: List[Json]): Set[Json] = {
+    //the List[Json] accumulates the raw JSons for the unique entries, and the List[String] accumulates all the different documentIds so far, to check against
+    unfiltered.foldLeft(Accumulator(Set(), Set()))((acc, next) => {
+      val cursor = next.hcursor
+      cursor.getOrElse("documentId")("failed") match {
+        case Left(_) => acc
+        case Right(docIdString) =>
+          if (docIdString == "failed" || acc.docIds.contains(docIdString)) {
+            logger.debug(s"FinancialDetailsRequestController-filterByUniqueDocumentId: Duplicate data with docId $docIdString")
+            acc
+          }
+          else {
+            Accumulator(acc.jsons + next, acc.docIds + docIdString)
+          }
+      }
+    }
+    ).jsons
+  }
+
   private def jsonMerge(jsons: List[String]): JsValue = {
     // Circe Json processing logic
     //val doc = io. parse(json).getOrElse(Json.Null)
@@ -125,11 +146,11 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
         val doc = io.circe.parser.parse(json).getOrElse(Json.Null)
         val cursor: HCursor = doc.hcursor
         val documentDetails = cursor.downField("documentDetails").values.getOrElse(List.empty).toList
-        //TODO: Add filtering for only one instance of each DOCID here
         //logger.error(s"RequestHandlerController-DocDetails: ${documentDetails.values.get.toList}")
         documentDetails
       }
     }
+    val uniqueDds = filterByUniqueDocumentId(dds)
 
     // Get list of all financialDetails
     val fds = jsons.flatMap {
@@ -138,10 +159,10 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
         val cursor: HCursor = doc.hcursor
         val financialDetails = cursor.downField("financialDetails").values.getOrElse(List.empty).toList
         //logger.error(s"RequestHandlerController-DocDetails: ${documentDetails.values.get.toList}")
-        //TODO: Add filtering for only one instance of each DOCID here
         financialDetails
       }
     }
+    val uniqueFds = filterByUniqueDocumentId(fds)
 
     //logger.error(s"RequestHandlerController-22/ -> ${dds}")
     // Get any 1553 response from the list ? lets take last one
@@ -150,17 +171,17 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
 
     // Replace DocumentDetails
     val documentDetails = doc.hcursor.downField("documentDetails")
-      .withFocus(_ => Json.fromValues(dds))
+      .withFocus(_ => Json.fromValues(uniqueDds))
 
     // Replace FinancialDetails
     val financialDetails = documentDetails.top.getOrElse(Json.Null)
       .hcursor.downField("financialDetails")
-      .withFocus(_ => Json.fromValues(fds))
+      .withFocus(_ => Json.fromValues(uniqueFds))
 
     // Get top document
     val finalJsonDocumentAsString: String = financialDetails.top.getOrElse(Json.Null).toString()
 
-    logger.debug(s"RequestHandlerController-FinalJson: ${finalJsonDocumentAsString}")
+    logger.debug(s"FinancialDetailsRequestController-FinalJson: ${finalJsonDocumentAsString}")
     val js = play.api.libs.json.Json.parse(finalJsonDocumentAsString)
     js
   }
