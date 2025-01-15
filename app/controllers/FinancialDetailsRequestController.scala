@@ -114,11 +114,11 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
     }
   }
 
-  private case class Accumulator(jsons: List[Json], docIds: Set[String])
+  private case class Accumulator(jsons: Set[Json], docIds: Set[String])
 
-  private def filterByUniqueDocumentId(unfiltered: List[Json]): List[Json] = {
+  private def filterByUniqueDocumentId(unfiltered: List[Json]): Set[Json] = {
     //the List[Json] accumulates the raw JSons for the unique entries, and the List[String] accumulates all the different documentIds so far, to check against
-    unfiltered.foldLeft(Accumulator(List(), Set()))((acc, next) => {
+    unfiltered.foldLeft(Accumulator(Set(), Set()))((acc, next) => {
       val cursor = next.hcursor
       cursor.getOrElse("documentId")("failed") match {
         case Left(_) => acc
@@ -128,7 +128,7 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
             acc
           }
           else {
-            Accumulator(acc.jsons.appended(next), acc.docIds + docIdString)
+            Accumulator(acc.jsons + next, acc.docIds + docIdString)
           }
       }
     }
