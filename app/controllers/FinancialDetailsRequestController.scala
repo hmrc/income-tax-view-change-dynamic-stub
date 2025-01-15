@@ -124,6 +124,7 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
         case Left(_) => acc
         case Right(docIdString) =>
           if (docIdString == "failed" || acc.docIds.contains(docIdString)) {
+            logger.debug(s"FinancialDetailsRequestController-filterByUniqueDocumentId: Duplicate data with docId $docIdString")
             acc
           }
           else {
@@ -180,7 +181,7 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
     // Get top document
     val finalJsonDocumentAsString: String = financialDetails.top.getOrElse(Json.Null).toString()
 
-    logger.debug(s"RequestHandlerController-FinalJson: ${finalJsonDocumentAsString}")
+    logger.debug(s"FinancialDetailsRequestController-FinalJson: ${finalJsonDocumentAsString}")
     val js = play.api.libs.json.Json.parse(finalJsonDocumentAsString)
     js
   }
