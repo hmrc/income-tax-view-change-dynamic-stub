@@ -63,53 +63,58 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
     val to = LocalDate.parse(toDate)
     logger.info(s"RequestHandlerController-URI: ${request.uri} - ${fromDate} - ${toDate} - ${to.getYear - from.getYear}")
 
-    // Detect that its a request for a range of TaxYears
-    if (to.getYear - from.getYear > 1) {
-
-      // Call mongoDb for the give range of taxYears
-      val baseUrl = request.uri.replace(fromDate, "TaxYearFrom").replace(toDate, "TaxYearTo")
-      val mongoResponses: Future[IndexedSeq[Option[JsValue]]] = getSingleResponseFromMongo(baseUrl, from, to)
-
-      val jsonListOfStrings: Future[List[String]] = mongoResponses.flatMap { x =>
-        Future.successful(x.toList.map { y =>
-          y.map(_.toString()).getOrElse("")
-        }.filter(_ != ""))
-      }
-
-      // Merging logic
-      {
-        for {
-          ls <- jsonListOfStrings
-        } yield {
-          if (ls.isEmpty) {
-            //If we found no data, return 404
-            Future.successful(Status(404))
-          }
-          else {
-            val js: JsValue = jsonMerge(ls)
-
-            // For debug only
-            // import java.nio.charset.StandardCharsets
-            // import java.nio.file.{Files, Paths}
-            // Files.write( Paths.get("1553_final_response.json"), finalJsonDocumentAsString.getBytes(StandardCharsets.UTF_8) )
-
-            Future.successful(Status(200)(js))
-          }
-        }
-      }.flatten
+    // Return error if requesting a range of more than 5 tax years
+    if (to.getYear - from.getYear > 5) {
+      Future.successful(Status(400))
     } else {
-      dataRepository.find(equal("_id", request.uri), equal("method", GET)).map {
-        stubData =>
-          if (stubData.nonEmpty) {
-            if (stubData.head.response.isEmpty) {
-              Status(stubData.head.status)
-            } else {
-              Status(stubData.head.status)(stubData.head.response.get)
+      // Detect that its a request for a range of TaxYears
+      if (to.getYear - from.getYear > 1) {
+
+        // Call mongoDb for the give range of taxYears
+        val baseUrl = request.uri.replace(fromDate, "TaxYearFrom").replace(toDate, "TaxYearTo")
+        val mongoResponses: Future[IndexedSeq[Option[JsValue]]] = getSingleResponseFromMongo(baseUrl, from, to)
+
+        val jsonListOfStrings: Future[List[String]] = mongoResponses.flatMap { x =>
+          Future.successful(x.toList.map { y =>
+            y.map(_.toString()).getOrElse("")
+          }.filter(_ != ""))
+        }
+
+        // Merging logic
+        {
+          for {
+            ls <- jsonListOfStrings
+          } yield {
+            if (ls.isEmpty) {
+              //If we found no data, return 404
+              Future.successful(Status(404))
             }
-          } else {
-            val url = s"/enterprise/02.00.00/financial-data/NINO/$nino/ITSA"
-            defaultValues.getResponse(url)
+            else {
+              val js: JsValue = jsonMerge(ls)
+
+              // For debug only
+              // import java.nio.charset.StandardCharsets
+              // import java.nio.file.{Files, Paths}
+              // Files.write( Paths.get("1553_final_response.json"), finalJsonDocumentAsString.getBytes(StandardCharsets.UTF_8) )
+
+              Future.successful(Status(200)(js))
+            }
           }
+        }.flatten
+      } else {
+        dataRepository.find(equal("_id", request.uri), equal("method", GET)).map {
+          stubData =>
+            if (stubData.nonEmpty) {
+              if (stubData.head.response.isEmpty) {
+                Status(stubData.head.status)
+              } else {
+                Status(stubData.head.status)(stubData.head.response.get)
+              }
+            } else {
+              val url = s"/enterprise/02.00.00/financial-data/NINO/$nino/ITSA"
+              defaultValues.getResponse(url)
+            }
+        }
       }
     }
   }
