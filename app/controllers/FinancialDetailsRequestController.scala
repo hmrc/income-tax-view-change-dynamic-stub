@@ -65,7 +65,7 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
 
     // Return error if requesting a range of more than 5 tax years
     if (to.getYear - from.getYear > 5) {
-      Future.successful(Status(400))
+      Future.successful(Status(BAD_REQUEST))
     } else {
       // Detect that its a request for a range of TaxYears
       if (to.getYear - from.getYear > 1) {
@@ -141,9 +141,6 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
   }
 
   private def jsonMerge(jsons: List[String]): JsValue = {
-    // Circe Json processing logic
-    //val doc = io. parse(json).getOrElse(Json.Null)
-    //logger.error(s"RequestHandlerController-33/ ->")
 
     // Get list of all documentDetails
     val dds = jsons.flatMap {
@@ -151,7 +148,6 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
         val doc = io.circe.parser.parse(json).getOrElse(Json.Null)
         val cursor: HCursor = doc.hcursor
         val documentDetails = cursor.downField("documentDetails").values.getOrElse(List.empty).toList
-        //logger.error(s"RequestHandlerController-DocDetails: ${documentDetails.values.get.toList}")
         documentDetails
       }
     }
@@ -163,12 +159,10 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
         val doc = io.circe.parser.parse(json).getOrElse(Json.Null)
         val cursor: HCursor = doc.hcursor
         val financialDetails = cursor.downField("financialDetails").values.getOrElse(List.empty).toList
-        //logger.error(s"RequestHandlerController-DocDetails: ${documentDetails.values.get.toList}")
         financialDetails
       }
     }
 
-    //logger.error(s"RequestHandlerController-22/ -> ${dds}")
     // Get any 1553 response from the list ? lets take last one
     // balanceDetails must be the same across all these responses???
     val doc = io.circe.parser.parse(jsons.last).getOrElse(Json.Null)
@@ -196,12 +190,10 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
         .map { delta =>
           val f = from.plusYears(delta)
           val t = from.plusYears(delta + 1).plusDays(-1)
-          //logger.error(s"RequestHandlerController-Range: $f - $t")
           baseUrl
             .replace("TaxYearFrom", f.format(DateTimeFormatter.ISO_DATE))
             .replace("TaxYearTo", t.format(DateTimeFormatter.ISO_DATE))
         }.map(mongoUrl => {
-          //logger.error(s"RequestHandlerController-MongoUrl: $mongoUrl")
           dataRepository.find(equal("_id", mongoUrl), equal("method", GET)).map {
             stubData =>
               if (stubData.nonEmpty) {
