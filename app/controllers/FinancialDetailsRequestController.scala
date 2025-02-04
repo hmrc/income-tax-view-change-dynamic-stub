@@ -87,7 +87,7 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
           } yield {
             if (ls.isEmpty) {
               //If we found no data, return 404
-              Future.successful(Status(404))
+              Future.successful(Status(NOT_FOUND))
             }
             else {
               val js: JsValue = jsonMerge(ls)
@@ -97,7 +97,7 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
               // import java.nio.file.{Files, Paths}
               // Files.write( Paths.get("1553_final_response.json"), finalJsonDocumentAsString.getBytes(StandardCharsets.UTF_8) )
 
-              Future.successful(Status(200)(js))
+              Future.successful(Status(OK)(js))
             }
           }
         }.flatten
