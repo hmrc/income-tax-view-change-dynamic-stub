@@ -25,43 +25,43 @@ object EnrolmentStoreProxyResponse {
       "startRecord" -> 1,
       "enrolments" -> Json.arr(
         Json.obj(
-          "service" -> "HMRC-MTD-IT",
+          "service"      -> "HMRC-MTD-IT",
           "friendlyName" -> "Clever+Digs+Set+2",
-          "state" -> "Activated",
+          "state"        -> "Activated",
           "identifiers" -> Json.arr(
             Json.obj("key" -> "MTDITID", "value" -> "XAIT00000111111")
           ),
-          "enrolmentDate" -> "2024-07-04T14:15:15.078",
+          "enrolmentDate"  -> "2024-07-04T14:15:15.078",
           "activationDate" -> "2024-07-04T14:15:15.078"
         ),
         Json.obj(
-          "service" -> "HMRC-MTD-IT",
+          "service"      -> "HMRC-MTD-IT",
           "friendlyName" -> "Damsels+In+This+Dress",
-          "state" -> "Activated",
+          "state"        -> "Activated",
           "identifiers" -> Json.arr(
             Json.obj("key" -> "MTDITID", "value" -> "XDIT22222222222")
           ),
-          "enrolmentDate" -> "2024-07-04T14:21:08.203",
+          "enrolmentDate"  -> "2024-07-04T14:21:08.203",
           "activationDate" -> "2024-07-04T14:21:08.203"
         ),
         Json.obj(
-          "service" -> "HMRC-MTD-IT",
+          "service"      -> "HMRC-MTD-IT",
           "friendlyName" -> "Clever+Digs+Set+5",
-          "state" -> "Activated",
+          "state"        -> "Activated",
           "identifiers" -> Json.arr(
             Json.obj("key" -> "MTDITID", "value" -> "XYIT77777777777")
           ),
-          "enrolmentDate" -> "2024-07-04T14:22:25.981",
+          "enrolmentDate"  -> "2024-07-04T14:22:25.981",
           "activationDate" -> "2024-07-04T14:22:25.981"
         ),
         Json.obj(
-          "service" -> "HMRC-MTD-IT",
+          "service"      -> "HMRC-MTD-IT",
           "friendlyName" -> "Clever+Digs+Set+6",
-          "state" -> "Activated",
+          "state"        -> "Activated",
           "identifiers" -> Json.arr(
             Json.obj("key" -> "MTDITID", "value" -> "XBIT00994530029")
           ),
-          "enrolmentDate" -> "2024-07-04T14:23:44.674",
+          "enrolmentDate"  -> "2024-07-04T14:23:44.674",
           "activationDate" -> "2024-07-04T14:23:44.674"
         )
       )

@@ -18,7 +18,6 @@ package testUtils
 
 import org.apache.pekko.actor.ActorSystem
 
-
 trait MaterializerSupport {
   implicit val system: ActorSystem = ActorSystem("Sys")
 }

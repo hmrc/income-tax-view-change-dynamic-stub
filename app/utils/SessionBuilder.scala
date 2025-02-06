@@ -25,15 +25,21 @@ import java.util.UUID
 
 object SessionBuilder {
 
-  def buildPrivilegedSession(authExchange: AuthExchange): Session = Session(Map(
-    SessionKeys.sessionId -> SessionId(s"session-${UUID.randomUUID}").value,
-    SessionKeys.authToken -> authExchange.bearerToken,
-    SessionKeys.lastRequestTimestamp -> DateTime.now.getMillis.toString
-  ))
+  def buildPrivilegedSession(authExchange: AuthExchange): Session =
+    Session(
+      Map(
+        SessionKeys.sessionId            -> SessionId(s"session-${UUID.randomUUID}").value,
+        SessionKeys.authToken            -> authExchange.bearerToken,
+        SessionKeys.lastRequestTimestamp -> DateTime.now.getMillis.toString
+      )
+    )
 
-  def buildGGSession(authExchange: AuthExchange): Session = Session(Map(
-    SessionKeys.sessionId -> SessionId(s"session-${UUID.randomUUID}").value,
-    SessionKeys.authToken -> authExchange.bearerToken,
-    SessionKeys.lastRequestTimestamp -> DateTime.now.getMillis.toString
-  ))
+  def buildGGSession(authExchange: AuthExchange): Session =
+    Session(
+      Map(
+        SessionKeys.sessionId            -> SessionId(s"session-${UUID.randomUUID}").value,
+        SessionKeys.authToken            -> authExchange.bearerToken,
+        SessionKeys.lastRequestTimestamp -> DateTime.now.getMillis.toString
+      )
+    )
 }

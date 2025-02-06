@@ -30,18 +30,17 @@ class EnrolmentStoreProxyControllerSpec extends TestSupport with ScalaFutures {
   "getUTRList" should {
 
     "return status OK with the expected JSON response" in {
-      val groupId = "testGroupId"
+      val groupId      = "testGroupId"
       val expectedJson = EnrolmentStoreProxyResponse.generateResponse
-      val result = TestEnrolmentStoreProxyController.getUTRList(groupId)(FakeRequest())
+      val result       = TestEnrolmentStoreProxyController.getUTRList(groupId)(FakeRequest())
       status(result) shouldBe OK
       contentAsJson(result) shouldBe expectedJson
     }
 
     "return status InternalServerError when an invalid groupId is provided" in {
       val groupId = ""
-      val result = TestEnrolmentStoreProxyController.getUTRList(groupId)(FakeRequest())
+      val result  = TestEnrolmentStoreProxyController.getUTRList(groupId)(FakeRequest())
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }
   }
 }
-

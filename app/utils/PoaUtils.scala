@@ -56,11 +56,12 @@ trait PoaUtils {
     )
   }
 
-  def getFinDetailsDataModel(request: JsValue, url: String): DataModel = DataModel(
-    _id = url,
-    schemaId = "getFinancialDetailsSuccess",
-    method = "GET",
-    status = 200,
-    response = Some(request)
-  )
+  def getFinDetailsDataModel(request: JsValue, url: String): DataModel =
+    DataModel(
+      _id = url,
+      schemaId = "getFinancialDetailsSuccess",
+      method = "GET",
+      status = 200,
+      response = Some(request)
+    )
 }

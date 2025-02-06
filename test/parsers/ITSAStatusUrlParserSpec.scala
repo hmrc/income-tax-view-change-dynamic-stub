@@ -18,7 +18,7 @@ package parsers
 
 import org.scalatest.funsuite.AnyFunSuite
 
-class ITSAStatusUrlParserSpec  extends AnyFunSuite {
+class ITSAStatusUrlParserSpec extends AnyFunSuite {
   import ITSAStatusUrlParser.extractTaxYear
 
   test("An empty string return None") {
@@ -35,7 +35,7 @@ class ITSAStatusUrlParserSpec  extends AnyFunSuite {
     assert(extractTaxYear(url) == Some("20-21"))
   }
 
-  test("return correct tax year / case C: 23-24"){
+  test("return correct tax year / case C: 23-24") {
     val url = "income-tax/AS000002A/person-itd/itsa-status/23-24"
     assert(extractTaxYear(url) == Some("23-24"))
   }

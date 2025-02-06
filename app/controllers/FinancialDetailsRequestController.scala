@@ -31,37 +31,46 @@ import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponents,
-                                                  dataRepository: DataRepository,
-                                                  defaultValues: DefaultValues,
-                                                  requestHandlerController: RequestHandlerController
-                                                 )
-                                                 (implicit val ec: ExecutionContext) extends FrontendController(cc) with Logging {
+class FinancialDetailsRequestController @Inject() (
+    cc:                       MessagesControllerComponents,
+    dataRepository:           DataRepository,
+    defaultValues:            DefaultValues,
+    requestHandlerController: RequestHandlerController
+  )(
+    implicit val ec: ExecutionContext)
+    extends FrontendController(cc)
+    with Logging {
 
-  private def addSuffixToRequest(key: String, suffix: String)(implicit request: MessagesRequest[AnyContent]): WrappedRequest[AnyContent] = {
-    val testHeader = request.headers.get("Gov-Test-Scenario")
+  private def addSuffixToRequest(
+      key:    String,
+      suffix: String
+    )(
+      implicit request: MessagesRequest[AnyContent]
+    ): WrappedRequest[AnyContent] = {
+    val testHeader     = request.headers.get("Gov-Test-Scenario")
     val computedSuffix = if (testHeader.contains(key)) s"&$suffix" else ""
-    val uri = request.uri + computedSuffix
-    val newRequest = request.withTarget(request.target.withUri(URI.create(uri)))
+    val uri            = request.uri + computedSuffix
+    val newRequest     = request.withTarget(request.target.withUri(URI.create(uri)))
     newRequest
   }
 
-  def transform(nino: String): Action[AnyContent] = Action.async {
-    implicit request =>
+  def transform(nino: String): Action[AnyContent] =
+    Action.async { implicit request =>
       if (request.uri.contains("dateFrom")) {
         callIndividualYears(nino)(addSuffixToRequest("afterPoaAmountAdjusted", "afterPoaAmountAdjusted=true"))
-      }
-      else {
+      } else {
         requestHandlerController.getRequestHandler(request.uri).apply(request)
       }
-  }
+    }
 
   def callIndividualYears(nino: String)(implicit request: WrappedRequest[AnyContent]): Future[Result] = {
     val fromDate = request.getQueryString("dateFrom").get
-    val toDate = request.getQueryString("dateTo").get
-    val from = LocalDate.parse(fromDate)
-    val to = LocalDate.parse(toDate)
-    logger.info(s"RequestHandlerController-URI: ${request.uri} - ${fromDate} - ${toDate} - ${to.getYear - from.getYear}")
+    val toDate   = request.getQueryString("dateTo").get
+    val from     = LocalDate.parse(fromDate)
+    val to       = LocalDate.parse(toDate)
+    logger.info(
+      s"RequestHandlerController-URI: ${request.uri} - ${fromDate} - ${toDate} - ${to.getYear - from.getYear}"
+    )
 
     // Return error if requesting a range of more than 5 tax years
     if (to.getYear - from.getYear > 5) {
@@ -75,9 +84,13 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
         val mongoResponses: Future[IndexedSeq[Option[JsValue]]] = getSingleResponseFromMongo(baseUrl, from, to)
 
         val jsonListOfStrings: Future[List[String]] = mongoResponses.flatMap { x =>
-          Future.successful(x.toList.map { y =>
-            y.map(_.toString()).getOrElse("")
-          }.filter(_ != ""))
+          Future.successful(
+            x.toList
+              .map { y =>
+                y.map(_.toString()).getOrElse("")
+              }
+              .filter(_ != "")
+          )
         }
 
         // Merging logic
@@ -88,8 +101,7 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
             if (ls.isEmpty) {
               //If we found no data, return 404
               Future.successful(Status(NOT_FOUND))
-            }
-            else {
+            } else {
               val js: JsValue = jsonMerge(ls)
 
               // For debug only
@@ -102,18 +114,17 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
           }
         }.flatten
       } else {
-        dataRepository.find(equal("_id", request.uri), equal("method", GET)).map {
-          stubData =>
-            if (stubData.nonEmpty) {
-              if (stubData.head.response.isEmpty) {
-                Status(stubData.head.status)
-              } else {
-                Status(stubData.head.status)(stubData.head.response.get)
-              }
+        dataRepository.find(equal("_id", request.uri), equal("method", GET)).map { stubData =>
+          if (stubData.nonEmpty) {
+            if (stubData.head.response.isEmpty) {
+              Status(stubData.head.status)
             } else {
-              val url = s"/enterprise/02.00.00/financial-data/NINO/$nino/ITSA"
-              defaultValues.getResponse(url)
+              Status(stubData.head.status)(stubData.head.response.get)
             }
+          } else {
+            val url = s"/enterprise/02.00.00/financial-data/NINO/$nino/ITSA"
+            defaultValues.getResponse(url)
+          }
         }
       }
     }
@@ -123,28 +134,30 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
 
   private def filterByUniqueDocumentId(unfiltered: List[Json]): Set[Json] = {
     //the List[Json] accumulates the raw JSons for the unique entries, and the List[String] accumulates all the different documentIds so far, to check against
-    unfiltered.foldLeft(Accumulator(Set(), Set()))((acc, next) => {
-      val cursor = next.hcursor
-      cursor.getOrElse("documentId")("failed") match {
-        case Left(_) => acc
-        case Right(docIdString) =>
-          if (docIdString == "failed" || acc.docIds.contains(docIdString)) {
-            logger.debug(s"FinancialDetailsRequestController-filterByUniqueDocumentId: Duplicate data with docId $docIdString")
-            acc
-          }
-          else {
-            Accumulator(acc.jsons + next, acc.docIds + docIdString)
-          }
-      }
-    }
-    ).jsons
+    unfiltered
+      .foldLeft(Accumulator(Set(), Set()))((acc, next) => {
+        val cursor = next.hcursor
+        cursor.getOrElse("documentId")("failed") match {
+          case Left(_) => acc
+          case Right(docIdString) =>
+            if (docIdString == "failed" || acc.docIds.contains(docIdString)) {
+              logger.debug(
+                s"FinancialDetailsRequestController-filterByUniqueDocumentId: Duplicate data with docId $docIdString"
+              )
+              acc
+            } else {
+              Accumulator(acc.jsons + next, acc.docIds + docIdString)
+            }
+        }
+      })
+      .jsons
   }
 
   private def jsonMerge(jsons: List[String]): JsValue = {
 
     // Get list of all documentDetails
-    val dds = jsons.flatMap {
-      json => {
+    val dds = jsons.flatMap { json =>
+      {
         val doc = io.circe.parser.parse(json).getOrElse(Json.Null)
         val cursor: HCursor = doc.hcursor
         val documentDetails = cursor.downField("documentDetails").values.getOrElse(List.empty).toList
@@ -154,8 +167,8 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
     val uniqueDds = filterByUniqueDocumentId(dds)
 
     // Get list of all financialDetails
-    val fds = jsons.flatMap {
-      json => {
+    val fds = jsons.flatMap { json =>
+      {
         val doc = io.circe.parser.parse(json).getOrElse(Json.Null)
         val cursor: HCursor = doc.hcursor
         val financialDetails = cursor.downField("financialDetails").values.getOrElse(List.empty).toList
@@ -168,12 +181,15 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
     val doc = io.circe.parser.parse(jsons.last).getOrElse(Json.Null)
 
     // Replace DocumentDetails
-    val documentDetails = doc.hcursor.downField("documentDetails")
+    val documentDetails = doc.hcursor
+      .downField("documentDetails")
       .withFocus(_ => Json.fromValues(uniqueDds))
 
     // Replace FinancialDetails
-    val financialDetails = documentDetails.top.getOrElse(Json.Null)
-      .hcursor.downField("financialDetails")
+    val financialDetails = documentDetails.top
+      .getOrElse(Json.Null)
+      .hcursor
+      .downField("financialDetails")
       .withFocus(_ => Json.fromValues(fds))
 
     // Get top document
@@ -193,18 +209,18 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
           baseUrl
             .replace("TaxYearFrom", f.format(DateTimeFormatter.ISO_DATE))
             .replace("TaxYearTo", t.format(DateTimeFormatter.ISO_DATE))
-        }.map(mongoUrl => {
-          dataRepository.find(equal("_id", mongoUrl), equal("method", GET)).map {
-            stubData =>
-              if (stubData.nonEmpty) {
-                if (stubData.head.response.isEmpty) {
-                  None
-                } else {
-                  stubData.head.response
-                }
-              } else {
+        }
+        .map(mongoUrl => {
+          dataRepository.find(equal("_id", mongoUrl), equal("method", GET)).map { stubData =>
+            if (stubData.nonEmpty) {
+              if (stubData.head.response.isEmpty) {
                 None
+              } else {
+                stubData.head.response
               }
+            } else {
+              None
+            }
           }
         })
     })

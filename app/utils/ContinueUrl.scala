@@ -25,18 +25,20 @@ case class ContinueUrl(url: String)
 object ContinueUrl {
   private def errorFor(invalidUrl: String) = s"'$invalidUrl' is not a valid continue URL"
 
-  implicit def queryBinder(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[ContinueUrl] = new QueryStringBindable[ContinueUrl] {
-    def bind(key: String, params: Map[String, scala.Seq[String]]): Option[Either[String, ContinueUrl]] =
-      stringBinder.bind(key, params).map {
-        case Right(s) => Try(ContinueUrl(s)) match {
-          case Success(url) =>
-            Right(url)
-          case Failure(_) =>
-            Left(errorFor(s)) // TODO - this can never be reached as there is no validation
+  implicit def queryBinder(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[ContinueUrl] =
+    new QueryStringBindable[ContinueUrl] {
+      def bind(key: String, params: Map[String, scala.Seq[String]]): Option[Either[String, ContinueUrl]] =
+        stringBinder.bind(key, params).map {
+          case Right(s) =>
+            Try(ContinueUrl(s)) match {
+              case Success(url) =>
+                Right(url)
+              case Failure(_) =>
+                Left(errorFor(s)) // TODO - this can never be reached as there is no validation
+            }
+          case Left(message) => Left(message)
         }
-        case Left(message) => Left(message)
-      }
 
-    def unbind(key: String, value: ContinueUrl): String = stringBinder.unbind(key, value.url)
-  }
+      def unbind(key: String, value: ContinueUrl): String = stringBinder.unbind(key, value.url)
+    }
 }

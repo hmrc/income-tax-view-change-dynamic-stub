@@ -25,16 +25,17 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class EnrolmentStoreProxyController @Inject()(cc: MessagesControllerComponents) extends FrontendController(cc) {
+class EnrolmentStoreProxyController @Inject() (cc: MessagesControllerComponents) extends FrontendController(cc) {
 
-  def getUTRList(groupId: String): Action[AnyContent] = Action.async {
-    Logger("application").info(s"${Console.YELLOW} agent groupid found: $groupId" + Console.WHITE)
-    if (groupId.isEmpty) {
-      Future.successful(InternalServerError("Invalid groupId"))
-    } else {
-      val responseJson = EnrolmentStoreProxyResponse.generateResponse
-      Logger("application").info(s"${Console.YELLOW} responseJson: $responseJson" + Console.WHITE)
-      Future.successful(Ok(responseJson))
+  def getUTRList(groupId: String): Action[AnyContent] =
+    Action.async {
+      Logger("application").info(s"${Console.YELLOW} agent groupid found: $groupId" + Console.WHITE)
+      if (groupId.isEmpty) {
+        Future.successful(InternalServerError("Invalid groupId"))
+      } else {
+        val responseJson = EnrolmentStoreProxyResponse.generateResponse
+        Logger("application").info(s"${Console.YELLOW} responseJson: $responseJson" + Console.WHITE)
+        Future.successful(Ok(responseJson))
+      }
     }
-  }
 }

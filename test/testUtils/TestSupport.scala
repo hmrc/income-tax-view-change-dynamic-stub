@@ -27,17 +27,23 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext
 
-trait TestSupport extends UnitSpec with GuiceOneServerPerSuite with MockitoSugar with BeforeAndAfterAll with BeforeAndAfterEach with MaterializerSupport {
+trait TestSupport
+    extends UnitSpec
+    with GuiceOneServerPerSuite
+    with MockitoSugar
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach
+    with MaterializerSupport {
 
-  implicit val ec: ExecutionContext = stubControllerComponents().executionContext
-  implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-  implicit val config: Config = app.configuration.underlying
+  implicit val ec:            ExecutionContext = stubControllerComponents().executionContext
+  implicit val headerCarrier: HeaderCarrier    = HeaderCarrier()
+  implicit val config:        Config           = app.configuration.underlying
 
-  val successUpdateResult = UpdateResult.acknowledged(0,0,BsonBoolean.TRUE)
-  val failedUpdateResult = UpdateResult.unacknowledged()
+  val successUpdateResult    = UpdateResult.acknowledged(0, 0, BsonBoolean.TRUE)
+  val failedUpdateResult     = UpdateResult.unacknowledged()
   val successInsertOneResult = InsertOneResult.acknowledged(BsonBoolean.TRUE)
-  val failedInsertOneResult = InsertOneResult.unacknowledged()
+  val failedInsertOneResult  = InsertOneResult.unacknowledged()
   val successDeleteResult: DeleteResult = DeleteResult.acknowledged(0)
-  val failedDeleteResult: DeleteResult = DeleteResult.unacknowledged()
+  val failedDeleteResult:  DeleteResult = DeleteResult.unacknowledged()
 
 }

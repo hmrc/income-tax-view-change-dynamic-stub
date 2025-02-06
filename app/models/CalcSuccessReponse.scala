@@ -16,14 +16,14 @@
 
 package models
 
-case class CalcSuccessReponse(calculationId: String,
-                               calculationTimestamp: String,
-                               calculationType: String,
-                               requestedBy: String,
-                               year: Int,
-                               fromDate: String,
-                               toDate: String,
-                               totalIncomeTaxAndNicsDue: BigDecimal,
-                               intentToCrystallise: Boolean,
-                               crystallised: Boolean)
-
+case class CalcSuccessReponse(
+    calculationId:            String,
+    calculationTimestamp:     String,
+    calculationType:          String,
+    requestedBy:              String,
+    year:                     Int,
+    fromDate:                 String,
+    toDate:                   String,
+    totalIncomeTaxAndNicsDue: BigDecimal,
+    intentToCrystallise:      Boolean,
+    crystallised:             Boolean)
