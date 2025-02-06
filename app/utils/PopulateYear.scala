@@ -22,16 +22,17 @@ import play.api.libs.json.{JsValue, Json}
 import java.time.LocalDate
 
 object PopulateYear {
-  private val currentStartYear = "{{CY-START-YEAR}}"
+  private val currentStartYear  = "{{CY-START-YEAR}}"
   private val previousStartYear = "{{PY-START-YEAR}}"
-
-
 
   def apply(jsValue: JsValue): JsValue = {
     val year = TaxYear.getStartYear(LocalDate.now())
-    Json.parse(jsValue.toString()
-      .replace(currentStartYear, year.toString)
-      .replace(previousStartYear, (year - 1).toString))
+    Json.parse(
+      jsValue
+        .toString()
+        .replace(currentStartYear, year.toString)
+        .replace(previousStartYear, (year - 1).toString)
+    )
 
   }
 

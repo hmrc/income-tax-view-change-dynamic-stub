@@ -30,8 +30,7 @@ import scala.concurrent.Future
 class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
   lazy val mockCC: MessagesControllerComponents = stubMessagesControllerComponents()
 
-  object TestSetupSchemaController extends SetupSchemaController(mockSchemaRepository,
-    mockCC)
+  object TestSetupSchemaController extends SetupSchemaController(mockSchemaRepository, mockCC)
 
   "The SetupSchemaController" when {
 
@@ -43,7 +42,8 @@ class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
         method = "GET",
         responseSchema = Json.parse("{}")
       )
-      lazy val request = FakeRequest().withBody(Json.toJson(successModel)).withHeaders(("Content-Type", "application/json"))
+      lazy val request =
+        FakeRequest().withBody(Json.toJson(successModel)).withHeaders(("Content-Type", "application/json"))
       lazy val result: Future[Result] = TestSetupSchemaController.addSchema(request)
 
       "Return a status 200 (OK)" in {
@@ -73,7 +73,8 @@ class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
       //        responseSchema = Json.parse("{}")
       //      )
 
-      lazy val request = FakeRequest().withBody(Json.toJson(successModel)).withHeaders(("Content-Type", "application/json"))
+      lazy val request =
+        FakeRequest().withBody(Json.toJson(successModel)).withHeaders(("Content-Type", "application/json"))
       lazy val result = TestSetupSchemaController.addSchema(request)
 
       "Return a status 500 (ISE)" in {
@@ -97,7 +98,7 @@ class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
     "removing a schema is successful" should {
       "Return a status 200 (OK)" in {
         lazy val request = FakeRequest()
-        lazy val result = TestSetupSchemaController.removeSchema("someId")(request)
+        lazy val result  = TestSetupSchemaController.removeSchema("someId")(request)
 
         setupMockRemoveSchema("someId")(successDeleteResult)
         status(result) shouldBe Status.OK
@@ -107,7 +108,7 @@ class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
     "removing a schema is unsuccessful" should {
       "Return a status 500 (ISE)" in {
         lazy val request = FakeRequest()
-        lazy val result = TestSetupSchemaController.removeSchema("someId")(request)
+        lazy val result  = TestSetupSchemaController.removeSchema("someId")(request)
 
         setupMockRemoveSchema("someId")(failedDeleteResult)
         status(result) shouldBe Status.INTERNAL_SERVER_ERROR
@@ -117,7 +118,7 @@ class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
     "removing all schemas is successful" should {
       "Return a status 200 (OK)" in {
         lazy val request = FakeRequest()
-        lazy val result = TestSetupSchemaController.removeAll()(request)
+        lazy val result  = TestSetupSchemaController.removeAll()(request)
 
         setupMockRemoveAllSchemas(successDeleteResult)
         status(result) shouldBe Status.OK
@@ -127,7 +128,7 @@ class SetupSchemaControllerSpec extends TestSupport with MockSchemaRepository {
     "removing all schemas is unsuccessful" should {
       "Return a status 500 (ISE)" in {
         lazy val request = FakeRequest()
-        lazy val result = TestSetupSchemaController.removeAll()(request)
+        lazy val result  = TestSetupSchemaController.removeAll()(request)
 
         setupMockRemoveAllSchemas(failedDeleteResult)
         status(result) shouldBe Status.INTERNAL_SERVER_ERROR

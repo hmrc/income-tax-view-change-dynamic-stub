@@ -19,10 +19,10 @@ package utils
 import testUtils.TestSupport
 import utils.CalculationUtils.getTaxYearRangeEndYear
 
-class CalculationUtilsSpec extends  TestSupport{
+class CalculationUtilsSpec extends TestSupport {
   import CalculationUtils.createCalResponseModel
 
-  val taxYear : Int = 2024
+  val taxYear: Int = 2024
 
   "call getCalculationListSuccessResponse" should {
 
@@ -50,7 +50,7 @@ class CalculationUtilsSpec extends  TestSupport{
     "fail for nino in wrong format" in {
       createCalResponseModel("AAAAYY", Some(taxYear), true) match {
         case Left(error) =>
-          error.getMessage should  fullyMatch regex """([String\sindex\sout\sof\srange:\s7|Index\s7\sout\sof\sbounds\sfor\slength\s6]+)+"""
+          error.getMessage should fullyMatch regex """([String\sindex\sout\sof\srange:\s7|Index\s7\sout\sof\sbounds\sfor\slength\s6]+)+"""
         case Right(_) => fail("Failing scenario")
       }
     }

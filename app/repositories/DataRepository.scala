@@ -26,17 +26,20 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class DataRepository @Inject()(repository: DataRepositoryBase) {
+class DataRepository @Inject() (repository: DataRepositoryBase) {
 
   def removeAll(): Future[DeleteResult] = repository.collection.deleteMany(empty()).toFuture()
 
   def removeById(url: String): Future[DeleteResult] = repository.collection.deleteOne(equal("_id", url)).toFuture()
 
-  def addEntry(document: DataModel): Future[UpdateResult] = repository.collection.replaceOne(
-    equal("_id", document._id), document,
-    options = ReplaceOptions().upsert(true)
-  ).toFuture()
-
+  def addEntry(document: DataModel): Future[UpdateResult] =
+    repository.collection
+      .replaceOne(
+        equal("_id", document._id),
+        document,
+        options = ReplaceOptions().upsert(true)
+      )
+      .toFuture()
 
   def find(query: Bson*): Future[Option[DataModel]] = {
     val finalQuery = if (query.isEmpty) empty() else and(query: _*)
@@ -44,11 +47,13 @@ class DataRepository @Inject()(repository: DataRepositoryBase) {
   }
 
   def replaceOne(url: String, updatedFile: DataModel): Future[UpdateResult] = {
-      repository.collection.replaceOne(
+    repository.collection
+      .replaceOne(
         filter = Filters.equal("_id", url),
         replacement = updatedFile,
         options = new ReplaceOptions().upsert(true)
-      ).toFuture()
+      )
+      .toFuture()
   }
 
 }

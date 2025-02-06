@@ -26,13 +26,15 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import testUtils.TestSupport
 
-class RequestHandlerControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository with MockDefaultValues {
+class RequestHandlerControllerSpec
+    extends TestSupport
+    with MockSchemaValidation
+    with MockDataRepository
+    with MockDefaultValues {
   lazy val mockCC: MessagesControllerComponents = stubMessagesControllerComponents()
 
-  object TestRequestHandlerController extends RequestHandlerController(mockSchemaValidation,
-    mockDataRepository,
-    mockCC,
-    mockDefaultValues)
+  object TestRequestHandlerController
+      extends RequestHandlerController(mockSchemaValidation, mockDataRepository, mockCC, mockDefaultValues)
 
   lazy val successModel: DataModel = DataModel(
     _id = "test",

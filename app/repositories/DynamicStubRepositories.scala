@@ -25,18 +25,18 @@ import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class DataRepositoryBase @Inject()(implicit mongo: MongoComponent, val ec: ExecutionContext)
-  extends PlayMongoRepository[DataModel](
-    mongoComponent = mongo,
-    collectionName = "data",
-    domainFormat = DataModel.formats,
-    indexes = Seq()
-  )
+class DataRepositoryBase @Inject() (implicit mongo: MongoComponent, val ec: ExecutionContext)
+    extends PlayMongoRepository[DataModel](
+      mongoComponent = mongo,
+      collectionName = "data",
+      domainFormat = DataModel.formats,
+      indexes = Seq()
+    )
 
-class SchemaRepositoryBase @Inject()(implicit mongo: MongoComponent,  val ec: ExecutionContext)
-  extends PlayMongoRepository[SchemaModel](
-    mongoComponent = mongo,
-    collectionName = "schemas",
-    domainFormat = SchemaModel.formats,
-    indexes = Seq()
-  )
+class SchemaRepositoryBase @Inject() (implicit mongo: MongoComponent, val ec: ExecutionContext)
+    extends PlayMongoRepository[SchemaModel](
+      mongoComponent = mongo,
+      collectionName = "schemas",
+      domainFormat = SchemaModel.formats,
+      indexes = Seq()
+    )

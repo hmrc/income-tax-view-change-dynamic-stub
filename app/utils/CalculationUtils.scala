@@ -25,15 +25,19 @@ object CalculationUtils {
   private def ninoMatchCharacters(nino: String): String =
     s"${nino.charAt(0)}${nino.charAt(7)}"
 
-
   private def calculationId(lastTwoChars: String, taxYearOpt: Option[Int]): String = {
-    taxYearOpt.map(taxYear => {
-      s"041f7e4d-87d9-4d4a-a296-3cfbdf${taxYear.toLong.toString}$lastTwoChars"
-    }).getOrElse(s"041f7e4d-87d9-4d4a-a296-3cfbdf92f1$lastTwoChars")
+    taxYearOpt
+      .map(taxYear => {
+        s"041f7e4d-87d9-4d4a-a296-3cfbdf${taxYear.toLong.toString}$lastTwoChars"
+      })
+      .getOrElse(s"041f7e4d-87d9-4d4a-a296-3cfbdf92f1$lastTwoChars")
   }
 
-  def createCalResponseModel(nino: String, taxYear: Option[Int], crystallised:
-  Boolean = false): Either[Throwable, List[CalcSuccessReponse]] = {
+  def createCalResponseModel(
+      nino:         String,
+      taxYear:      Option[Int],
+      crystallised: Boolean = false
+    ): Either[Throwable, List[CalcSuccessReponse]] = {
     Try {
       val encodedNino = ninoMatchCharacters(nino)
       List(getCalcResponse(taxYear, crystallised, encodedNino))
@@ -44,8 +48,7 @@ object CalculationUtils {
     s"20${taxYearRange.takeRight(2)}".toInt
   }
 
-  private def getCalcResponse(taxYear: Option[Int],
-                              crystallised: Boolean, calcEncoding: String): CalcSuccessReponse = {
+  private def getCalcResponse(taxYear: Option[Int], crystallised: Boolean, calcEncoding: String): CalcSuccessReponse = {
     CalcSuccessReponse(
       calculationId = s"${calculationId(calcEncoding, taxYear).toLowerCase()}",
       calculationTimestamp = "2018-07-13T12:13:48.763Z",
@@ -70,7 +73,11 @@ object CalculationUtils {
     s"/income-tax/view/calculations/liability/$taxYearRange/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf${taxYear}s1"
   }
 
-  def getCalculationListSuccessResponse(lastTwoChars: String, taxYear: Option[Int], crystallised: Boolean = false): String = {
+  def getCalculationListSuccessResponse(
+      lastTwoChars: String,
+      taxYear:      Option[Int],
+      crystallised: Boolean = false
+    ): String = {
     s"""
        |[
        |      {

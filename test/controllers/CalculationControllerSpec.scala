@@ -25,15 +25,25 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import testUtils.TestSupport
 
-class CalculationControllerSpec extends TestSupport with MockSchemaValidation with MockDataRepository with ScalaFutures
-  with DataHelper with MockDefaultValues {
+class CalculationControllerSpec
+    extends TestSupport
+    with MockSchemaValidation
+    with MockDataRepository
+    with ScalaFutures
+    with DataHelper
+    with MockDefaultValues {
 
-  object TestRequestHandlerController extends RequestHandlerController(mockSchemaValidation,
-    mockDataRepository,
-    mockCC,
-    mockDefaultValues)
+  object TestRequestHandlerController
+      extends RequestHandlerController(mockSchemaValidation, mockDataRepository, mockCC, mockDefaultValues)
 
-  object CalcControllerUnderTest extends CalculationController(mockCC, mockDataRepository, TestRequestHandlerController, app.configuration, mockDefaultValues)
+  object CalcControllerUnderTest
+      extends CalculationController(
+        mockCC,
+        mockDataRepository,
+        TestRequestHandlerController,
+        app.configuration,
+        mockDefaultValues
+      )
 
   "generateCalculationListTYS" should {
 

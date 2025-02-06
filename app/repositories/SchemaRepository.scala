@@ -24,7 +24,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SchemaRepository @Inject()(repository: SchemaRepositoryBase) {
+class SchemaRepository @Inject() (repository: SchemaRepositoryBase) {
 
   def findById(schemaId: String): Future[SchemaModel] =
     repository.collection.find(equal("_id", schemaId)).head()
@@ -34,10 +34,12 @@ class SchemaRepository @Inject()(repository: SchemaRepositoryBase) {
 
   def removeAll(): Future[DeleteResult] = repository.collection.deleteMany(empty()).toFuture()
 
-  def addEntry(document: SchemaModel)(implicit ec:ExecutionContext): Future[InsertOneResult] = {
-    repository.collection.deleteOne(
-      equal("_id", document._id)
-    ).toFuture() flatMap (_ => {
+  def addEntry(document: SchemaModel)(implicit ec: ExecutionContext): Future[InsertOneResult] = {
+    repository.collection
+      .deleteOne(
+        equal("_id", document._id)
+      )
+      .toFuture() flatMap (_ => {
       repository.collection.insertOne(document).toFuture()
     })
   }

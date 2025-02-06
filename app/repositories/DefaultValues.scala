@@ -28,20 +28,33 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class DefaultValues @Inject()(dataRepository: DataRepository,
-                              cc: MessagesControllerComponents)
-                             (implicit val ec: ExecutionContext) extends FrontendController(cc) with Logging {
+class DefaultValues @Inject() (
+    dataRepository: DataRepository,
+    cc:             MessagesControllerComponents
+  )(
+    implicit val ec: ExecutionContext)
+    extends FrontendController(cc)
+    with Logging {
   case class ITSAStatus(taxYear: String, itsaStatusDetails: List[ITSAStatusDetails])
 
   case class ITSAStatusDetails(submittedOn: String, status: String, statusReason: String)
 
   implicit val ITSAITSAStatusDetailsWriter: OWrites[ITSAStatusDetails] = Json.writes[ITSAStatusDetails]
-  implicit val ITSAStatusWriter: OWrites[ITSAStatus] = Json.writes[ITSAStatus]
+  implicit val ITSAStatusWriter:            OWrites[ITSAStatus]        = Json.writes[ITSAStatus]
 
   private def getItsaStatusDefaultJson(taxYear: String): JsValue = {
-    val itsaAStatus = List(ITSAStatus(taxYear = taxYear, itsaStatusDetails = List(
-      ITSAStatusDetails(submittedOn = "2022-01-10T06:14:00Z", status = "MTD Voluntary",
-        statusReason = "Sign up - return available"))))
+    val itsaAStatus = List(
+      ITSAStatus(
+        taxYear = taxYear,
+        itsaStatusDetails = List(
+          ITSAStatusDetails(
+            submittedOn = "2022-01-10T06:14:00Z",
+            status = "MTD Voluntary",
+            statusReason = "Sign up - return available"
+          )
+        )
+      )
+    )
     Json.toJson(itsaAStatus)
   }
 
@@ -49,7 +62,7 @@ class DefaultValues @Inject()(dataRepository: DataRepository,
     extractTaxYear(url) match {
       case Some(taxYear) =>
         val taxYearNormalised = s"20$taxYear" // conversion to format 2023-24
-        val json = getItsaStatusDefaultJson(taxYearNormalised)
+        val json              = getItsaStatusDefaultJson(taxYearNormalised)
         logger.info(s"DefaultValues applied: $json - for: $url")
         Status(OK)(json)
       case None =>
@@ -61,7 +74,7 @@ class DefaultValues @Inject()(dataRepository: DataRepository,
     dataRepository
       .find(equal("_id", url), equal("method", GET))
       .map {
-        case stubData@Some(_: DataModel) =>
+        case stubData @ Some(_: DataModel) =>
           Status(stubData.head.status)(stubData.head.response.get)
         case None =>
           NotFound(s"Failed to find the default API endpoint in the repository matching the URI: $url")

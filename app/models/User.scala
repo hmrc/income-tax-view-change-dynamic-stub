@@ -20,20 +20,29 @@ import play.api.data.Forms.{boolean, mapping, text}
 import play.api.data.{Form, Mapping}
 
 case class User(nino: Nino, isAgent: Boolean)
-case class UserRecord(nino: String, mtditid: String, utr: String, description: String)
+case class UserRecord(
+    nino:        String,
+    mtditid:     String,
+    utr:         String,
+    description: String)
 object User {
   val ninoNonEmptyMapping: Mapping[Nino] = {
 
     // TODO: remove usage of .head
-    text.verifying("You must supply a valid Nino", nino => {
-      models.Nino.isValid(nino.split(" ").head)
-    }).transform[Nino](Nino(_), _.value)
+    text
+      .verifying(
+        "You must supply a valid Nino",
+        nino => {
+          models.Nino.isValid(nino.split(" ").head)
+        }
+      )
+      .transform[Nino](Nino(_), _.value)
   }
 
   val form: Form[User] =
     Form(
       mapping(
-        "nino" -> ninoNonEmptyMapping,
+        "nino"    -> ninoNonEmptyMapping,
         "isAgent" -> boolean
       )(User.apply)(User.unapply)
     )

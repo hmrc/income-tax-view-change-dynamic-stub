@@ -26,41 +26,57 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ItsaStatusController @Inject()(cc: MessagesControllerComponents,
-                                     dataRepository: DataRepository)
-                                    (implicit val ec: ExecutionContext)
-  extends FrontendController(cc) with Logging {
+class ItsaStatusController @Inject() (
+    cc:             MessagesControllerComponents,
+    dataRepository: DataRepository
+  )(
+    implicit val ec: ExecutionContext)
+    extends FrontendController(cc)
+    with Logging {
 
   private def createOverwriteItsaStatusUrl(nino: String, taxYear: TaxYear): String = {
     s"/income-tax/$nino/person-itd/itsa-status/${taxYear.rangeShort}?futureYears=false&history=false"
   }
 
-  def overwriteItsaStatus(nino: String, taxYearRange: String, itsaStatus: String): Action[AnyContent] = Action.async { _ =>
-    Logger("application").info(s"Overwriting itsa status data for < nino: $nino > < taxYearRange: $taxYearRange > < itsaStatus: $itsaStatus >")
+  def overwriteItsaStatus(nino: String, taxYearRange: String, itsaStatus: String): Action[AnyContent] =
+    Action.async { _ =>
+      Logger("application").info(
+        s"Overwriting itsa status data for < nino: $nino > < taxYearRange: $taxYearRange > < itsaStatus: $itsaStatus >"
+      )
 
-    TaxYear.createTaxYearGivenTaxYearRange(taxYearRange) match {
-      case Some(taxYear: TaxYear) =>
+      TaxYear.createTaxYearGivenTaxYearRange(taxYearRange) match {
+        case Some(taxYear: TaxYear) =>
+          val url           = createOverwriteItsaStatusUrl(nino = nino, taxYear = taxYear)
+          val itsaStatusObj = ItsaStatus(itsaStatus, url, taxYear)
 
-        val url = createOverwriteItsaStatusUrl(nino = nino, taxYear = taxYear)
-        val itsaStatusObj = ItsaStatus(itsaStatus, url, taxYear)
-
-        dataRepository.replaceOne(url = url, updatedFile = itsaStatusObj.makeOverwriteDataModel).map { result =>
-          if (result.wasAcknowledged) {
-            Logger("application").info(s"[ItsaStatusController][overwriteItsaStatus] Overwrite success! For < url: $url >")
-            Ok(s"Overwrite success! For < url: $url >")
-          } else {
-            Logger("application").info(s"[ItsaStatusController][overwriteItsaStatus] Write was not acknowledged! For < url: $url >")
-            InternalServerError("Write was not acknowledged")
-          }
-        }.recoverWith {
-          case ex =>
-            Logger("application").error(s"[ItsaStatusController][overwriteItsaStatus] Update operation failed. < Exception: $ex >")
-            Future.failed(ex)
-        }
-      case None =>
-        Logger("application").error(s"[ItsaStatusController][overwriteItsaStatus] taxYearRange could not be converted to TaxYear")
-        Future.failed(new Exception("taxYearRange could not be converted to TaxYear"))
+          dataRepository
+            .replaceOne(url = url, updatedFile = itsaStatusObj.makeOverwriteDataModel)
+            .map { result =>
+              if (result.wasAcknowledged) {
+                Logger("application").info(
+                  s"[ItsaStatusController][overwriteItsaStatus] Overwrite success! For < url: $url >"
+                )
+                Ok(s"Overwrite success! For < url: $url >")
+              } else {
+                Logger("application").info(
+                  s"[ItsaStatusController][overwriteItsaStatus] Write was not acknowledged! For < url: $url >"
+                )
+                InternalServerError("Write was not acknowledged")
+              }
+            }
+            .recoverWith {
+              case ex =>
+                Logger("application").error(
+                  s"[ItsaStatusController][overwriteItsaStatus] Update operation failed. < Exception: $ex >"
+                )
+                Future.failed(ex)
+            }
+        case None =>
+          Logger("application").error(
+            s"[ItsaStatusController][overwriteItsaStatus] taxYearRange could not be converted to TaxYear"
+          )
+          Future.failed(new Exception("taxYearRange could not be converted to TaxYear"))
+      }
     }
-  }
 
 }

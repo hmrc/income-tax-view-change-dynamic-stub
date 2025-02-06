@@ -56,13 +56,14 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
         schemaId = "2345",
         method = "GET",
         response = Some(Json.parse("{}")),
-        status = Status.OK)
+        status = Status.OK
+      )
 
       "when validateResponseJson returns 'true'" should {
 
-
         "return Status OK (200) if data successfully added to stub" in new Setup {
-          lazy val request: FakeRequest[JsValue] = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
+          lazy val request: FakeRequest[JsValue] =
+            FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
           lazy val result: Future[Result] = controller.addData(request)
 
           mockValidateUrlMatch("2345", "1234")(response = true)
@@ -71,7 +72,8 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
           status(result) shouldBe Status.OK
         }
         "return Status InternalServerError (500) if unable to add data to the stub" in new Setup {
-          lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
+          lazy val request =
+            FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
           lazy val result = controller.addData(request)
 
           mockValidateUrlMatch("2345", "1234")(response = true)
@@ -84,7 +86,7 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
 
       "return Status BadRequest (400) when validateResponseJson returns 'false'" in new Setup {
         lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
-        lazy val result = controller.addData(request)
+        lazy val result  = controller.addData(request)
 
         mockValidateUrlMatch("2345", "1234")(response = true)
         mockValidateResponseJson("2345", Some(Json.parse("""{}""")))(response = false)
@@ -93,7 +95,7 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
 
       "return Status when validateResponseJson returns 'false'" in new Setup(false) {
         lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
-        lazy val result = controller.addData(request)
+        lazy val result  = controller.addData(request)
 
         mockValidateUrlMatch("2345", "1234")(response = true)
         mockValidateResponseJson("2345", Some(Json.parse("""{}""")))(response = true)
@@ -103,7 +105,7 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
 
       "return Status InternalServerError (500) when validateResponseJson returns 'false'" in new Setup {
         lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
-        lazy val result = controller.addData(request)
+        lazy val result  = controller.addData(request)
 
         mockValidateUrlMatch("2345", "1234")(response = true)
         mockValidateResponseJson("2346", Some(Json.parse("""{}""")))(response = false)
@@ -118,11 +120,12 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
         schemaId = "2345",
         method = "GET",
         response = Some(Json.parse("{}")),
-        status = Status.OK)
+        status = Status.OK
+      )
 
       "return Status BadRequest (400)" in new Setup {
         lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
-        lazy val result = controller.addData(request)
+        lazy val result  = controller.addData(request)
 
         mockValidateUrlMatch("2345", "1234")(response = false)
         mockLoadUrlRegex("2345")(response = "w")
@@ -138,11 +141,12 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
         schemaId = "2345",
         method = "BLOB",
         response = Some(Json.parse("{}")),
-        status = Status.OK)
+        status = Status.OK
+      )
 
       "return Status BadRequest (400)" in new Setup {
         lazy val request = FakeRequest().withBody(Json.toJson(model)).withHeaders(("Content-Type", "application/json"))
-        lazy val result = controller.addData(request)
+        lazy val result  = controller.addData(request)
 
         status(result) shouldBe Status.BAD_REQUEST
       }
@@ -155,7 +159,7 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
 
     "return Status OK (200) on successful removal of data from the stub" in new Setup {
       lazy val request = FakeRequest()
-      lazy val result = controller.removeData("someUrl")(request)
+      lazy val result  = controller.removeData("someUrl")(request)
 
       mockRemoveById("someUrl")(successDeleteResult)
 
@@ -164,7 +168,7 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
 
     "return Status InternalServerError (500) on unsuccessful removal of data from the stub" in new Setup {
       lazy val request = FakeRequest()
-      lazy val result = controller.removeData("someUrl")(request)
+      lazy val result  = controller.removeData("someUrl")(request)
 
       mockRemoveById("someUrl")(failedDeleteResult)
 
@@ -177,7 +181,7 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
 
     "return Status OK (200) on successful removal of all stubbed data" in new Setup {
       lazy val request = FakeRequest()
-      lazy val result = controller.removeAll()(request)
+      lazy val result  = controller.removeAll()(request)
 
       mockRemoveAll()(successDeleteResult)
 
@@ -186,7 +190,7 @@ class SetupDataControllerSpec extends TestSupport with MockSchemaValidation with
 
     "return Status InternalServerError (500) on successful removal of all stubbed data" in new Setup {
       lazy val request = FakeRequest()
-      lazy val result = controller.removeAll()(request)
+      lazy val result  = controller.removeAll()(request)
 
       mockRemoveAll()(failedDeleteResult)
 

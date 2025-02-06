@@ -25,15 +25,16 @@ class SimpleObjectWrites[T](val valueGetter: T => String) extends Writes[T] {
 }
 
 class SimpleObjectReads[T](val fieldName: String, val constructor: String => T) extends Reads[T] {
-  override def reads(js: JsValue): JsResult[T] = Try {
-    js match {
+  override def reads(js: JsValue): JsResult[T] =
+    Try {
+      js match {
 
-      case v: JsString => v.validate[String].map(constructor)
-      case v: JsObject => (v \ fieldName).validate[String].map(constructor)
-      case noParsed    => JsError(s"Could not read Json value of $fieldName in $noParsed")
+        case v: JsString => v.validate[String].map(constructor)
+        case v: JsObject => (v \ fieldName).validate[String].map(constructor)
+        case noParsed => JsError(s"Could not read Json value of $fieldName in $noParsed")
+      }
+    } match {
+      case Success(jsResult)  => jsResult
+      case Failure(exception) => JsError(exception.getMessage())
     }
-  } match {
-    case Success(jsResult)  => jsResult
-    case Failure(exception) => JsError(exception.getMessage())
-  }
 }

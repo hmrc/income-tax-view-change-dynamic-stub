@@ -27,38 +27,47 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class SetupSchemaController @Inject()(schemaRepository: SchemaRepository,
-                                      cc: MessagesControllerComponents)
-                                     (implicit val ec: ExecutionContext)
-  extends FrontendController(cc) with Logging {
+class SetupSchemaController @Inject() (
+    schemaRepository: SchemaRepository,
+    cc:               MessagesControllerComponents
+  )(
+    implicit val ec: ExecutionContext)
+    extends FrontendController(cc)
+    with Logging {
 
-  val addSchema: Action[JsValue] = Action.async(parse.json) {
-    implicit request =>
-      withJsonBody[SchemaModel](
-        json => {
-          schemaRepository.addEntry(json).map(_.wasAcknowledged() match {
-            case true => Ok(s"Successfully added Schema: ${request.body}")
-            case _ => logger.error("[SetupSchemaController][addSchema] could not store data" + json)
-              InternalServerError("Could not store data")
-          })
-        }
-      ).recover {
-        case err => logger.error("[SetupSchemaController][addSchema] error parsing schemamodel: " + err)
-          BadRequest("Error Parsing Json SchemaModel")
-      }
+  val addSchema: Action[JsValue] = Action.async(parse.json) { implicit request =>
+    withJsonBody[SchemaModel](json => {
+      schemaRepository
+        .addEntry(json)
+        .map(_.wasAcknowledged() match {
+          case true => Ok(s"Successfully added Schema: ${request.body}")
+          case _ =>
+            logger.error("[SetupSchemaController][addSchema] could not store data" + json)
+            InternalServerError("Could not store data")
+        })
+    }).recover {
+      case err =>
+        logger.error("[SetupSchemaController][addSchema] error parsing schemamodel: " + err)
+        BadRequest("Error Parsing Json SchemaModel")
+    }
   }
 
-  val removeSchema: String => Action[AnyContent] = id => Action.async {
-    schemaRepository.removeById(id).map(_.wasAcknowledged() match {
-      case true => Ok("Success")
-      case _ => InternalServerError("Could not delete data")
-    })
-  }
+  val removeSchema: String => Action[AnyContent] = id =>
+    Action.async {
+      schemaRepository
+        .removeById(id)
+        .map(_.wasAcknowledged() match {
+          case true => Ok("Success")
+          case _    => InternalServerError("Could not delete data")
+        })
+    }
 
   val removeAll: Action[AnyContent] = Action.async {
-    schemaRepository.removeAll().map(_.wasAcknowledged() match {
-      case true => Ok("Removed All Schemas")
-      case _ => InternalServerError("Unexpected Error Clearing MongoDB.")
-    })
+    schemaRepository
+      .removeAll()
+      .map(_.wasAcknowledged() match {
+        case true => Ok("Removed All Schemas")
+        case _    => InternalServerError("Unexpected Error Clearing MongoDB.")
+      })
   }
 }

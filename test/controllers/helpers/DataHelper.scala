@@ -56,7 +56,7 @@ trait DataHelper {
     response = None
   )
 
-  val ninoTest: String = "1111AAAA"
+  val ninoTest:            String = "1111AAAA"
   val ninoWithWrongFormat: String = "111AAA"
-  val calculationIdTest : String =  "041f7e4d-87d9-4d4a-a296-3cfbdf"
+  val calculationIdTest:   String = "041f7e4d-87d9-4d4a-a296-3cfbdf"
 }
