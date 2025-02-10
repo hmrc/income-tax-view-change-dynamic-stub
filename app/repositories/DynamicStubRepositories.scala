@@ -18,6 +18,7 @@ package repositories
 
 import com.google.inject.Singleton
 import models.{DataModel, SchemaModel}
+import org.mongodb.scala.model.{IndexModel, Indexes}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
@@ -30,8 +31,14 @@ class DataRepositoryBase @Inject() (implicit mongo: MongoComponent, val ec: Exec
       mongoComponent = mongo,
       collectionName = "data",
       domainFormat = DataModel.formats,
-      indexes = Seq()
+      indexes = Seq(
+        IndexModel(
+          Indexes.ascending("method")
+        )
+      ),
+      replaceIndexes = true
     )
+
 
 class SchemaRepositoryBase @Inject() (implicit mongo: MongoComponent, val ec: ExecutionContext)
     extends PlayMongoRepository[SchemaModel](
