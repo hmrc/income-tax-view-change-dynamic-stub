@@ -1,0 +1,10 @@
+active: true
+age: 30
+details:
+  hobbies:
+  - reading
+  - coding
+  location:
+    city: New York
+    country: USA
+name: John
