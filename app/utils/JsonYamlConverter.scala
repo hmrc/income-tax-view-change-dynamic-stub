@@ -16,15 +16,22 @@
 
 package utils
 
-import io.circe.ParsingFailure
 import io.circe.yaml.syntax._
+import io.circe.{Json, ParsingFailure}
 
 class JsonYamlConverter {
 
-  def yamlToJson(yamlString: String): Either[ParsingFailure, String] = {
-    io.circe.yaml.parser.parse(yamlString)
-      .map(_.spaces2SortKeys)
+  def yamlToJson(yamlString: String): Either[ParsingFailure, Json] = {
+    val parsed = io.circe.yaml.parser.parse(yamlString)
+
+    parsed match {
+      case Right(Json.Null) => Left(ParsingFailure("Parsed as null", new Exception("Invalid YAML or empty input")))
+      case Right(json) if json.isObject || json.isArray => Right(json)
+      case Right(_) => Left(ParsingFailure("Invalid YAML structure", new Exception("Unexpected YAML structure")))
+      case Left(error) => Left(error)
+    }
   }
+
 
   def jsonToYaml(jsonString: String): Either[ParsingFailure, String] = {
     io.circe.parser.parse(jsonString).map { json =>

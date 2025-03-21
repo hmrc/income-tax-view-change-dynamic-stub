@@ -16,6 +16,7 @@
 
 package utils
 
+import io.circe.ParsingFailure
 import io.circe.yaml.syntax.AsYaml
 import testUtils.TestSupport
 
@@ -55,7 +56,31 @@ class JsonYamlConverterSpec extends TestSupport {
 
     "convert valid yaml from file to json" in {
       val result = converter.yamlToJson(yamlStringFromFile)
-      result.map(formatJson) shouldBe Right(jsonStringFromFile)
+      result.map(_.spaces2) shouldBe Right(jsonStringFromFile)
+    }
+
+    "return a Left parsing failure when given an empty string" in {
+      val result = converter.yamlToJson("")
+      result.isLeft shouldBe true
+      result.left.get shouldBe a[ParsingFailure]
+    }
+
+    "return a Left parsing failure when given an invalid yaml string" in {
+      val result = converter.yamlToJson("???")
+      result.isLeft shouldBe true
+      result.left.get shouldBe a[ParsingFailure]
+    }
+
+    "return a Left parsing failure when given malformed yaml" in {
+      val malformedYaml =
+        """
+      name: John
+      age: thirty  # Invalid type
+      hobbies: [reading, coding
+      """
+      val result = converter.yamlToJson(malformedYaml)
+      result.isLeft shouldBe true
+      result.left.get shouldBe a[ParsingFailure]
     }
   }
 
@@ -64,6 +89,16 @@ class JsonYamlConverterSpec extends TestSupport {
     "convert valid json file to yaml" in {
       val result = converter.jsonToYaml(jsonStringFromFile)
       result shouldBe Right(yamlStringFromFile)
+    }
+
+    "return a Left parsing failure when empty string" in {
+      val result: Either[ParsingFailure, String] = converter.jsonToYaml("")
+      result.isLeft shouldBe true
+    }
+
+    "return a Left failure when input string is invalid" in {
+      val result: Either[ParsingFailure, String] = converter.jsonToYaml("{?")
+      result.isLeft shouldBe true
     }
   }
 }
