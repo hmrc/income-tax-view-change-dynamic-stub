@@ -1,0 +1,232 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API#1605 Create/Update Income Savings Submission",
+    "description": "This API allows a customer to update the annual submission provided for a taxable entity's Income Savings.",
+    "version": "0.1.0",
+    "contact": {
+      "name": "Andy Coyne"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://localhost:443",
+      "description": "Different hostnames and ports are used in different IF environments",
+      "variables": {
+        "hostname": {
+          "default": "localhost",
+          "description": "The hostname for one of IST, Clone, and Production"
+        },
+        "port": {
+          "default": "443",
+          "description": "The port for one of IST, Clone, and Production"
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "API#1605",
+      "description": "Create/Update Income Savings Submission."
+    }
+  ],
+  "paths": {
+    "/income-tax/income/savings/{taxableEntityId}/{taxYear}": {
+      "put": {
+        "summary": "API#1605 Create/Update Income Savings Submission",
+        "description": "This API allows a customer to update the annual submission provided for an taxable entity's Income Savings.",
+        "operationId": "createOrUpdateincomeSavings",
+        "tags": [
+          "API#1605"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "environment",
+            "in": "header",
+            "required": true,
+            "value": "ist0"
+          },
+          {
+            "name": "correlationId",
+            "in": "header",
+            "required": false,
+            "value": "ddcb4844-93a4-4b76-8ed4-a8ec76ddc47e"
+          },
+          {
+            "name": "taxableEntityId",
+            "in": "path",
+            "required": true,
+            "value": "RLYRXNU4RG"
+          },
+          {
+            "name": "taxYear",
+            "in": "path",
+            "required": true,
+            "value": "2023-24"
+          }
+        ],
+        "requestBody": {
+          "description": "API#1605 Create/Update Income Savings Submission Request",
+          "content": {
+            "application/json;charset=UTF-8": {
+              "schema": {
+                "securities": {
+                  "taxTakenOff": 26060972511.68,
+                  "grossAmount": 26807110940.71,
+                  "netAmount": 85516700027.79
+                },
+                "foreignInterest": [
+                  {
+                    "countryCode": "CYM",
+                    "amountBeforeTax": 42558357427.38,
+                    "taxTakenOff": 79756623249.8,
+                    "specialWithholdingTax": 60251801133.53,
+                    "foreignTaxCreditRelief": true,
+                    "taxableAmount": 87572466930.45
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "The request has been accepted, with no content returned."
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json;charset=UTF-8": {
+                "examples": {
+                  "Example1_SingleCode": {
+                    "summary": "Single Error Code",
+                    "value": {
+                      "failures": [
+                        {
+                          "code": "INVALID_TAXABLE_ENTITY_ID",
+                          "reason": "Invalid parameter taxableEntityId."
+                        }
+                      ]
+                    }
+                  },
+                  "Example2_MultipleErrorCodes": {
+                    "summary": "Multiple Error Codes",
+                    "value": {
+                      "failures": [
+                        {
+                          "code": "INVALID_PAYLOAD",
+                          "reason": "Invalid payload."
+                        },
+                        {
+                          "code": "INVALID_CORRELATIONID",
+                          "reason": "Invalid Header parameter CorrelationId."
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/json;charset=UTF-8": {
+                "examples": {
+                  "Example-ServerError": {
+                    "value": {
+                      "failures": [
+                        {
+                          "code": "SERVER_ERROR",
+                          "reason": "IF is currently experiencing problems."
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json;charset=UTF-8": {
+                "examples": {
+                  "Example-ServerUnavailable": {
+                    "value": {
+                      "failures": [
+                        {
+                          "code": "SERVICE_UNAVAILABLE",
+                          "reason": "Dependent systems are not responding."
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "headers": {
+      "CorrelationId": {
+        "description": "CorrelationID for traceability",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        }
+      }
+    },
+    "parameters": {
+      "environment": {
+        "in": "header",
+        "name": "Environment",
+        "description": "The environment in use",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ist0",
+            "clone",
+            "live"
+          ]
+        }
+      },
+      "taxableEntityIdParam": {
+        "in": "path",
+        "name": "taxableEntityId",
+        "description": "Unique identity of the taxable entity",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9]{1,16}$"
+        }
+      },
+      "taxYearParam": {
+        "in": "path",
+        "name": "taxYear",
+        "description": "The tax year in yyyy-yy format",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^2[0-9]{3}-[0-9]{2}$"
+        }
+      }
+    }
+  }
+}

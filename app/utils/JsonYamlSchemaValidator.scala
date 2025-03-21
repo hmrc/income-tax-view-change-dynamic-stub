@@ -16,10 +16,27 @@
 
 package utils
 
+import com.github.fge.jackson.JsonLoader
+import com.github.fge.jsonschema.core.report.ProcessingReport
+import com.github.fge.jsonschema.main.JsonSchemaFactory
 import io.circe.yaml.syntax._
 import io.circe.{Json, ParsingFailure}
+import play.api.Logger
 
-class JsonYamlConverter {
+class JsonYamlSchemaValidator {
+
+  def validate(schemaJson: String, payloadJson: String): Boolean = {
+
+    val factory = JsonSchemaFactory.byDefault()
+    val schemaNode = JsonLoader.fromString(schemaJson)
+    val jsonNode = JsonLoader.fromString(payloadJson)
+    val schema = factory.getJsonSchema(schemaNode)
+
+    val report: ProcessingReport = schema.validate(jsonNode)
+
+    Logger("application").info(s"[JsonYamlConverter][validate] $report")
+    report.isSuccess
+  }
 
   def yamlToJson(yamlString: String): Either[ParsingFailure, Json] = {
     val parsed = io.circe.yaml.parser.parse(yamlString)
