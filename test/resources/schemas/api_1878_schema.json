@@ -1,0 +1,43 @@
+{
+  "title": "ITSA Status",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "properties": {
+      "taxYear": {
+        "type": "string",
+        "pattern": "^2[0-9]{3}-[0-9]{2}$"
+      },
+      "itsaStatusDetails": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "properties": {
+            "submittedOn": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["No Status", "MTD Mandated", "MTD Voluntary", "Annual", "Non Digital", "Dormant", "MTD Exempt"]
+            },
+            "statusReason": {
+              "type": "string",
+              "enum": ["Sign up - return available", "Sign up - no return available", "ITSA final declaration", "ITSA Q4 declaration", "CESA SA return", "Complex", "Ceased income source", "Reinstated income source", "Rollover"]
+            },
+            "businessIncomePriorTo2Years": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 99999999999.99
+            }
+          },
+          "required": ["submittedOn", "status", "statusReason"]
+        }
+      }
+    },
+    "required": ["taxYear", "itsaStatusDetails"],
+    "additionalProperties": false
+  }
+}
