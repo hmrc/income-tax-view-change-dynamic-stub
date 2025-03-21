@@ -24,10 +24,8 @@ class JsonYamlConverter {
   def yamlToJson(yamlString: String): Either[ParsingFailure, String] = {
     io.circe.yaml.parser.parse(yamlString)
       .map(_.spaces2SortKeys)
-      // .map(_.noSpaces)
   }
 
-  // Convert JSON string to YAML string
   def jsonToYaml(jsonString: String): Either[ParsingFailure, String] = {
     io.circe.parser.parse(jsonString).map { json =>
       json.asYaml.spaces2
