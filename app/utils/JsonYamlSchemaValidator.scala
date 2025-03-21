@@ -76,7 +76,7 @@ class JsonYamlSchemaValidator {
     } yield result
   }
 
-  def validateJsonAgainstYamlSchema(yamlSchema: String, jsonPayload: String): Either[Object, ReportValidation] = {
+  def validateJsonAgainstYamlSchema(yamlSchema: String, jsonPayload: String): Either[ValidationError, ReportValidation] = {
     for {
       jsonSchemaFromYaml <- yamlToJson(yamlSchema)
       validationResult <- validateJson(jsonSchemaFromYaml.spaces2, jsonPayload)
