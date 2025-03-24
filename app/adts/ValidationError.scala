@@ -16,7 +16,7 @@
 
 package adts
 
-trait ValidationError
+sealed trait ValidationError
 
 case class YamlParsingFailure(message: String) extends ValidationError
 

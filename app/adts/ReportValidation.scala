@@ -16,6 +16,6 @@
 
 package adts
 
-trait ReportValidation
+sealed trait ReportValidation
 
 case object ReportSuccess extends ReportValidation
