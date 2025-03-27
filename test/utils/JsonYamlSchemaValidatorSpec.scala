@@ -164,7 +164,7 @@ class JsonYamlSchemaValidatorSpec extends TestSupport {
       result shouldBe Right(ReportSuccess)
     }
 
-    "return Left ValidationFailure when json contains invalid data values for " in {
+    "return Left ValidationFailure when json contains multiple invalid data values for date and status field" in {
 
       val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1878SchemaYaml, api1878DataJsonInvalidDateAndStatus)
       result shouldBe Left(ValidationFailure("instance value (\"123456\") not found in enum (possible values: [\"No Status\",\"MTD Mandated\",\"MTD Voluntary\",\"Annual\",\"Non Digital\",\"Dormant\",\"MTD Exempt\"]), string \"ABC\" is invalid against requested date format(s) [yyyy-MM-dd'T'HH:mm:ssZ, yyyy-MM-dd'T'HH:mm:ss.SSSZ]"))
