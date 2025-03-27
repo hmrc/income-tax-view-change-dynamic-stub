@@ -46,8 +46,5 @@ items:
           - submittedOn
           - status
           - statusReason
-  required:
-    - taxYear
-    - itsaStatusDetails
   additionalProperties: false
 

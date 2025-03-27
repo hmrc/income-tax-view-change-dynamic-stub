@@ -43,12 +43,6 @@ class JsonYamlSchemaValidator {
     }
   }
 
-  def jsonToYaml(jsonString: String): Either[ParsingFailure, String] = {
-    io.circe.parser.parse(jsonString).map { json =>
-      json.asYaml.spaces2
-    }
-  }
-
   def validateJson(jsonSchema: String, payloadJson: String): Either[ValidationError, ReportValidation] = {
     for {
       schemaNode <- Try(JsonLoader.fromString(jsonSchema))

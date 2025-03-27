@@ -54,6 +54,7 @@ class JsonYamlSchemaValidatorSpec extends TestSupport {
   val api1878SchemaJson: String = formatJson(readFile("test/resources/schemas/api_1878_schema.json"))
 
   val api1878DataJson: String = formatJson(readFile("test/resources/data/api_1878_data.json"))
+  val api1878DataJsonInvalidDateAndStatus: String = formatJson(readFile("test/resources/data/api_1878_invalid_date_and_status.json.json"))
   val invalidJsonData: String = formatJson(readFile("test/resources/data/invalid_data.json"))
 
   ".yamlToJson()" should {
@@ -161,6 +162,12 @@ class JsonYamlSchemaValidatorSpec extends TestSupport {
 
       val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1878SchemaYaml, api1878DataJson)
       result shouldBe Right(ReportSuccess)
+    }
+
+    "return Left ValidationFailure when json contains invalid data values for " in {
+
+      val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1878SchemaYaml, api1878DataJsonInvalidDateAndStatus)
+      result shouldBe Left(ValidationFailure("instance value (\"123456\") not found in enum (possible values: [\"No Status\",\"MTD Mandated\",\"MTD Voluntary\",\"Annual\",\"Non Digital\",\"Dormant\",\"MTD Exempt\"]), string \"ABC\" is invalid against requested date format(s) [yyyy-MM-dd'T'HH:mm:ssZ, yyyy-MM-dd'T'HH:mm:ss.SSSZ]"))
     }
 
     "return Left YamlParsingFailure when yaml schema is an empty string" in {
