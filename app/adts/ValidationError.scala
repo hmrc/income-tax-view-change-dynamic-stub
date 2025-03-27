@@ -25,4 +25,3 @@ case class SchemaParseFailure(message: String) extends ValidationError
 case class PayLoadParseFailure(message: String) extends ValidationError
 
 case class ValidationFailure(message: String) extends ValidationError
-

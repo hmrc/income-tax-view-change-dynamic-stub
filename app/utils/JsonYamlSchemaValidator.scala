@@ -36,7 +36,9 @@ class JsonYamlSchemaValidator {
       case Right(json) if json.isObject || json.isArray =>
         Right(json)
       case Right(_) =>
-        Left(YamlParsingFailure("[JsonYamlSchemaValidator][yamlToJson] Invalid YAML structure: Unexpected YAML structure"))
+        Left(
+          YamlParsingFailure("[JsonYamlSchemaValidator][yamlToJson] Invalid YAML structure: Unexpected YAML structure")
+        )
       case Left(error) =>
         Left(YamlParsingFailure(error.getMessage))
     }
@@ -44,35 +46,37 @@ class JsonYamlSchemaValidator {
 
   def validateJson(jsonSchema: String, payloadJson: String): Either[ValidationError, ReportValidation] = {
     for {
-      schemaNode <- Try(JsonLoader.fromString(jsonSchema))
-        .toEither
-        .left
-        .map(e => SchemaParseFailure(e.getMessage))
+      schemaNode <-
+        Try(JsonLoader.fromString(jsonSchema)).toEither.left
+          .map(e => SchemaParseFailure(e.getMessage))
 
-      payLoadJsonNode <- Try(JsonLoader.fromString(payloadJson))
-        .toEither
-        .left
-        .map(e => PayLoadParseFailure(e.getMessage))
+      payLoadJsonNode <-
+        Try(JsonLoader.fromString(payloadJson)).toEither.left
+          .map(e => PayLoadParseFailure(e.getMessage))
 
       factory = JsonSchemaFactory.byDefault()
-      schema = factory.getJsonSchema(schemaNode)
+      schema  = factory.getJsonSchema(schemaNode)
 
       report = schema.validate(payLoadJsonNode)
-      result <- if (report.isSuccess) {
-        Logger("application").info("[JsonYamlConverter][validate] JSON validation was successful.")
-        Right(ReportSuccess)
-      } else {
-        val errors = report.iterator().asScala.map(_.getMessage).mkString(", ")
-        Logger("application").warn(s"[JsonYamlConverter][validate] JSON validation failed: $errors")
-        Left(ValidationFailure(errors))
-      }
+      result <-
+        if (report.isSuccess) {
+          Logger("application").info("[JsonYamlConverter][validateJson] JSON validation was successful.")
+          Right(ReportSuccess)
+        } else {
+          val errors = report.iterator().asScala.map(_.getMessage).mkString(", ")
+          Logger("application").warn(s"[JsonYamlConverter][validateJson] JSON validation failed: $errors")
+          Left(ValidationFailure(errors))
+        }
     } yield result
   }
 
-  def validateJsonAgainstYamlSchema(yamlSchema: String, jsonPayload: String): Either[ValidationError, ReportValidation] = {
+  def validateJsonAgainstYamlSchema(
+      yamlSchema:  String,
+      jsonPayload: String
+    ): Either[ValidationError, ReportValidation] = {
     for {
       jsonSchemaFromYaml <- yamlToJson(yamlSchema)
-      validationResult <- validateJson(jsonSchemaFromYaml.spaces2, jsonPayload)
+      validationResult   <- validateJson(jsonSchemaFromYaml.spaces2, jsonPayload)
     } yield {
       validationResult
     }
