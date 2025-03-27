@@ -19,8 +19,7 @@ package utils
 import adts._
 import com.github.fge.jackson.JsonLoader
 import com.github.fge.jsonschema.main.JsonSchemaFactory
-import io.circe.yaml.syntax._
-import io.circe.{Json, ParsingFailure}
+import io.circe.Json
 import play.api.Logger
 
 import scala.jdk.CollectionConverters.IteratorHasAsScala

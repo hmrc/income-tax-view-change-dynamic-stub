@@ -17,44 +17,23 @@
 package utils
 
 import adts._
-import io.circe.ParsingFailure
-import io.circe.yaml.syntax.AsYaml
 import testUtils.TestSupport
-
-import scala.io.Source
 
 class JsonYamlSchemaValidatorSpec extends TestSupport {
 
   val jsonYamlSchemaValidator = new JsonYamlSchemaValidator()
 
-  def readFile(path: String): String = {
-    val source = Source.fromFile(path)
-    try {
-      source.getLines().mkString("\n")
-    } finally {
-      source.close()
-    }
-  }
+  val api1566SchemaYaml: String = readFile("test/resources/schemas/yaml/api_1566_schema.yaml")
+  val api1566SchemaJson: String = formatJson(readFile("test/resources/schemas/json/api_1566_schema.json"))
 
-  def formatJson(jsonString: String): String = {
-    io.circe.parser.parse(jsonString) match {
-      case Right(json) => json.spaces2
-      case Left(_) => jsonString
-    }
-  }
+  val api1878SchemaYaml: String = readFile("test/resources/schemas/yaml/api_1878_schema.yaml")
+  val api1878SchemaJson: String = formatJson(readFile("test/resources/schemas/json/api_1878_schema.json"))
 
-  def formatYaml(yamlString: String): String = {
-    io.circe.yaml.parser.parse(yamlString) match {
-      case Right(json) => json.asYaml.spaces2
-      case Left(_) => yamlString
-    }
-  }
+  val api1566DataJson: String = formatJson(readFile("test/resources/data/api_1566_valid_data.json"))
+  val api1566DataJsonInvalidData: String = formatJson(readFile("test/resources/data/api_1566_invalid_data.json"))
 
-  val api1878SchemaYaml: String = readFile("test/resources/schemas/api_1878_schema.yaml")
-  val api1878SchemaJson: String = formatJson(readFile("test/resources/schemas/api_1878_schema.json"))
-
-  val api1878DataJson: String = formatJson(readFile("test/resources/data/api_1878_data.json"))
-  val api1878DataJsonInvalidDateAndStatus: String = formatJson(readFile("test/resources/data/api_1878_invalid_date_and_status.json.json"))
+  val api1878DataJson: String = formatJson(readFile("test/resources/data/api_1878_valid_data.json"))
+  val api1878DataJsonInvalidDateAndStatus: String = formatJson(readFile("test/resources/data/api_1878_invalid_date_and_status.json"))
   val invalidJsonData: String = formatJson(readFile("test/resources/data/invalid_data.json"))
 
   ".yamlToJson()" should {
@@ -70,8 +49,8 @@ class JsonYamlSchemaValidatorSpec extends TestSupport {
 
     "convert valid yaml api spec from file to correct json schema" in {
 
-      val yamlStringFromFile = readFile("test/resources/schemas/api_1878_schema.yaml")
-      val jsonStringFromFile = formatJson(readFile("test/resources/schemas/api_1878_schema.json"))
+      val yamlStringFromFile = readFile("test/resources/schemas/yaml/api_1878_schema.yaml")
+      val jsonStringFromFile = formatJson(readFile("test/resources/schemas/json/api_1878_schema.json"))
 
       val result = jsonYamlSchemaValidator.yamlToJson(yamlStringFromFile)
       result.map(_.spaces2) shouldBe Right(jsonStringFromFile)
@@ -97,28 +76,6 @@ class JsonYamlSchemaValidatorSpec extends TestSupport {
       hobbies: [reading, coding
       """
       val result = jsonYamlSchemaValidator.yamlToJson(malformedYaml)
-      result.isLeft shouldBe true
-    }
-  }
-
-  ".jsonToYaml()" should {
-
-    "convert valid json file to yaml" in {
-
-      val yamlStringFromFile = formatYaml(readFile("test/resources/sample.yaml"))
-      val jsonStringFromFile = formatJson(readFile("test/resources/sample.json"))
-
-      val result = jsonYamlSchemaValidator.jsonToYaml(jsonStringFromFile)
-      result shouldBe Right(yamlStringFromFile)
-    }
-
-    "return a Left parsing failure when empty string" in {
-      val result: Either[ParsingFailure, String] = jsonYamlSchemaValidator.jsonToYaml("")
-      result.isLeft shouldBe true
-    }
-
-    "return a Left failure when input string is invalid" in {
-      val result: Either[ParsingFailure, String] = jsonYamlSchemaValidator.jsonToYaml("{?")
       result.isLeft shouldBe true
     }
   }
@@ -156,42 +113,88 @@ class JsonYamlSchemaValidatorSpec extends TestSupport {
     }
   }
 
-  ".validateJsonAgainstYamlSchema()" should {
+  "API-1878" when {
 
-    "return Right(ReportSuccess) when validating a valid json payload against the correct yaml schema" in {
+    ".validateJsonAgainstYamlSchema()" should {
 
-      val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1878SchemaYaml, api1878DataJson)
-      result shouldBe Right(ReportSuccess)
+      "return Right(ReportSuccess) when validating a valid json payload against the correct yaml schema" in {
+
+        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1878SchemaYaml, api1878DataJson)
+        result shouldBe Right(ReportSuccess)
+      }
+
+      "return Left ValidationFailure when json contains multiple invalid data values for date and status field" in {
+
+        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1878SchemaYaml, api1878DataJsonInvalidDateAndStatus)
+        result shouldBe Left(ValidationFailure("instance value (\"123456\") not found in enum (possible values: [\"No Status\",\"MTD Mandated\",\"MTD Voluntary\",\"Annual\",\"Non Digital\",\"Dormant\",\"MTD Exempt\"]), string \"ABC\" is invalid against requested date format(s) [yyyy-MM-dd'T'HH:mm:ssZ, yyyy-MM-dd'T'HH:mm:ss.SSSZ]"))
+      }
+
+      "return Left YamlParsingFailure when yaml schema is an empty string" in {
+
+        val noYamlSchema = ""
+        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(noYamlSchema, api1878DataJson)
+
+        result shouldBe Left(YamlParsingFailure("[JsonYamlSchemaValidator][yamlToJson] Invalid YAML structure: Unexpected YAML structure"))
+      }
+
+      "return Left PayLoadParseFailure when jsonData is an empty string" in {
+
+        val noJsonData = ""
+        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1878SchemaYaml, noJsonData)
+
+        result shouldBe Left(PayLoadParseFailure("no JSON Text to read from input\n at [Source: (StringReader); line: 1, column: 1]"))
+      }
+
+      "return Left PayLoadParseFailure when jsonData is empty - {} (object) and not an array" in {
+
+        val emptyJsonData = "{}"
+        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1878SchemaYaml, emptyJsonData)
+
+        result shouldBe Left(ValidationFailure("instance type (object) does not match any allowed primitive type (allowed: [\"array\"])"))
+      }
     }
+  }
 
-    "return Left ValidationFailure when json contains multiple invalid data values for date and status field" in {
+  "API-1566" when {
 
-      val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1878SchemaYaml, api1878DataJsonInvalidDateAndStatus)
-      result shouldBe Left(ValidationFailure("instance value (\"123456\") not found in enum (possible values: [\"No Status\",\"MTD Mandated\",\"MTD Voluntary\",\"Annual\",\"Non Digital\",\"Dormant\",\"MTD Exempt\"]), string \"ABC\" is invalid against requested date format(s) [yyyy-MM-dd'T'HH:mm:ssZ, yyyy-MM-dd'T'HH:mm:ss.SSSZ]"))
-    }
+    ".validateJsonAgainstYamlSchema()" should {
 
-    "return Left YamlParsingFailure when yaml schema is an empty string" in {
+      "return Right(ReportSuccess) when validating a valid json payload against the correct yaml schema" in {
 
-      val yamlSchema = ""
-      val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(yamlSchema, api1878DataJson)
+        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1566SchemaYaml, api1566DataJson)
+        result shouldBe Right(ReportSuccess)
+      }
 
-      result shouldBe Left(YamlParsingFailure("[JsonYamlSchemaValidator][yamlToJson] Invalid YAML structure: Unexpected YAML structure"))
-    }
+      "return Left ValidationFailure with error message when json contains multiple invalid data values" in {
 
-    "return Left PayLoadParseFailure when jsonData is an empty string" in {
+        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1566SchemaYaml, api1566DataJsonInvalidData)
+        result shouldBe
+          Left(ValidationFailure("instance type (integer) does not match any allowed primitive type (allowed: [\"string\"]), instance type (string) does not match any allowed primitive type (allowed: [\"object\"])"))
+      }
 
-      val jsonData = ""
-      val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1878SchemaYaml, jsonData)
+      "return Left YamlParsingFailure when yaml schema is an empty string" in {
 
-      result shouldBe Left(PayLoadParseFailure("no JSON Text to read from input\n at [Source: (StringReader); line: 1, column: 1]"))
-    }
+        val noYamlSchema = ""
+        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(noYamlSchema, api1878DataJson)
 
-    "return Left PayLoadParseFailure when jsonData is empty - {}" in {
+        result shouldBe Left(YamlParsingFailure("[JsonYamlSchemaValidator][yamlToJson] Invalid YAML structure: Unexpected YAML structure"))
+      }
 
-      val jsonData = "{}"
-      val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1878SchemaYaml, jsonData)
+      "return Left PayLoadParseFailure when jsonData is an empty string" in {
 
-      result shouldBe Left(ValidationFailure("instance type (object) does not match any allowed primitive type (allowed: [\"array\"])"))
+        val noJsonData = ""
+        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1878SchemaYaml, noJsonData)
+
+        result shouldBe Left(PayLoadParseFailure("no JSON Text to read from input\n at [Source: (StringReader); line: 1, column: 1]"))
+      }
+
+      "return Left PayLoadParseFailure when jsonData is empty - {}" in {
+
+        val emptyJsonData = "{}"
+        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1878SchemaYaml, emptyJsonData)
+
+        result shouldBe Left(ValidationFailure("instance type (object) does not match any allowed primitive type (allowed: [\"array\"])"))
+      }
     }
   }
 }

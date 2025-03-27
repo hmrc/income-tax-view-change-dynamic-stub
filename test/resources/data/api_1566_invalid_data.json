@@ -1,0 +1,12 @@
+[
+  {
+    "incomeSourceId": 123456
+  },
+  {
+    "incomeSourceId": null
+  },
+  {
+    "incomeSourceID": "abc12345-6789-def0-1234-56789abcdef0"
+  },
+  "invalidObject"
+]
