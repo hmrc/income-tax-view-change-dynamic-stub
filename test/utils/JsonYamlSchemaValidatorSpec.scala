@@ -23,6 +23,9 @@ class JsonYamlSchemaValidatorSpec extends TestSupport {
 
   val jsonYamlSchemaValidator = new JsonYamlSchemaValidator()
 
+  val yamlSample = formatYaml(readFile("test/resources/sample.yaml"))
+  val jsonSample = formatJson(readFile("test/resources/sample.json"))
+
   val api1566SchemaYaml: String = readFile("test/resources/schemas/yaml/api_1566_schema.yaml")
   val api1566SchemaJson: String = formatJson(readFile("test/resources/schemas/json/api_1566_schema.json"))
 
@@ -36,86 +39,115 @@ class JsonYamlSchemaValidatorSpec extends TestSupport {
   val api1878DataJsonInvalidDateAndStatus: String = formatJson(readFile("test/resources/data/api_1878_invalid_date_and_status.json"))
   val invalidJsonData: String = formatJson(readFile("test/resources/data/invalid_data.json"))
 
-  ".yamlToJson()" should {
+  ".yamlToJson()" when {
 
-    "convert valid yaml from file to json" in {
+    "Custom sample yaml" should {
 
-      val yamlStringFromFile = formatYaml(readFile("test/resources/sample.yaml"))
-      val jsonStringFromFile = formatJson(readFile("test/resources/sample.json"))
+      "convert valid yaml from file to json" in {
 
-      val result = jsonYamlSchemaValidator.yamlToJson(yamlStringFromFile)
-      result.map(_.spaces2) shouldBe Right(jsonStringFromFile)
+        val result = jsonYamlSchemaValidator.yamlToJson(yamlSample)
+        result.map(_.spaces2) shouldBe Right(jsonSample)
+      }
     }
 
-    "convert valid yaml api spec from file to correct json schema" in {
+    "API-1566" should {
 
-      val yamlStringFromFile = readFile("test/resources/schemas/yaml/api_1878_schema.yaml")
-      val jsonStringFromFile = formatJson(readFile("test/resources/schemas/json/api_1878_schema.json"))
+      "convert valid yaml api spec from file to correct json schema" in {
 
-      val result = jsonYamlSchemaValidator.yamlToJson(yamlStringFromFile)
-      result.map(_.spaces2) shouldBe Right(jsonStringFromFile)
+        val result = jsonYamlSchemaValidator.yamlToJson(api1566SchemaYaml)
+        result.map(_.spaces2) shouldBe Right(api1566SchemaJson)
+      }
     }
 
-    "return a Left YamlParsingFailure when given an empty string" in {
-      val result = jsonYamlSchemaValidator.yamlToJson("")
-      result.isLeft shouldBe true
-      result shouldBe Left(YamlParsingFailure("[JsonYamlSchemaValidator][yamlToJson] Invalid YAML structure: Unexpected YAML structure"))
+    "API-1878" should {
+
+      "convert valid yaml api spec from file to correct json schema" in {
+
+        val result = jsonYamlSchemaValidator.yamlToJson(api1878SchemaYaml)
+        result.map(_.spaces2) shouldBe Right(api1878SchemaJson)
+      }
     }
 
-    "return a Left YamlParsingFailure when given an invalid yaml string" in {
-      val result = jsonYamlSchemaValidator.yamlToJson("???")
-      result.isLeft shouldBe true
-      result shouldBe Left(YamlParsingFailure("[JsonYamlSchemaValidator][yamlToJson] Invalid YAML structure: Unexpected YAML structure"))
-    }
+    "some input formats with errors" should {
 
-    "return a Left YamlParsingFailure when given malformed yaml" in {
-      val malformedYaml =
-        """
+      "return a Left YamlParsingFailure when given an empty string" in {
+        val result = jsonYamlSchemaValidator.yamlToJson("")
+        result.isLeft shouldBe true
+        result shouldBe Left(YamlParsingFailure("[JsonYamlSchemaValidator][yamlToJson] Invalid YAML structure: Unexpected YAML structure"))
+      }
+
+      "return a Left YamlParsingFailure when given an invalid yaml string" in {
+        val result = jsonYamlSchemaValidator.yamlToJson("???")
+        result.isLeft shouldBe true
+        result shouldBe Left(YamlParsingFailure("[JsonYamlSchemaValidator][yamlToJson] Invalid YAML structure: Unexpected YAML structure"))
+      }
+
+      "return a Left YamlParsingFailure when given malformed yaml" in {
+        val malformedYaml =
+          """
       name: John
       age: thirty  # Invalid type
       hobbies: [reading, coding
       """
-      val result = jsonYamlSchemaValidator.yamlToJson(malformedYaml)
-      result.isLeft shouldBe true
+        val result = jsonYamlSchemaValidator.yamlToJson(malformedYaml)
+        result.isLeft shouldBe true
+      }
     }
   }
 
-  ".validateJson()" should {
+  ".validateJson()" when {
 
-    "return true when validating a valid json payload against the correct json schema" in {
+    "API-1878" should {
 
-      val result = jsonYamlSchemaValidator.validateJson(api1878SchemaJson, api1878DataJson)
+      "return true when validating a valid json payload against the correct json schema" in {
 
-      result shouldBe Right(ReportSuccess)
+        val result = jsonYamlSchemaValidator.validateJson(api1878SchemaJson, api1878DataJson)
+
+        result shouldBe Right(ReportSuccess)
+      }
     }
 
-    "return Left ValidationFailure when validating a invalid json payload against the desired json schema" in {
+    "API-1566" should {
 
-      val result = jsonYamlSchemaValidator.validateJson(api1878SchemaJson, invalidJsonData)
-      result shouldBe Left(ValidationFailure("instance type (object) does not match any allowed primitive type (allowed: [\"array\"])"))
+      "return true when validating a valid json payload against the correct json schema" in {
+
+        val result = jsonYamlSchemaValidator.validateJson(api1566SchemaJson, api1566DataJson)
+
+        result shouldBe Right(ReportSuccess)
+      }
     }
 
-    "return Left ValidationFailure when validating a empty json payload against the desired json schema" in {
+    "bad json formats" should {
 
-      val invalidJsonData = "{}"
+      "return Left ValidationFailure when validating a invalid json payload against the desired json schema" in {
 
-      val result = jsonYamlSchemaValidator.validateJson(api1878SchemaJson, invalidJsonData)
-      result shouldBe Left(ValidationFailure("instance type (object) does not match any allowed primitive type (allowed: [\"array\"])"))
-    }
+        val result = jsonYamlSchemaValidator.validateJson(api1878SchemaJson, invalidJsonData)
+        result shouldBe Left(ValidationFailure("instance type (object) does not match any allowed primitive type (allowed: [\"array\"])"))
+      }
 
-    "return Left PayLoadParseFailure when validating a empty string against the desired json schema" in {
+      "return Left ValidationFailure when validating a empty json payload against the desired json schema" in {
 
-      val invalidJsonData = ""
+        val invalidJsonData = "{}"
 
-      val result = jsonYamlSchemaValidator.validateJson(api1878SchemaJson, invalidJsonData)
+        val result = jsonYamlSchemaValidator.validateJson(api1878SchemaJson, invalidJsonData)
+        result shouldBe Left(ValidationFailure("instance type (object) does not match any allowed primitive type (allowed: [\"array\"])"))
+      }
 
-      result shouldBe Left(PayLoadParseFailure("no JSON Text to read from input\n at [Source: (StringReader); line: 1, column: 1]"))
+      "return Left PayLoadParseFailure when validating a empty string against the desired json schema" in {
+
+        val invalidJsonData = ""
+
+        val result = jsonYamlSchemaValidator.validateJson(api1878SchemaJson, invalidJsonData)
+
+        result shouldBe Left(PayLoadParseFailure("no JSON Text to read from input\n at [Source: (StringReader); line: 1, column: 1]"))
+      }
     }
   }
 
-  "API-1878" when {
 
-    ".validateJsonAgainstYamlSchema()" should {
+  ".validateJsonAgainstYamlSchema()" when {
+
+    "API-1878" should {
 
       "return Right(ReportSuccess) when validating a valid json payload against the correct yaml schema" in {
 
@@ -153,11 +185,8 @@ class JsonYamlSchemaValidatorSpec extends TestSupport {
         result shouldBe Left(ValidationFailure("instance type (object) does not match any allowed primitive type (allowed: [\"array\"])"))
       }
     }
-  }
 
-  "API-1566" when {
-
-    ".validateJsonAgainstYamlSchema()" should {
+    "API-1566" should {
 
       "return Right(ReportSuccess) when validating a valid json payload against the correct yaml schema" in {
 
@@ -175,7 +204,7 @@ class JsonYamlSchemaValidatorSpec extends TestSupport {
       "return Left YamlParsingFailure when yaml schema is an empty string" in {
 
         val noYamlSchema = ""
-        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(noYamlSchema, api1878DataJson)
+        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(noYamlSchema, api1566DataJson)
 
         result shouldBe Left(YamlParsingFailure("[JsonYamlSchemaValidator][yamlToJson] Invalid YAML structure: Unexpected YAML structure"))
       }
@@ -183,7 +212,7 @@ class JsonYamlSchemaValidatorSpec extends TestSupport {
       "return Left PayLoadParseFailure when jsonData is an empty string" in {
 
         val noJsonData = ""
-        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1878SchemaYaml, noJsonData)
+        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1566SchemaYaml, noJsonData)
 
         result shouldBe Left(PayLoadParseFailure("no JSON Text to read from input\n at [Source: (StringReader); line: 1, column: 1]"))
       }
@@ -191,10 +220,12 @@ class JsonYamlSchemaValidatorSpec extends TestSupport {
       "return Left PayLoadParseFailure when jsonData is empty - {}" in {
 
         val emptyJsonData = "{}"
-        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1878SchemaYaml, emptyJsonData)
+        val result = jsonYamlSchemaValidator.validateJsonAgainstYamlSchema(api1566SchemaYaml, emptyJsonData)
 
         result shouldBe Left(ValidationFailure("instance type (object) does not match any allowed primitive type (allowed: [\"array\"])"))
       }
     }
   }
+
+
 }
