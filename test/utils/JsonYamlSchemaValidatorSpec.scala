@@ -105,6 +105,29 @@ class JsonYamlSchemaValidatorSpec extends TestSupport {
 
         result shouldBe Right(ReportSuccess)
       }
+
+      "return Left ValidationFailure when validating a invalid json payload against the desired json schema" in {
+
+        val result = jsonYamlSchemaValidator.validateJson(api1878SchemaJson, invalidJsonData)
+        result shouldBe Left(ValidationFailure("instance type (object) does not match any allowed primitive type (allowed: [\"array\"])"))
+      }
+
+      "return Left ValidationFailure when validating a empty json payload against the desired json schema" in {
+
+        val emptyJson = "{}"
+
+        val result = jsonYamlSchemaValidator.validateJson(api1878SchemaJson, emptyJson)
+        result shouldBe Left(ValidationFailure("instance type (object) does not match any allowed primitive type (allowed: [\"array\"])"))
+      }
+
+      "return Left PayLoadParseFailure when validating a empty string against the desired json schema" in {
+
+        val emptyString = ""
+
+        val result = jsonYamlSchemaValidator.validateJson(api1878SchemaJson, emptyString)
+
+        result shouldBe Left(PayLoadParseFailure("no JSON Text to read from input\n at [Source: (StringReader); line: 1, column: 1]"))
+      }
     }
 
     "API-1566" should {
@@ -115,29 +138,26 @@ class JsonYamlSchemaValidatorSpec extends TestSupport {
 
         result shouldBe Right(ReportSuccess)
       }
-    }
-
-    "bad json formats" should {
 
       "return Left ValidationFailure when validating a invalid json payload against the desired json schema" in {
 
-        val result = jsonYamlSchemaValidator.validateJson(api1878SchemaJson, invalidJsonData)
+        val result = jsonYamlSchemaValidator.validateJson(api1566SchemaJson, invalidJsonData)
         result shouldBe Left(ValidationFailure("instance type (object) does not match any allowed primitive type (allowed: [\"array\"])"))
       }
 
       "return Left ValidationFailure when validating a empty json payload against the desired json schema" in {
 
-        val invalidJsonData = "{}"
+        val emptyJson = "{}"
 
-        val result = jsonYamlSchemaValidator.validateJson(api1878SchemaJson, invalidJsonData)
+        val result = jsonYamlSchemaValidator.validateJson(api1566SchemaJson, emptyJson)
         result shouldBe Left(ValidationFailure("instance type (object) does not match any allowed primitive type (allowed: [\"array\"])"))
       }
 
       "return Left PayLoadParseFailure when validating a empty string against the desired json schema" in {
 
-        val invalidJsonData = ""
+        val emptyString = ""
 
-        val result = jsonYamlSchemaValidator.validateJson(api1878SchemaJson, invalidJsonData)
+        val result = jsonYamlSchemaValidator.validateJson(api1566SchemaJson, emptyString)
 
         result shouldBe Left(PayLoadParseFailure("no JSON Text to read from input\n at [Source: (StringReader); line: 1, column: 1]"))
       }
