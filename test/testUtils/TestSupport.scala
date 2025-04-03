@@ -18,6 +18,7 @@ package testUtils
 
 import com.mongodb.client.result.{DeleteResult, InsertOneResult, UpdateResult}
 import com.typesafe.config.Config
+import io.circe.yaml.syntax.AsYaml
 import org.bson.BsonBoolean
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar
@@ -26,24 +27,48 @@ import play.api.test.Helpers.stubControllerComponents
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext
+import scala.io.Source
 
 trait TestSupport
-    extends UnitSpec
+  extends UnitSpec
     with GuiceOneServerPerSuite
     with MockitoSugar
     with BeforeAndAfterAll
     with BeforeAndAfterEach
     with MaterializerSupport {
 
-  implicit val ec:            ExecutionContext = stubControllerComponents().executionContext
-  implicit val headerCarrier: HeaderCarrier    = HeaderCarrier()
-  implicit val config:        Config           = app.configuration.underlying
+  implicit val ec: ExecutionContext = stubControllerComponents().executionContext
+  implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+  implicit val config: Config = app.configuration.underlying
 
-  val successUpdateResult    = UpdateResult.acknowledged(0, 0, BsonBoolean.TRUE)
-  val failedUpdateResult     = UpdateResult.unacknowledged()
+  val successUpdateResult = UpdateResult.acknowledged(0, 0, BsonBoolean.TRUE)
+  val failedUpdateResult = UpdateResult.unacknowledged()
   val successInsertOneResult = InsertOneResult.acknowledged(BsonBoolean.TRUE)
-  val failedInsertOneResult  = InsertOneResult.unacknowledged()
+  val failedInsertOneResult = InsertOneResult.unacknowledged()
   val successDeleteResult: DeleteResult = DeleteResult.acknowledged(0)
-  val failedDeleteResult:  DeleteResult = DeleteResult.unacknowledged()
+  val failedDeleteResult: DeleteResult = DeleteResult.unacknowledged()
 
+
+  def readFile(path: String): String = {
+    val source = Source.fromFile(path)
+    try {
+      source.getLines().mkString("\n")
+    } finally {
+      source.close()
+    }
+  }
+
+  def formatJson(jsonString: String): String = {
+    io.circe.parser.parse(jsonString) match {
+      case Right(json) => json.spaces2
+      case Left(_) => jsonString
+    }
+  }
+
+  def formatYaml(yamlString: String): String = {
+    io.circe.yaml.parser.parse(yamlString) match {
+      case Right(json) => json.asYaml.spaces2
+      case Left(_) => yamlString
+    }
+  }
 }

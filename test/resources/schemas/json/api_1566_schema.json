@@ -1,0 +1,15 @@
+{
+  "title": "API#1566 Create Business Income Sources Success Response Schema v1.0.0",
+  "description": "API#1566 Create Business Income Sources Success Response Schema v1.0.0",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "properties": {
+      "incomeSourceId": {
+        "type": "string",
+        "description": "An identifier for the self-employment business, unique to the Taxpayer"
+      }
+    }
+  }
+}
