@@ -37,7 +37,7 @@ POST        /income-tax/calculations/POA/ClaimToAdjust                          
 ### IF #1404 ###
 GET         /income-tax/list-of-calculation-results/:nino                             controllers.CalculationController.generateCalculationList(nino:String, taxYear:Option[Int])
 ### HIP #1404 ###
-GET         /calculations/liability/:nino                                             controllers.CalculationController.generateCalculationList(nino:String, taxYear:Option[Int])
+GET         /itsd/calculations/liability/:nino                                             controllers.CalculationController.generateCalculationList(nino:String, taxYear:Option[Int])
 
 
 GET         /*url                                                                     controllers.RequestHandlerController.getRequestHandler(url)
