@@ -62,6 +62,52 @@ class CalculationControllerSpec
     }
   }
 
+  "generateCalculationSummary" should {
+
+    "return status OK" in {
+      val result = CalcControllerUnderTest.generateCalculationSummary(ninoTest, "25-26")(FakeRequest())
+      status(result) shouldBe OK
+    }
+    "return status OK future taxYear" in {
+      val result = CalcControllerUnderTest.generateCalculationSummary(ninoTest, "26-27")(FakeRequest())
+      status(result) shouldBe OK
+    }
+
+    "return status BadRequest when internal error" in {
+      val result = CalcControllerUnderTest.generateCalculationSummary(ninoWithWrongFormat, "25-26")(FakeRequest())
+      status(result) shouldBe BAD_REQUEST
+    }
+  }
+
+  "getCalculationDetailsTYS" should {
+    "data for given Nino and TaxYear exists: return OK" in {
+      mockFind(Some(successWithBodyModel))
+      val result1 = CalcControllerUnderTest
+        .getCalculationDetailsTYS(nino = ninoTest, calculationId = calculationIdTest, "23-24")(FakeRequest())
+      val result2 = CalcControllerUnderTest
+        .getCalculationDetailsTYS(nino = ninoTest, calculationId = calculationIdTest, "24-25")(FakeRequest())
+      status(result1) shouldBe OK
+      status(result2) shouldBe OK
+    }
+
+    "no data for given Nino and TaxYear: return NotFound" in {
+      mockFind(None)
+      mockGetDefaultRequestHandler(Status(NOT_FOUND))
+      val result = CalcControllerUnderTest
+        .getCalculationDetailsTYS(nino = "", calculationId = calculationIdTest, "23-24")(FakeRequest())
+      status(result) shouldBe NOT_FOUND
+    }
+
+    "no data for given Nino and TaxYear: empty response" in {
+      mockFind(Some(successWithEmptyBody))
+      val result = CalcControllerUnderTest
+        .getCalculationDetailsTYS(nino = ninoTest, calculationId = calculationIdTest, "23-24")(FakeRequest())
+      status(result) shouldBe NO_CONTENT
+    }
+  }
+
+
+
   "getCalculationDetailsTYS" should {
     "data for given Nino and TaxYear exists: return OK" in {
       mockFind(Some(successWithBodyModel))
