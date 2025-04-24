@@ -16,7 +16,7 @@
 
 package utils
 
-import models.CalcSuccessReponse
+import models.{CalcSuccessReponse, CalcSummary}
 
 import scala.util.Try
 
@@ -44,6 +44,17 @@ object CalculationUtils {
     }.toEither
   }
 
+  def createCalSummaryModel(
+                              nino:         String,
+                              taxYear:      Int,
+                              crystallised: Boolean = false
+                            ): Either[Throwable, List[CalcSummary]] = {
+    Try {
+      val encodedNino = ninoMatchCharacters(nino)
+      List(getCalcSummaryResponse(taxYear, crystallised, encodedNino))
+    }.toEither
+  }
+
   def getTaxYearRangeEndYear(taxYearRange: String): Int = {
     s"20${taxYearRange.takeRight(2)}".toInt
   }
@@ -60,6 +71,17 @@ object CalculationUtils {
       totalIncomeTaxAndNicsDue = BigDecimal("1250.00"),
       intentToCrystallise = false,
       crystallised = crystallised
+    )
+  }
+
+  private def getCalcSummaryResponse(taxYear: Int, crystallised: Boolean, calcEncoding: String): CalcSummary = {
+    CalcSummary(
+      calculationId = s"${calculationId(calcEncoding, Some(taxYear)).toLowerCase()}",
+      calculationTimestamp = "2018-07-13T12:13:48.763Z",
+      calculationType = if(crystallised) "DF" else "IY",
+      requestedBy = "CUSTOMER",
+      fromDate = "2018-04-06",
+      toDate = "2019-04-05"
     )
   }
 

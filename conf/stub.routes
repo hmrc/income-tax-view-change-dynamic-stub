@@ -9,6 +9,12 @@ GET         /income-tax/view/calculations/liability/$nino<[A-Z0-9]{9}>/:calcId  
 GET         /income-tax/view/calculations/liability/$taxYearRange<[0-9]{2}-[0-9]{2}>/:nino                                      controllers.CalculationController.generateCalculationListTYS(nino:String, taxYearRange: String)
 GET         /income-tax-view-change/calculation-list/:nino/$taxYearRange<[0-9]{2}-[0-9]{2}>/overwrite/:crystallisationStatus    controllers.CalculationController.overwriteCalculationList(nino:String, taxYearRange: String, crystallisationStatus: String)
 
+### IF #2083 - v11.0.3 ###
+GET         /income-tax/$taxYearRange<[0-9]{2}-[0-9]{2}>/view/:nino/calculations-summary                                      controllers.CalculationController.generateCalculationSummary(nino:String, taxYearRange: String)
+
+### override IF #2083 or 1896 (tax year dependant) ###
+GET         /income-tax-view-change/calculation-summary/:nino/$taxYearRange<[0-9]{2}-[0-9]{2}>/overwrite/:crystallisationStatus    controllers.CalculationController.overwriteCalculationList(nino:String, taxYearRange: String, crystallisationStatus: String)
+
 ### IF #1885 - v9.1.0 ###
 GET         /income-tax/view/calculations/liability/:taxYearRange/:nino/:calculationId                                          controllers.CalculationController.getCalculationDetailsTYS(nino:String, calculationId:String, taxYearRange: String)
 

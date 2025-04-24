@@ -17,7 +17,7 @@
 package controllers
 
 import models.HttpMethod.GET
-import models.{CalcSuccessReponse, CrystallisationStatus, DataModel, TaxYear}
+import models.{CalcSuccessReponse, CalcSummary, CrystallisationStatus, DataModel, TaxYear}
 import org.mongodb.scala.model.Filters.equal
 import play.api.libs.json.{JsValue, Json, OWrites}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
@@ -42,7 +42,9 @@ class CalculationController @Inject() (
     with Logging {
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
-  val ninoMatchCharacters:                String => String            = (nino: String) => s"${nino.charAt(0)}${nino.charAt(7)}"
+  implicit val calcSummaryWrites: OWrites[CalcSummary] = Json.writes[CalcSummary]
+
+  val ninoMatchCharacters: String => String = (nino: String) => s"${nino.charAt(0)}${nino.charAt(7)}"
 
   def getCalcLegacy(nino: String, calcId: String): Action[AnyContent] =
     Action.async { _ =>
@@ -75,11 +77,11 @@ class CalculationController @Inject() (
 
   def generateCalculationListTYS(nino: String, taxYearRange: String): Action[AnyContent] = {
 
-    val stubbed1896NinoPrefixes: Seq[String] = configuration
-      .getOptional[Seq[String]]("stubbed1896NinoPrefixes")
+    val stubbedCalcListNinoPrefixes: Seq[String] = configuration
+      .getOptional[Seq[String]]("stubbedCalcListNinoPrefixes")
       .getOrElse(Seq.empty)
 
-    if (stubbed1896NinoPrefixes.exists(prefix => nino.startsWith(prefix))) {
+    if (stubbedCalcListNinoPrefixes.exists(prefix => nino.startsWith(prefix))) {
       // Retrieve stubbed response from ATs
       requestHandlerController.getRequestHandler(s"/income-tax/view/calculations/liability/$taxYearRange/$nino")
     } else {
@@ -89,6 +91,33 @@ class CalculationController @Inject() (
           createCalResponseModel(nino, Some(getTaxYearRangeEndYear(taxYearRange)), crystallised = true) match {
             case Right(responseModel) =>
               val jsonReponse = Json.toJson(responseModel).toString()
+              Ok(Json.parse(jsonReponse))
+            case Left(error) =>
+              BadRequest(s"Failed with error: $error")
+          }
+        }
+      }
+    }
+  }
+
+  def generateCalculationSummary(nino: String, taxYearRange: String): Action[AnyContent] = {
+
+    val stubbedCalcListNinoPrefixes: Seq[String] = configuration
+      .getOptional[Seq[String]]("stubbedCalcListNinoPrefixes")
+      .getOrElse(Seq.empty)
+
+    if (stubbedCalcListNinoPrefixes.exists(prefix => nino.startsWith(prefix))) {
+      // Retrieve stubbed response from ATs
+      requestHandlerController.getRequestHandler(s"/income-tax/$taxYearRange/view/$nino/calculations-summary")
+    } else {
+      Action.async { _ =>
+        Logger("application").info(s"Generating calculation list for nino: $nino")
+        Future {
+          createCalSummaryModel(nino, getTaxYearRangeEndYear(taxYearRange), crystallised = true) match {
+            case Right(responseModel) =>
+              val jsonReponse = Json.obj(
+                  "calculationsSummary" -> Json.toJson(responseModel)
+                ).toString()
               Ok(Json.parse(jsonReponse))
             case Left(error) =>
               BadRequest(s"Failed with error: $error")
