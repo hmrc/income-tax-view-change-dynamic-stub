@@ -19,15 +19,32 @@ package models
 import play.api.http.Status.OK
 import play.api.libs.json.{JsValue, Json}
 
-case class ItsaStatus(status: String, url: String, taxYear: TaxYear) {
+case class ItsaStatus(
+    status:   String,
+    url:      String,
+    taxYear:  TaxYear,
+    isHipApi: Boolean) {
 
   val expectedStatusCode: Int = OK
 
   def statusReason: String =
     status match {
-      case "NoStatus" => "Sign up - return available"
-      case _          => "Sign up - no return available"
+      case "NoStatus" if isHipApi => "00"
+      case "NoStatus"             => "Sign up - return available"
+      case _ if isHipApi          => "01"
+      case _                      => "Sign up - no return available"
+
     }
+
+  val statusKeyMap = Map(
+    "No Status"        -> "00",
+    "MTD Mandated"     -> "01",
+    "MTD Voluntary"    -> "02",
+    "Annual"           -> "03",
+    "Digitally Exempt" -> "04",
+    "Dormant"          -> "05",
+    "MTD Exempt"       -> "99"
+  )
 
   def makeOverwriteJson: JsValue = {
     Json.arr(
@@ -36,7 +53,7 @@ case class ItsaStatus(status: String, url: String, taxYear: TaxYear) {
         "itsaStatusDetails" -> Json.arr(
           Json.obj(
             "submittedOn"  -> s"2024-01-10T06:14:00Z",
-            "status"       -> status,
+            "status"       -> { if (isHipApi) statusKeyMap(status) else status },
             "statusReason" -> statusReason
           )
         )

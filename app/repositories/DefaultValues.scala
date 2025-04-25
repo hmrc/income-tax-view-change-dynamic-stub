@@ -58,6 +58,22 @@ class DefaultValues @Inject() (
     Json.toJson(itsaAStatus)
   }
 
+  def getHipItsaStatusDefaultJson(taxYear: String): JsValue = {
+    val itsaAStatus = List(
+      ITSAStatus(
+        taxYear = s"20$taxYear",
+        itsaStatusDetails = List(
+          ITSAStatusDetails(
+            submittedOn = "2022-01-10T06:14:00Z",
+            status = "02",
+            statusReason = "00"
+          )
+        )
+      )
+    )
+    Json.toJson(itsaAStatus)
+  }
+
   def getResponse(url: String)(implicit request: WrappedRequest[AnyContent]): Result = {
     extractTaxYear(url) match {
       case Some(taxYear) =>
