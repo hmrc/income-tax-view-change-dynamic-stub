@@ -20,9 +20,9 @@ GET         /registration/business-details/mtdbsa/:mtdid                        
 GET         /registration/business-details/mtdId/:mtdid                               controllers.BusinessDetailsRequestController.transform(mtdid: String)
 
 ### Intercepting API #1553 after Poa Amount updated
-GET         /enterprise/02.00.00/financial-data/NINO/:nino/ITSA                            controllers.FinancialDetailsRequestController.transform(nino: String)
+###GET         /enterprise/02.00.00/financial-data/NINO/:nino/ITSA                            controllers.FinancialDetailsRequestController.transform(nino: String)
 # API #1553  => #5277 Hip migration
-GET         /etmp/RESTAdapter/itsa/taxpayer/financial-details                            controllers.FinancialDetailsRequestController.transform(idNumber: String)
+GET         /etmp/RESTAdapter/itsa/taxpayer/financial-details             controllers.FinancialDetailsRequestController.transform()
 
 ### Enrolment Store Proxy route
 + nocsrf
