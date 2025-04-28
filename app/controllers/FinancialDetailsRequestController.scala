@@ -54,8 +54,15 @@ class FinancialDetailsRequestController @Inject() (
     newRequest
   }
 
+  /*
+  /etmp/RESTAdapter/itsa/taxpayer/financial-details
+  ?calculateAccruedInterest=true&customerPaymentInformation=true&dateFrom=2024-04-06&dateTo=2025-04-05&idNumber=AA888888A&idType=NINO&includeLocks=true&includeStatistical=false&onlyOpenItems=false&regimeType=ITSA&removePaymentonAccount=false
+   */
   def transform(nino: String): Action[AnyContent] =
     Action.async { implicit request =>
+      logger.info(
+        s"Calling 1553 override =>"
+      )
       if (request.uri.contains("dateFrom")) {
         callIndividualYears(nino)(addSuffixToRequest("afterPoaAmountAdjusted", "afterPoaAmountAdjusted=true"))
       } else {
@@ -113,7 +120,8 @@ class FinancialDetailsRequestController @Inject() (
             }
           }
         }.flatten
-      } else {
+      }
+      else {
         dataRepository.find(equal("_id", request.uri), equal("method", GET)).map { stubData =>
           if (stubData.nonEmpty) {
             if (stubData.head.response.isEmpty) {
