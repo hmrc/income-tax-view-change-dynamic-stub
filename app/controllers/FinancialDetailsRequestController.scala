@@ -54,15 +54,10 @@ class FinancialDetailsRequestController @Inject() (
     newRequest
   }
 
-  /*
-  /etmp/RESTAdapter/itsa/taxpayer/financial-details
-  ?calculateAccruedInterest=true&customerPaymentInformation=true&dateFrom=2024-04-06&dateTo=2025-04-05&idNumber=AA888888A&idType=NINO&includeLocks=true&includeStatistical=false&onlyOpenItems=false&regimeType=ITSA&removePaymentonAccount=false
-   */
-  def transform(nino: String): Action[AnyContent] =
+  def transform(): Action[AnyContent] =
     Action.async { implicit request =>
-      logger.info(
-        s"Calling 1553 override =>"
-      )
+      logger.info(s"Calling 1553 override =>")
+      val nino: String = request.queryString.get("idNumber").map(_.head).getOrElse("DefaultNino")
       if (request.uri.contains("dateFrom")) {
         callIndividualYears(nino)(addSuffixToRequest("afterPoaAmountAdjusted", "afterPoaAmountAdjusted=true"))
       } else {
