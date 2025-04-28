@@ -81,7 +81,7 @@ class ItsaStatusController @Inject() (
 
   private def overrideItsaStatusForTaxYear(taxYear: TaxYear, nino: String, itsaStatus: String): Future[Result] = {
     val url              = createOverwriteItsaStatusUrl(nino = nino, taxYear = taxYear)
-    val hipUrl           = createOverwriteItsaStatusUrl(nino = nino, taxYear = taxYear)
+    val hipUrl           = createOverwriteHipItsaStatusUrl(nino = nino, taxYear = taxYear)
     val itsaStatusObj    = ItsaStatus(itsaStatus, url, taxYear, false)
     val itsaStatusHipObj = ItsaStatus(itsaStatus, url, taxYear, true)
 
