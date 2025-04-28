@@ -83,7 +83,7 @@ class ItsaStatusController @Inject() (
     val url              = createOverwriteItsaStatusUrl(nino = nino, taxYear = taxYear)
     val hipUrl           = createOverwriteHipItsaStatusUrl(nino = nino, taxYear = taxYear)
     val itsaStatusObj    = ItsaStatus(itsaStatus, url, taxYear, false)
-    val itsaStatusHipObj = ItsaStatus(itsaStatus, url, taxYear, true)
+    val itsaStatusHipObj = ItsaStatus(itsaStatus, hipUrl, taxYear, true)
 
     val res = for {
       ifStatusOverride <-
