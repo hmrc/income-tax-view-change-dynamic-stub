@@ -40,8 +40,7 @@ GET         /income-tax/list-of-calculation-results/:nino                       
 GET         /itsd/calculations/liability/:nino                                        controllers.CalculationController.generateCalculationList(nino:String, taxYear:Option[Int])
 
 ### HIP #1878 ###
-GET         /itsd/person-itd/itsa-status/:nino                                        controllers.ItsaStatusController.getHIPITSAStatus(nino:String, taxYearRange: String, futureYears: Boolean, history: Boolean)
-
+GET         /itsd/person-itd/itsa-status/:nino                                        controllers.ItsaStatusController.getHIPITSAStatus(nino:String, taxYear: String, futureYears: Boolean, history: Boolean)
 
 
 GET         /*url                                                                     controllers.RequestHandlerController.getRequestHandler(url)
