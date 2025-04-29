@@ -38,7 +38,7 @@ class BusinessDetailsRequestController @Inject() (
     requestHandlerController.getRequestHandler(uri).apply(newRequest)
   }
 
-  def transform(mtdid: String): Action[AnyContent] =
+  def transform(mtdReference: Option[String]): Action[AnyContent] =
     Action.async { implicit request =>
       addSuffixToRequest("afterIncomeSourceCreated", "afterIncomeSourceCreated=true")
     }
