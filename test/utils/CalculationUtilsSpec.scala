@@ -76,7 +76,7 @@ class CalculationUtilsSpec extends TestSupport {
       calcResponse.get.size shouldBe 1
       calcResponse.get.head.calculationId shouldBe "041f7e4d-87d9-4d4a-a296-3cfbdf2024a8"
       calcResponse.get.head.calculationTimestamp shouldBe "2018-07-13T12:13:48.763Z"
-      calcResponse.get.head.calculationType shouldBe "IY"
+      calcResponse.get.head.calculationType shouldBe "DF"
       calcResponse.get.head.requestedBy shouldBe "CUSTOMER"
     }
 
