@@ -32,13 +32,13 @@ class BusinessDetailsRequestController @Inject() (
 
   private def addSuffixToRequest(key: String, suffix: String)(implicit request: MessagesRequest[AnyContent]) = {
     val testHeader     = request.headers.get("Gov-Test-Scenario")
-    val computedSuffix = if (testHeader.contains(key)) s"?$suffix" else ""
+    val computedSuffix = if (testHeader.contains(key)) s"&$suffix" else ""
     val uri            = request.uri + computedSuffix
     val newRequest     = request.withTarget(request.target.withUri(URI.create(uri)))
     requestHandlerController.getRequestHandler(uri).apply(newRequest)
   }
 
-  def transform(mtdid: String): Action[AnyContent] =
+  def transform(mtdReference: Option[String]): Action[AnyContent] =
     Action.async { implicit request =>
       addSuffixToRequest("afterIncomeSourceCreated", "afterIncomeSourceCreated=true")
     }
