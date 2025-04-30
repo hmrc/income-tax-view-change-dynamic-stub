@@ -56,7 +56,7 @@ class FinancialDetailsRequestController @Inject() (
 
   def transform(): Action[AnyContent] =
     Action.async { implicit request =>
-      logger.info(s"Calling 1553 override =>")
+      logger.error(s"Calling 1553 override =>")
       val nino: String = request.queryString.get("idNumber").map(_.head).getOrElse("DefaultNino")
       if (request.uri.contains("dateFrom")) {
         callIndividualYears(nino)(addSuffixToRequest("afterPoaAmountAdjusted", "afterPoaAmountAdjusted=true"))
@@ -70,7 +70,7 @@ class FinancialDetailsRequestController @Inject() (
     val toDate   = request.getQueryString("dateTo").get
     val from     = LocalDate.parse(fromDate)
     val to       = LocalDate.parse(toDate)
-    logger.info(
+    logger.error(
       s"RequestHandlerController-URI: ${request.uri} - ${fromDate} - ${toDate} - ${to.getYear - from.getYear}"
     )
 
@@ -122,9 +122,11 @@ class FinancialDetailsRequestController @Inject() (
             if (stubData.head.response.isEmpty) {
               Status(stubData.head.status)
             } else {
-              Status(stubData.head.status)(stubData.head.response.get)
+              println("11")
+             Status(stubData.head.status)(stubData.head.response.get)
             }
           } else {
+            println("22")
             val url = s"/enterprise/02.00.00/financial-data/NINO/$nino/ITSA"
             defaultValues.getResponse(url)
           }
