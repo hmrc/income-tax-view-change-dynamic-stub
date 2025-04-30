@@ -70,9 +70,8 @@ class FinancialDetailsRequestController @Inject() (
     val toDate   = request.getQueryString("dateTo").get
     val from     = LocalDate.parse(fromDate)
     val to       = LocalDate.parse(toDate)
-    logger.error(
-      s"RequestHandlerController-URI: ${request.uri} - ${fromDate} - ${toDate} - ${to.getYear - from.getYear}"
-    )
+
+    logger.info(s"RequestHandlerController-URI: ${request.uri} - ${fromDate} - ${toDate} - ${to.getYear - from.getYear}")
 
     // Return error if requesting a range of more than 5 tax years
     if (to.getYear - from.getYear > 5) {
@@ -122,11 +121,9 @@ class FinancialDetailsRequestController @Inject() (
             if (stubData.head.response.isEmpty) {
               Status(stubData.head.status)
             } else {
-              println("11")
              Status(stubData.head.status)(stubData.head.response.get)
             }
           } else {
-            println("22")
             val url = s"/enterprise/02.00.00/financial-data/NINO/$nino/ITSA"
             defaultValues.getResponse(url)
           }
