@@ -34,9 +34,13 @@ trait PoaUtils {
     (json \ "taxYear").asOpt[String]
   }
 
+  // switch to use HiP/API
   def getFinancialDetailsUrl(nino: String, taxYear: TaxYear): String = {
-    s"/etmp/RESTAdapter/itsa/taxpayer/financial-details?calculateAccruedInterest=true&customerPaymentInformation=true&dateFrom=${taxYear.startYear}-04-06&dateTo=${taxYear.endYear}-04-05&idNumber=$nino&idType=NINO&includeLocks=true&includeStatistical=false&onlyOpenItems=false&regimeType=ITSA&removePaymentonAccount=false&afterPoaAmountAdjusted=true"
-    //s"/enterprise/02.00.00/financial-data/NINO/$nino/ITSA?dateFrom=${taxYear.startYear}-04-06&dateTo=${taxYear.endYear}-04-05&onlyOpenItems=false&includeLocks=true&calculateAccruedInterest=true&removePOA=false&customerPaymentInformation=true&includeStatistical=false&afterPoaAmountAdjusted=true"
+    s"/etmp/RESTAdapter/itsa/taxpayer/financial-details?" +
+      s"calculateAccruedInterest=true&customerPaymentInformation=true" +
+      s"&dateFrom=${taxYear.startYear}-04-06&dateTo=${taxYear.endYear}-04-05&idNumber=$nino&idType=NINO" +
+      s"&includeLocks=true&includeStatistical=false&onlyOpenItems=false&regimeType=ITSA" +
+      s"&removePaymentonAccount=false&afterPoaAmountAdjusted=true"
   }
 
   def transformDocDetails(amount: BigDecimal): Reads[JsObject] = {
