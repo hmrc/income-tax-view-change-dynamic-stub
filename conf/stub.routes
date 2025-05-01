@@ -16,8 +16,7 @@ GET         /income-tax/view/calculations/liability/:taxYearRange/:nino/:calcula
 GET         /income-tax-view-change/itsa-status/:nino/$taxYearRange<[0-9]{2}-[0-9]{2}>/overwrite/:itsaStatus                    controllers.ItsaStatusController.overwriteItsaStatus(nino:String, taxYearRange: String, itsaStatus: String)
 
 ### Mapping to No active Properties UK and Foreign ###
-GET         /registration/business-details/mtdbsa/:mtdid                              controllers.BusinessDetailsRequestController.transform(mtdid: String)
-GET         /registration/business-details/mtdId/:mtdid                               controllers.BusinessDetailsRequestController.transform(mtdid: String)
+GET         /etmp/RESTAdapter/itsa/taxpayer/business-details                              controllers.BusinessDetailsRequestController.transform(mtdReference: Option[String])
 
 ### Intercepting API #1553 after Poa Amount updated
 ###GET         /enterprise/02.00.00/financial-data/NINO/:nino/ITSA                            controllers.FinancialDetailsRequestController.transform(nino: String)
