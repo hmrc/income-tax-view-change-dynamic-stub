@@ -84,6 +84,7 @@ class SubmitPoaController @Inject() (
             val financialDetailsResponse = dataRepository.find(equal("_id", financialUrl))
             transformFinancialDetailsResponse(amount, financialUrl, nino, financialDetailsResponse)
           case None =>
+            Logger("application").info(s"=>>Failed to create tax year from request")
             Future.failed(new Exception("Failed to create tax year from request"))
         }
       case _ => Future.failed(new Exception("Could not extract poa amount or tax year from request"))

@@ -54,8 +54,10 @@ class FinancialDetailsRequestController @Inject() (
     newRequest
   }
 
-  def transform(nino: String): Action[AnyContent] =
+  def transform(): Action[AnyContent] =
     Action.async { implicit request =>
+      logger.error(s"Calling 1553 override =>")
+      val nino: String = request.queryString.get("idNumber").map(_.head).getOrElse("DefaultNino")
       if (request.uri.contains("dateFrom")) {
         callIndividualYears(nino)(addSuffixToRequest("afterPoaAmountAdjusted", "afterPoaAmountAdjusted=true"))
       } else {
@@ -68,9 +70,8 @@ class FinancialDetailsRequestController @Inject() (
     val toDate   = request.getQueryString("dateTo").get
     val from     = LocalDate.parse(fromDate)
     val to       = LocalDate.parse(toDate)
-    logger.info(
-      s"RequestHandlerController-URI: ${request.uri} - ${fromDate} - ${toDate} - ${to.getYear - from.getYear}"
-    )
+
+    logger.info(s"RequestHandlerController-URI: ${request.uri} - ${fromDate} - ${toDate} - ${to.getYear - from.getYear}")
 
     // Return error if requesting a range of more than 5 tax years
     if (to.getYear - from.getYear > 5) {
@@ -113,13 +114,14 @@ class FinancialDetailsRequestController @Inject() (
             }
           }
         }.flatten
-      } else {
+      }
+      else {
         dataRepository.find(equal("_id", request.uri), equal("method", GET)).map { stubData =>
           if (stubData.nonEmpty) {
             if (stubData.head.response.isEmpty) {
               Status(stubData.head.status)
             } else {
-              Status(stubData.head.status)(stubData.head.response.get)
+             Status(stubData.head.status)(stubData.head.response.get)
             }
           } else {
             val url = s"/enterprise/02.00.00/financial-data/NINO/$nino/ITSA"

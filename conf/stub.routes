@@ -25,7 +25,9 @@ GET         /income-tax-view-change/itsa-status/:nino/$taxYearRange<[0-9]{2}-[0-
 GET         /etmp/RESTAdapter/itsa/taxpayer/business-details                              controllers.BusinessDetailsRequestController.transform(mtdReference: Option[String])
 
 ### Intercepting API #1553 after Poa Amount updated
-GET         /enterprise/02.00.00/financial-data/NINO/:nino/ITSA                            controllers.FinancialDetailsRequestController.transform(nino: String)
+###GET         /enterprise/02.00.00/financial-data/NINO/:nino/ITSA                            controllers.FinancialDetailsRequestController.transform(nino: String)
+# API #1553  => #5277 Hip migration
+GET         /etmp/RESTAdapter/itsa/taxpayer/financial-details             controllers.FinancialDetailsRequestController.transform()
 
 ### Enrolment Store Proxy route
 + nocsrf
