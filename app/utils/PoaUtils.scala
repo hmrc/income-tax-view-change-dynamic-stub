@@ -44,7 +44,7 @@ trait PoaUtils {
   }
 
   def transformDocDetails(amount: BigDecimal): Reads[JsObject] = {
-    (__ \ "documentDetails").json.update(
+    (__ \ "success" \ "documentDetails").json.update(
       of[JsArray].map {
         case JsArray(arr) =>
           JsArray(arr.map(item => item.transform(transformAmount(amount)).getOrElse(item)))
