@@ -97,7 +97,7 @@ object CalculationUtils {
 
   def getFallbackUrlCalcDataHip(taxYearRange: String): String = {
     val taxYear = s"20${taxYearRange.takeRight(2)}"
-    s"/income-tax/v1/$taxYearRange/view/calculations/liability/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf${taxYear}a1"
+    s"/itsa/income-tax/v1/$taxYearRange/view/calculations/liability/SUCCESS1A/041f7e4d-87d9-4d4a-a296-3cfbdf${taxYear}a1"
   }
 
 
