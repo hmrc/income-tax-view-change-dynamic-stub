@@ -30,7 +30,7 @@ GET         /etmp/RESTAdapter/itsa/taxpayer/business-details                    
 GET         /etmp/RESTAdapter/itsa/taxpayer/financial-details             controllers.FinancialDetailsRequestController.transform()
 
 # API #1885 => #5294 Hip migration
-GET         /income-tax/v1/$taxYearRange<[0-9]{2}-[0-9]{2}>/view/calculations/liability/:nino/:calculationId        controllers.CalculationController.getCalculationDetailsHip(nino: String, calculationId: String, taxYearRange: String)
+GET         /itsa/income-tax/v1/$taxYearRange<[0-9]{2}-[0-9]{2}>/view/calculations/liability/:nino/:calculationId        controllers.CalculationController.getCalculationDetailsHip(nino: String, calculationId: String, taxYearRange: String)
 
 ### Enrolment Store Proxy route
 + nocsrf
