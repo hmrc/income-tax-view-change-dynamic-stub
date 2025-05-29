@@ -160,7 +160,7 @@ class CalculationController @Inject() (
   def getCalculationDetailsHip(nino: String, calculationId: String, taxYearRange: String): Action[AnyContent] = {
     Action.async { _ =>
       Logger("application").info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
-      val id = s"/income-tax/v1/$taxYearRange/view/calculations/liability/$nino/$calculationId"
+      val id = s"/itsa/income-tax/v1/$taxYearRange/view/calculations/liability/$nino/$calculationId"
       dataRepository
         .find(equal("_id", id), equal("method", GET))
         .flatMap {
