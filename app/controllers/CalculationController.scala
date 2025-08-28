@@ -100,6 +100,31 @@ class CalculationController @Inject() (
     }
   }
 
+  def generateHipCalculationListTYS(nino: String, taxYearRange: String): Action[AnyContent] = {
+
+    val stubbedCalcListNinoPrefixes: Seq[String] = configuration
+      .getOptional[Seq[String]]("stubbedCalcListNinoPrefixes")
+      .getOrElse(Seq.empty)
+
+    if (stubbedCalcListNinoPrefixes.exists(prefix => nino.startsWith(prefix))) {
+      // Retrieve stubbed response from ATs
+      requestHandlerController.getRequestHandler(s"/income-tax/v1/$taxYearRange/view/calculations/liability/$nino")
+    } else {
+      Action.async { _ =>
+        Logger("application").info(s"Generating calculation list for nino: $nino")
+        Future {
+          createCalResponseModel(nino, Some(getTaxYearRangeEndYear(taxYearRange)), crystallised = true) match {
+            case Right(responseModel) =>
+              val jsonReponse = Json.toJson(responseModel).toString()
+              Ok(Json.parse(jsonReponse))
+            case Left(error) =>
+              BadRequest(s"Failed with error: $error")
+          }
+        }
+      }
+    }
+  }
+
   def generateCalculationSummary(nino: String, taxYearRange: String): Action[AnyContent] = {
 
     val stubbedCalcListNinoPrefixes: Seq[String] = configuration
