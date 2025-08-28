@@ -108,7 +108,7 @@ class CalculationController @Inject() (
 
     if (stubbedCalcListNinoPrefixes.exists(prefix => nino.startsWith(prefix))) {
       // Retrieve stubbed response from ATs
-      requestHandlerController.getRequestHandler(s"/income-tax/v1/$taxYearRange/view/calculations/liability/$nino")
+      requestHandlerController.getRequestHandler(s"/itsa/income-tax/v1/$taxYearRange/view/calculations/liability/$nino")
     } else {
       Action.async { _ =>
         Logger("application").info(s"Generating calculation list for nino: $nino")
