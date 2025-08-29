@@ -215,7 +215,7 @@ class CalculationController @Inject() (
       Logger("application").info(
         s"[CalculationController][createOverwriteCalculationListUrl] Overwriting calculation details TYS"
       )
-      s"/income-tax/view/calculations/liability/${taxYear.rangeShort}/$nino"
+      s"/itsa/income-tax/v1/${taxYear.rangeShort}/view/calculations/liability/$nino"
     } else {
       Logger("application").info(
         s"[CalculationController][createOverwriteCalculationListUrl] Overwriting calculation details legacy"
