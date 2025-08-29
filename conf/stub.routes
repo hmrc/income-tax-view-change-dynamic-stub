@@ -44,9 +44,7 @@ PUT         /income-tax/business-detail/income-source                           
 +nocsrf
 POST        /income-tax/calculations/POA/ClaimToAdjust                                controllers.SubmitPoaController.interceptPoaSubmit()
 
-### IF #1404 ###
-GET         /income-tax/list-of-calculation-results/:nino                             controllers.CalculationController.generateCalculationList(nino:String, taxYear:Option[Int])
-### HIP #1404 ###
+### HIP #5191  (this was #1404 on DES / IF) ###
 GET         /itsd/calculations/liability/:nino                                        controllers.CalculationController.generateCalculationList(nino:String, taxYear:Option[Int])
 
 ### HIP #1878 ###
