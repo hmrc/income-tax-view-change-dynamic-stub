@@ -9,6 +9,8 @@ GET         /income-tax/view/calculations/liability/$nino<[A-Z0-9]{9}>/:calcId  
 GET         /income-tax/view/calculations/liability/$taxYearRange<[0-9]{2}-[0-9]{2}>/:nino                                      controllers.CalculationController.generateCalculationListTYS(nino:String, taxYearRange: String)
 GET         /income-tax-view-change/calculation-list/:nino/$taxYearRange<[0-9]{2}-[0-9]{2}>/overwrite/:crystallisationStatus    controllers.CalculationController.overwriteCalculationList(nino:String, taxYearRange: String, crystallisationStatus: String)
 
+### HIP #5624 ###
+GET         /itsa/income-tax/v1/$taxYearRange<[0-9]{2}-[0-9]{2}>/view/calculations/liability/:nino                              controllers.CalculationController.generateHipCalculationListTYS(nino:String, taxYearRange: String)
 ### IF #2083 - v11.0.3 ###
 GET         /income-tax/$taxYearRange<[0-9]{2}-[0-9]{2}>/view/:nino/calculations-summary                                      controllers.CalculationController.generateCalculationSummary(nino:String, taxYearRange: String)
 
