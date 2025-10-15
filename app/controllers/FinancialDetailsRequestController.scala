@@ -59,8 +59,10 @@ class FinancialDetailsRequestController @Inject() (
       logger.error(s"Calling 1553 override =>")
       val nino: String = request.queryString.get("idNumber").map(_.head).getOrElse("DefaultNino")
       if (request.uri.contains("dateFrom")) {
+        Thread.sleep(700)
         callIndividualYears(nino)(addSuffixToRequest("afterPoaAmountAdjusted", "afterPoaAmountAdjusted=true"))
       } else {
+        Thread.sleep(700)
         requestHandlerController.getRequestHandler(request.uri).apply(request)
       }
     }

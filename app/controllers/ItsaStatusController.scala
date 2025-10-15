@@ -55,9 +55,14 @@ class ItsaStatusController @Inject() (
       dataRepository.find(equal("_id", request.uri), equal("method", GET)).map { stubData =>
         stubData.headOption match {
           case Some(datamodel) if datamodel.response.nonEmpty =>
+            Thread.sleep(125)
             Status(datamodel.status)(stubData.head.response.get)
-          case Some(dataModel) => Status(dataModel.status)
-          case _               => Status(OK)(defaultValues.getHipItsaStatusDefaultJson(taxYearRange))
+          case Some(dataModel) =>
+            Thread.sleep(125)
+            Status(dataModel.status)
+          case _               =>
+            Thread.sleep(125)
+            Status(OK)(defaultValues.getHipItsaStatusDefaultJson(taxYearRange))
         }
       }
     }

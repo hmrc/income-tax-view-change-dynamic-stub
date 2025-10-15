@@ -40,6 +40,7 @@ class BusinessDetailsRequestController @Inject() (
 
   def transform(mtdReference: Option[String]): Action[AnyContent] =
     Action.async { implicit request =>
+      Thread.sleep(450)
       addSuffixToRequest("afterIncomeSourceCreated", "afterIncomeSourceCreated=true")
     }
 

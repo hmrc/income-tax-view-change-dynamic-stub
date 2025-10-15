@@ -51,8 +51,11 @@ class UpdateIncomeSourceController @Inject() (
                   // Retrieve stubbed success response from ATs
                   request
                 }
+              Thread.sleep(700)
               requestHandlerController.putRequestHandler(newRequest.uri).apply(newRequest)
-            case None => Future.successful(IncomeSourceIdNotFoundError)
+            case None =>
+              Thread.sleep(700)
+              Future.successful(IncomeSourceIdNotFoundError)
           }
         case None => Future.successful(InvalidJsonError)
       }
