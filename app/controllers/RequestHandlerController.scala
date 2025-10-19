@@ -43,14 +43,11 @@ class RequestHandlerController @Inject() (
         dataRepository.find(equal("_id", request.uri), equal("method", GET)).map { stubData =>
           if (stubData.nonEmpty) {
             if (stubData.head.response.isEmpty) {
-              Thread.sleep(500)
               Status(stubData.head.status)
             } else {
-              Thread.sleep(500)
               Status(stubData.head.status)(stubData.head.response.get)
             }
           } else {
-            Thread.sleep(500)
             defaultValues.getResponse(url)
           }
         }
@@ -66,17 +63,14 @@ class RequestHandlerController @Inject() (
             schemaValidation.validateRequestJson(stubData.head.schemaId, request.body.asJson) map {
               case true =>
                 if (stubData.head.response.isEmpty) {
-                  Thread.sleep(700)
                   Status(stubData.head.status)
                 } else {
-                  Thread.sleep(700)
                   Status(stubData.head.status)(stubData.head.response.get)
                 }
               case false =>
                 BadRequest(s"The Json Body:\n\n${request.body.asJson} did not validate against the Schema Definition")
             }
           } else {
-            Thread.sleep(700)
             Future(NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}"))
           }
         }
@@ -91,17 +85,14 @@ class RequestHandlerController @Inject() (
             schemaValidation.validateRequestJson(stubData.head.schemaId, request.body.asJson) map {
               case true =>
                 if (stubData.head.response.isEmpty) {
-                  Thread.sleep(500)
                   Status(stubData.head.status)
                 } else {
-                  Thread.sleep(500)
                   Status(stubData.head.status)(stubData.head.response.get)
                 }
               case false =>
                 BadRequest(s"The Json Body:\n\n${request.body.asJson} did not validate against the Schema Definition")
             }
           } else {
-            Thread.sleep(500)
             Future(NotFound(s"Could not find endpoint in Dynamic Stub matching the URI: ${request.uri}"))
           }
         }

@@ -68,11 +68,8 @@ class SubmitPoaController @Inject() (
                   Logger("application").info(s"Returning stubbed API#1773 success response for nino: $nino")
                   request
                 }
-              Thread.sleep(700)
               requestHandlerController.postRequestHandler(newRequest.uri).apply(newRequest)
-            case None =>
-              Thread.sleep(700)
-              Future.successful(NoNinoError)
+            case None => Future.successful(NoNinoError)
           }
         case None => Future.successful(InvalidJsonError)
       }
