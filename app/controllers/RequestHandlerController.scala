@@ -18,16 +18,13 @@ package controllers
 
 import models.HttpMethod
 import models.HttpMethod._
-import org.apache.pekko.actor.ActorSystem
-import org.apache.pekko.pattern.after
 import org.mongodb.scala.model.Filters._
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import repositories.{DataRepository, DefaultValues}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import utils.{AddDelays, SchemaValidation}
+import utils.SchemaValidation
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration.{DurationInt, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -36,31 +33,31 @@ class RequestHandlerController @Inject() (
     dataRepository:   DataRepository,
     cc:               MessagesControllerComponents,
     defaultValues:    DefaultValues
-  )(implicit val ec: ExecutionContext, val actorSystem: ActorSystem)
-    extends FrontendController(cc) with AddDelays {
+  )(
+    implicit val ec: ExecutionContext)
+    extends FrontendController(cc) {
 
-  def getRequestHandler(url: String, delay: Option[FiniteDuration] = None): Action[AnyContent] =
+  def getRequestHandler(url: String): Action[AnyContent] =
     Action.async { implicit request =>
       {
-        withDelay(delay.getOrElse(700.milliseconds)) {
-          dataRepository.find(equal("_id", request.uri), equal("method", GET)).map { stubData =>
-            if (stubData.nonEmpty) {
-              if (stubData.head.response.isEmpty) {
-                Status(stubData.head.status)
-              } else {
-                Status(stubData.head.status)(stubData.head.response.get)
-              }
+        dataRepository.find(equal("_id", request.uri), equal("method", GET)).map { stubData =>
+          if (stubData.nonEmpty) {
+            if (stubData.head.response.isEmpty) {
+              Status(stubData.head.status)
             } else {
-              defaultValues.getResponse(url)
+              Status(stubData.head.status)(stubData.head.response.get)
             }
+          } else {
+            defaultValues.getResponse(url)
           }
         }
+
       }
     }
 
-  def postRequestHandler(url: String, delay: Option[FiniteDuration] = None): Action[AnyContent] =
-    Action.async { implicit request => {
-      withDelay(delay.getOrElse(700.milliseconds)) {
+  def postRequestHandler(url: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      {
         dataRepository.find(equal("_id", s"""${request.uri}"""), equal("method", POST)).flatMap { stubData =>
           if (stubData.nonEmpty) {
             schemaValidation.validateRequestJson(stubData.head.schemaId, request.body.asJson) map {
@@ -79,11 +76,10 @@ class RequestHandlerController @Inject() (
         }
       }
     }
-  }
 
-  def putRequestHandler(url: String, delay: Option[FiniteDuration] = None): Action[AnyContent] =
-    Action.async { implicit request => {
-      withDelay(delay.getOrElse(700.milliseconds)) {
+  def putRequestHandler(url: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      {
         dataRepository.find(equal("_id", s"""${request.uri}"""), equal("method", HttpMethod.PUT)).flatMap { stubData =>
           if (stubData.nonEmpty) {
             schemaValidation.validateRequestJson(stubData.head.schemaId, request.body.asJson) map {
@@ -101,5 +97,6 @@ class RequestHandlerController @Inject() (
           }
         }
       }
-    }}
+    }
+
 }

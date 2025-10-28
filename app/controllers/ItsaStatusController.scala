@@ -18,24 +18,24 @@ package controllers
 
 import models.HttpMethod.GET
 import models.{ItsaStatus, Nino, TaxYear}
-import org.apache.pekko.actor.ActorSystem
 import org.mongodb.scala.model.Filters.equal
 import play.api.{Logger, Logging}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import repositories.{DataRepository, DefaultValues}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import utils.AddDelays
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ItsaStatusController @Inject()(cc: MessagesControllerComponents,
-                                     dataRepository: DataRepository,
-                                     defaultValues:  DefaultValues)
-                                    (implicit val ec: ExecutionContext, val actorSystem: ActorSystem)
-    extends FrontendController(cc) with Logging with AddDelays {
+class ItsaStatusController @Inject() (
+    cc:             MessagesControllerComponents,
+    dataRepository: DataRepository,
+    defaultValues:  DefaultValues
+  )(
+    implicit val ec: ExecutionContext)
+    extends FrontendController(cc)
+    with Logging {
 
   private def createOverwriteItsaStatusUrl(nino: String, taxYear: TaxYear): String = {
     s"/income-tax/$nino/person-itd/itsa-status/${taxYear.rangeShort}?futureYears=false&history=false"
@@ -52,16 +52,12 @@ class ItsaStatusController @Inject()(cc: MessagesControllerComponents,
       history:      Boolean
     ): Action[AnyContent] = {
     Action.async { implicit request =>
-      withDelay(125.milliseconds) {
-        dataRepository.find(equal("_id", request.uri), equal("method", GET)).map { stubData =>
-          stubData.headOption match {
-            case Some(datamodel) if datamodel.response.nonEmpty =>
-              Status(datamodel.status)(stubData.head.response.get)
-            case Some(dataModel) =>
-              Status(dataModel.status)
-            case _ =>
-              Status(OK)(defaultValues.getHipItsaStatusDefaultJson(taxYearRange))
-          }
+      dataRepository.find(equal("_id", request.uri), equal("method", GET)).map { stubData =>
+        stubData.headOption match {
+          case Some(datamodel) if datamodel.response.nonEmpty =>
+            Status(datamodel.status)(stubData.head.response.get)
+          case Some(dataModel) => Status(dataModel.status)
+          case _               => Status(OK)(defaultValues.getHipItsaStatusDefaultJson(taxYearRange))
         }
       }
     }
