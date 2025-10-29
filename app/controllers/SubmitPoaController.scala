@@ -35,11 +35,12 @@ import scala.concurrent.{ExecutionContext, Future}
 class SubmitPoaController @Inject() (
     cc:                       MessagesControllerComponents,
     requestHandlerController: RequestHandlerController,
-    configuration:            Configuration,
     dataRepository:           DataRepository
   )(
-    implicit val ec: ExecutionContext, val actorSystem: ActorSystem)
-    extends FrontendController(cc)
+    implicit val ec: ExecutionContext,
+    val actorSystem: ActorSystem,
+    val configuration: Configuration)
+  extends FrontendController(cc)
     with Logging
     with PoaUtils
     with AddDelays {

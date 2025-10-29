@@ -34,14 +34,14 @@ class CalculationControllerSpec
     with MockDefaultValues {
 
   object TestRequestHandlerController
-      extends RequestHandlerController(mockSchemaValidation, mockDataRepository, mockCC, mockDefaultValues)
+      extends
+        RequestHandlerController(mockSchemaValidation, mockDataRepository, mockCC, mockDefaultValues)
 
   object CalcControllerUnderTest
       extends CalculationController(
         mockCC,
         mockDataRepository,
         TestRequestHandlerController,
-        app.configuration,
         mockDefaultValues
       )
 

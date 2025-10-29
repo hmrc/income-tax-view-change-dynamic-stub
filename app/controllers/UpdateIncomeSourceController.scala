@@ -17,6 +17,7 @@
 package controllers
 
 import org.apache.pekko.actor.ActorSystem
+import play.api.Configuration
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -30,7 +31,10 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class UpdateIncomeSourceController @Inject()(cc: MessagesControllerComponents,
                                              requestHandlerController: RequestHandlerController)
-                                            (implicit val ec: ExecutionContext, val actorSystem: ActorSystem)
+                                            (implicit val ec: ExecutionContext,
+                                             val actorSystem: ActorSystem,
+                                             val configuration: Configuration
+                                            )
     extends FrontendController(cc) with AddDelays {
 
   def mapUpdateIncomeSourceStub(): Action[AnyContent] =

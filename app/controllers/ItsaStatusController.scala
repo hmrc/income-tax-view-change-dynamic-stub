@@ -20,7 +20,7 @@ import models.HttpMethod.GET
 import models.{ItsaStatus, Nino, TaxYear}
 import org.apache.pekko.actor.ActorSystem
 import org.mongodb.scala.model.Filters.equal
-import play.api.{Logger, Logging}
+import play.api.{Configuration, Logger, Logging}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import repositories.{DataRepository, DefaultValues}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -34,7 +34,9 @@ import scala.concurrent.{ExecutionContext, Future}
 class ItsaStatusController @Inject()(cc: MessagesControllerComponents,
                                      dataRepository: DataRepository,
                                      defaultValues:  DefaultValues)
-                                    (implicit val ec: ExecutionContext, val actorSystem: ActorSystem)
+                                    (implicit val ec: ExecutionContext,
+                                     val actorSystem: ActorSystem,
+                                     val configuration: Configuration)
     extends FrontendController(cc) with Logging with AddDelays {
 
   private def createOverwriteItsaStatusUrl(nino: String, taxYear: TaxYear): String = {

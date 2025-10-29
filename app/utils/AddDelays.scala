@@ -18,16 +18,22 @@ package utils
 
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.pattern.after
+import play.api.Configuration
 import play.api.mvc.Result
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{ExecutionContext, Future}
 
 trait AddDelays {
   implicit val actorSystem: ActorSystem
   implicit val ec: ExecutionContext
+  implicit val configuration: Configuration
   
   def withDelay(delay: FiniteDuration)(codeBlock: => Future[Result]): Future[Result] = {
-    after(delay, actorSystem.scheduler)(codeBlock)
+    val stubDataWithDelaysEnabled: Boolean = configuration.getOptional[Boolean]("useStubDataWithDelays")
+      .getOrElse(throw new RuntimeException(s"Could not find config key useStubDataWithDelays"))
+
+    if(stubDataWithDelaysEnabled) after(delay, actorSystem.scheduler)(codeBlock)
+    else codeBlock
   }
 }

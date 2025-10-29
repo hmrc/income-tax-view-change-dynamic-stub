@@ -36,9 +36,10 @@ import scala.concurrent.{ExecutionContext, Future}
 class CalculationController @Inject()(cc: MessagesControllerComponents,
                                       dataRepository: DataRepository,
                                       requestHandlerController: RequestHandlerController,
-                                      configuration: Configuration,
                                       defaultValues: DefaultValues)
-                                     (implicit val ec: ExecutionContext, val actorSystem: ActorSystem)
+                                     (implicit val ec: ExecutionContext,
+                                      val actorSystem: ActorSystem,
+                                      val configuration: Configuration)
   extends FrontendController(cc) with Logging with AddDelays {
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]

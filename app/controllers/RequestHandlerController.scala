@@ -19,8 +19,8 @@ package controllers
 import models.HttpMethod
 import models.HttpMethod._
 import org.apache.pekko.actor.ActorSystem
-import org.apache.pekko.pattern.after
 import org.mongodb.scala.model.Filters._
+import play.api.Configuration
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import repositories.{DataRepository, DefaultValues}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -36,8 +36,9 @@ class RequestHandlerController @Inject() (
     dataRepository:   DataRepository,
     cc:               MessagesControllerComponents,
     defaultValues:    DefaultValues
-  )(implicit val ec: ExecutionContext, val actorSystem: ActorSystem)
-    extends FrontendController(cc) with AddDelays {
+  )(implicit val ec: ExecutionContext,
+    val actorSystem: ActorSystem,
+    val configuration: Configuration) extends FrontendController(cc) with AddDelays {
 
   def getRequestHandler(url: String, delay: Option[FiniteDuration] = None): Action[AnyContent] =
     Action.async { implicit request =>

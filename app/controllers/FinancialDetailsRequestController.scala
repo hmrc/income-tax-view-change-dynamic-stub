@@ -20,7 +20,7 @@ import io.circe._
 import models.HttpMethod._
 import org.apache.pekko.actor.ActorSystem
 import org.mongodb.scala.model.Filters._
-import play.api.Logging
+import play.api.{Configuration, Logging}
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, Result, WrappedRequest}
 import repositories.{DataRepository, DefaultValues}
@@ -39,7 +39,9 @@ class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponen
                                                   defaultValues: DefaultValues,
                                                   requestHandlerController: RequestHandlerController)
                                                  (implicit val ec: ExecutionContext,
-                                                  val actorSystem: ActorSystem) extends FrontendController(cc) with Logging with AddDelays {
+                                                  val actorSystem: ActorSystem,
+                                                  val configuration: Configuration
+                                                 ) extends FrontendController(cc) with Logging with AddDelays {
 
   private def addSuffixToRequest(
       key:    String,

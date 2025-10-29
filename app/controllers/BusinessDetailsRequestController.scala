@@ -17,7 +17,7 @@
 package controllers
 
 import org.apache.pekko.actor.ActorSystem
-import play.api.Logging
+import play.api.{Configuration, Logging}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.AddDelays
@@ -30,7 +30,9 @@ import scala.concurrent.duration.DurationInt
 @Singleton
 class BusinessDetailsRequestController @Inject()(cc: MessagesControllerComponents,
                                                  requestHandlerController: RequestHandlerController)
-                                                 (implicit val ec: ExecutionContext, val actorSystem: ActorSystem)
+                                                 (implicit val ec: ExecutionContext,
+                                                  val actorSystem: ActorSystem,
+                                                  val configuration: Configuration)
     extends FrontendController(cc) with Logging with AddDelays {
 
   private def addSuffixToRequest(key: String, suffix: String)(implicit request: MessagesRequest[AnyContent]) = {
