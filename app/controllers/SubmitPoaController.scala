@@ -17,6 +17,7 @@
 package controllers
 
 import models.{DataModel, TaxYear}
+import org.apache.pekko.actor.ActorSystem
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.result
 import play.api.libs.json.JsValue
@@ -24,22 +25,25 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.api.{Configuration, Logger, Logging}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import utils.PoaUtils
+import utils.{AddDelays, PoaUtils}
 
 import java.net.URI
 import javax.inject.Inject
+import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 
 class SubmitPoaController @Inject() (
     cc:                       MessagesControllerComponents,
     requestHandlerController: RequestHandlerController,
-    configuration:            Configuration,
     dataRepository:           DataRepository
   )(
-    implicit val ec: ExecutionContext)
-    extends FrontendController(cc)
+    implicit val ec: ExecutionContext,
+    val actorSystem: ActorSystem,
+    val configuration: Configuration)
+  extends FrontendController(cc)
     with Logging
-    with PoaUtils {
+    with PoaUtils
+    with AddDelays {
 
   private val error1773Ninos: Seq[String] = configuration
     .getOptional[Seq[String]]("api1773ErrorResponseNinos")
@@ -47,31 +51,35 @@ class SubmitPoaController @Inject() (
 
   def interceptPoaSubmit(): Action[AnyContent] =
     Action.async { implicit request =>
-      val bodyOption: Option[JsValue] = request.body.asJson
-      val InvalidJsonError = BadRequest("Invalid JSON in the UpdateIncomeSourceRequest body")
-      val NoNinoError      = BadRequest("Nino not found in the ClaimToAdjustPoaRequest body")
+      withDelay(700.milliseconds) {
+        val bodyOption: Option[JsValue] = request.body.asJson
+        val InvalidJsonError = BadRequest("Invalid JSON in the UpdateIncomeSourceRequest body")
+        val NoNinoError = BadRequest("Nino not found in the ClaimToAdjustPoaRequest body")
 
-      bodyOption match {
-        case Some(body) =>
-          val ninoOpt = extractNino(body)
-          ninoOpt match {
-            case Some(nino) =>
-              val newRequest =
-                if (error1773Ninos.contains(nino.toUpperCase)) {
-                  // Retrieve stubbed error response from ATs
-                  Logger("application").info(s"Returning stubbed API#1773 error response for nino: $nino")
-                  request.withTarget(request.target.withUri(URI.create(request.uri + s"?nino=$nino")))
-                } else {
-                  //Replace poa amount with new amount
-                  overwriteTotalAmount(nino, body)
-                  // Retrieve stubbed success response from ATs
-                  Logger("application").info(s"Returning stubbed API#1773 success response for nino: $nino")
-                  request
-                }
-              requestHandlerController.postRequestHandler(newRequest.uri).apply(newRequest)
-            case None => Future.successful(NoNinoError)
-          }
-        case None => Future.successful(InvalidJsonError)
+        bodyOption match {
+          case Some(body) =>
+            val ninoOpt = extractNino(body)
+            ninoOpt match {
+              case Some(nino) =>
+                val newRequest =
+                  if (error1773Ninos.contains(nino.toUpperCase)) {
+                    // Retrieve stubbed error response from ATs
+                    Logger("application").info(s"Returning stubbed API#1773 error response for nino: $nino")
+                    request.withTarget(request.target.withUri(URI.create(request.uri + s"?nino=$nino")))
+                  } else {
+                    //Replace poa amount with new amount
+                    overwriteTotalAmount(nino, body)
+                    // Retrieve stubbed success response from ATs
+                    Logger("application").info(s"Returning stubbed API#1773 success response for nino: $nino")
+                    request
+                  }
+                //added 0 millisecond delay as we have both request handlers and non request handlers in same block
+                requestHandlerController.postRequestHandler(newRequest.uri, Some(0.milliseconds)).apply(newRequest)
+              case None =>
+                Future.successful(NoNinoError)
+            }
+          case None => Future.successful(InvalidJsonError)
+        }
       }
     }
 

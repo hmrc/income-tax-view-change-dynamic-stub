@@ -16,45 +16,55 @@
 
 package controllers
 
+import org.apache.pekko.actor.ActorSystem
+import play.api.Configuration
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import utils.AddDelays
 
 import java.net.URI
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class UpdateIncomeSourceController @Inject() (
-    cc:                       MessagesControllerComponents,
-    requestHandlerController: RequestHandlerController)
-    extends FrontendController(cc) {
+class UpdateIncomeSourceController @Inject()(cc: MessagesControllerComponents,
+                                             requestHandlerController: RequestHandlerController)
+                                            (implicit val ec: ExecutionContext,
+                                             val actorSystem: ActorSystem,
+                                             val configuration: Configuration
+                                            )
+    extends FrontendController(cc) with AddDelays {
 
   def mapUpdateIncomeSourceStub(): Action[AnyContent] =
     Action.async { implicit request =>
-      val bodyOption: Option[JsValue] = request.body.asJson
-      val InvalidJsonError = BadRequest("Invalid JSON in the UpdateIncomeSourceRequest body")
-      val IncomeSourceIdNotFoundError =
-        BadRequest("Income Source ID not found in the UpdateIncomeSourceRequest body")
+      withDelay(700.milliseconds) {
+        val bodyOption: Option[JsValue] = request.body.asJson
+        val InvalidJsonError = BadRequest("Invalid JSON in the UpdateIncomeSourceRequest body")
+        val IncomeSourceIdNotFoundError =
+          BadRequest("Income Source ID not found in the UpdateIncomeSourceRequest body")
 
-      bodyOption match {
-        case Some(body) =>
-          val incomeSourceIdOption = extractIncomeSourceId(body)
+        bodyOption match {
+          case Some(body) =>
+            val incomeSourceIdOption = extractIncomeSourceId(body)
 
-          incomeSourceIdOption match {
-            case Some(incomeSourceId) =>
-              val newRequest =
-                if (incomeSourceId.toLowerCase.contains("error")) {
-                  // Retrieve stubbed error response from ATs
-                  request.withTarget(request.target.withUri(URI.create(request.uri + s"?id=$incomeSourceId")))
-                } else {
-                  // Retrieve stubbed success response from ATs
-                  request
-                }
-              requestHandlerController.putRequestHandler(newRequest.uri).apply(newRequest)
-            case None => Future.successful(IncomeSourceIdNotFoundError)
-          }
-        case None => Future.successful(InvalidJsonError)
+            incomeSourceIdOption match {
+              case Some(incomeSourceId) =>
+                val newRequest =
+                  if (incomeSourceId.toLowerCase.contains("error")) {
+                    // Retrieve stubbed error response from ATs
+                    request.withTarget(request.target.withUri(URI.create(request.uri + s"?id=$incomeSourceId")))
+                  } else {
+                    // Retrieve stubbed success response from ATs
+                    request
+                  }
+                requestHandlerController.putRequestHandler(newRequest.uri).apply(newRequest)
+              case None =>
+                Future.successful(IncomeSourceIdNotFoundError)
+            }
+          case None => Future.successful(InvalidJsonError)
+        }
       }
     }
 

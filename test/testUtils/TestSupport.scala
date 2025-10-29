@@ -23,6 +23,7 @@ import org.bson.BsonBoolean
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Configuration
 import play.api.test.Helpers.stubControllerComponents
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -40,6 +41,7 @@ trait TestSupport
   implicit val ec: ExecutionContext = stubControllerComponents().executionContext
   implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
   implicit val config: Config = app.configuration.underlying
+  implicit val configuration: Configuration = app.configuration
 
   val successUpdateResult = UpdateResult.acknowledged(0, 0, BsonBoolean.TRUE)
   val failedUpdateResult = UpdateResult.unacknowledged()

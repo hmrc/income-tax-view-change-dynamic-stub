@@ -18,28 +18,29 @@ package controllers
 
 import models.HttpMethod.GET
 import models.{CalcSuccessReponse, CalcSummary, CrystallisationStatus, DataModel, TaxYear}
+import org.apache.pekko.actor.ActorSystem
 import org.mongodb.scala.model.Filters.equal
 import play.api.libs.json.{JsValue, Json, OWrites}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import play.api.{Configuration, Logger, Logging}
 import repositories.{DataRepository, DefaultValues}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import utils.AddDelays
 import utils.CalculationUtils._
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CalculationController @Inject() (
-    cc:                       MessagesControllerComponents,
-    dataRepository:           DataRepository,
-    requestHandlerController: RequestHandlerController,
-    configuration:            Configuration,
-    defaultValues:            DefaultValues
-  )(
-    implicit val ec: ExecutionContext)
-    extends FrontendController(cc)
-    with Logging {
+class CalculationController @Inject()(cc: MessagesControllerComponents,
+                                      dataRepository: DataRepository,
+                                      requestHandlerController: RequestHandlerController,
+                                      defaultValues: DefaultValues)
+                                     (implicit val ec: ExecutionContext,
+                                      val actorSystem: ActorSystem,
+                                      val configuration: Configuration)
+  extends FrontendController(cc) with Logging with AddDelays {
 
   implicit val calcSuccessResponseWrites: OWrites[CalcSuccessReponse] = Json.writes[CalcSuccessReponse]
   implicit val calcSummaryWrites: OWrites[CalcSummary] = Json.writes[CalcSummary]
@@ -48,52 +49,56 @@ class CalculationController @Inject() (
 
   def getCalcLegacy(nino: String, calcId: String): Action[AnyContent] =
     Action.async { _ =>
-      val id = s"/income-tax/view/calculations/liability/$nino/$calcId"
-      dataRepository
-        .find(equal("_id", id), equal("method", GET))
-        .flatMap {
-          case stubData @ Some(dataModel: DataModel) =>
-            dataModel.response match {
-              case Some(_: JsValue) => Future(Status(stubData.head.status)(stubData.head.response.get))
-              case None =>
-                Logger("application").info(
-                  s"[CalculationController][getCalcLegacy] " +
-                    s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint."
-                )
-                Future.successful(Status(NO_CONTENT))
-            }
-          case None =>
-            Logger("application").info(
-              s"[CalculationController][getCalcLegacy] " +
-                s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint."
-            )
-            val fallbackUrl: String = getFallbackUrlLegacy(calcId = calcId)
-            defaultValues.getDefaultRequestHandler(url = fallbackUrl)
-        }
-        .recoverWith {
-          case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
-        }
+      withDelay(700.milliseconds) {
+        val id = s"/income-tax/view/calculations/liability/$nino/$calcId"
+        dataRepository
+          .find(equal("_id", id), equal("method", GET))
+          .flatMap {
+            case stubData@Some(dataModel: DataModel) =>
+              dataModel.response match {
+                case Some(_: JsValue) =>
+                  Future(Status(stubData.head.status)(stubData.head.response.get))
+                case None =>
+                  Logger("application").info(
+                    s"[CalculationController][getCalcLegacy] " +
+                      s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint."
+                  )
+                  Future.successful(Status(NO_CONTENT))
+              }
+            case None =>
+              Logger("application").info(
+                s"[CalculationController][getCalcLegacy] " +
+                  s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint."
+              )
+              val fallbackUrl: String = getFallbackUrlLegacy(calcId = calcId)
+              defaultValues.getDefaultRequestHandler(url = fallbackUrl)
+          }
+          .recoverWith {
+            case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
+          }
+      }
     }
 
   def generateCalculationListTYS(nino: String, taxYearRange: String): Action[AnyContent] = {
-
     val stubbedCalcListNinoPrefixes: Seq[String] = configuration
       .getOptional[Seq[String]]("stubbedCalcListNinoPrefixes")
       .getOrElse(Seq.empty)
 
     if (stubbedCalcListNinoPrefixes.exists(prefix => nino.startsWith(prefix))) {
       // Retrieve stubbed response from ATs
-      requestHandlerController.getRequestHandler(s"/income-tax/view/calculations/liability/$taxYearRange/$nino")
+      requestHandlerController.getRequestHandler(s"/income-tax/view/calculations/liability/$taxYearRange/$nino", Some(700.milliseconds))
     } else {
       Action.async { _ =>
-        Logger("application").info(s"Generating calculation list for nino: $nino")
-        Future {
-          createCalResponseModel(nino, Some(getTaxYearRangeEndYear(taxYearRange)), crystallised = true) match {
-            case Right(responseModel) =>
-              val jsonReponse = Json.toJson(responseModel).toString()
-              Ok(Json.parse(jsonReponse))
-            case Left(error) =>
-              BadRequest(s"Failed with error: $error")
+        withDelay(700.milliseconds) {
+          Logger("application").info(s"Generating calculation list for nino: $nino")
+          Future {
+            createCalResponseModel(nino, Some(getTaxYearRangeEndYear(taxYearRange)), crystallised = true) match {
+              case Right(responseModel) =>
+                val jsonReponse = Json.toJson(responseModel).toString()
+                Ok(Json.parse(jsonReponse))
+              case Left(error) =>
+                BadRequest(s"Failed with error: $error")
+            }
           }
         }
       }
@@ -108,17 +113,19 @@ class CalculationController @Inject() (
 
     if (stubbedCalcListNinoPrefixes.exists(prefix => nino.startsWith(prefix))) {
       // Retrieve stubbed response from ATs
-      requestHandlerController.getRequestHandler(s"/itsa/income-tax/v1/$taxYearRange/view/calculations/liability/$nino")
+      requestHandlerController.getRequestHandler(s"/itsa/income-tax/v1/$taxYearRange/view/calculations/liability/$nino", Some(400.milliseconds))
     } else {
       Action.async { _ =>
-        Logger("application").info(s"Generating calculation list for nino: $nino")
-        Future {
-          createCalResponseModel(nino, Some(getTaxYearRangeEndYear(taxYearRange)), crystallised = true) match {
-            case Right(responseModel) =>
-              val jsonReponse = Json.toJson(responseModel).toString()
-              Ok(Json.parse(jsonReponse))
-            case Left(error) =>
-              BadRequest(s"Failed with error: $error")
+        withDelay(400.milliseconds) {
+          Logger("application").info(s"Generating calculation list for nino: $nino")
+          Future {
+            createCalResponseModel(nino, Some(getTaxYearRangeEndYear(taxYearRange)), crystallised = true) match {
+              case Right(responseModel) =>
+                val jsonReponse = Json.toJson(responseModel).toString()
+                Ok(Json.parse(jsonReponse))
+              case Left(error) =>
+                BadRequest(s"Failed with error: $error")
+            }
           }
         }
       }
@@ -133,19 +140,21 @@ class CalculationController @Inject() (
 
     if (stubbedCalcListNinoPrefixes.exists(prefix => nino.startsWith(prefix))) {
       // Retrieve stubbed response from ATs
-      requestHandlerController.getRequestHandler(s"/income-tax/$taxYearRange/view/$nino/calculations-summary")
+      requestHandlerController.getRequestHandler(s"/income-tax/$taxYearRange/view/$nino/calculations-summary", Some(700.milliseconds))
     } else {
       Action.async { _ =>
-        Logger("application").info(s"Generating calculation list for nino: $nino")
-        Future {
-          createCalSummaryModel(nino, getTaxYearRangeEndYear(taxYearRange), crystallised = true) match {
-            case Right(responseModel) =>
-              val jsonReponse = Json.obj(
+        withDelay(700.milliseconds) {
+          Logger("application").info(s"Generating calculation list for nino: $nino")
+          Future {
+            createCalSummaryModel(nino, getTaxYearRangeEndYear(taxYearRange), crystallised = true) match {
+              case Right(responseModel) =>
+                val jsonReponse = Json.obj(
                   "calculationsSummary" -> Json.toJson(responseModel)
                 ).toString()
-              Ok(Json.parse(jsonReponse))
-            case Left(error) =>
-              BadRequest(s"Failed with error: $error")
+                Ok(Json.parse(jsonReponse))
+              case Left(error) =>
+                BadRequest(s"Failed with error: $error")
+            }
           }
         }
       }
@@ -154,59 +163,65 @@ class CalculationController @Inject() (
 
   def getCalculationDetailsTYS(nino: String, calculationId: String, taxYearRange: String): Action[AnyContent] =
     Action.async { _ =>
-      Logger("application").info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
-      val id = s"/income-tax/view/calculations/liability/$taxYearRange/$nino/${calculationId.toLowerCase()}"
-      dataRepository
-        .find(equal("_id", id), equal("method", GET))
-        .flatMap {
-          case stubData @ Some(dataModel: DataModel) =>
-            dataModel.response match {
-              case Some(_: JsValue) => Future(Status(stubData.head.status)(stubData.head.response.get))
-              case None =>
-                Logger("application").info(
-                  s"[CalculationController][getCalculationDetailsTYS] " +
-                    s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint."
-                )
-                Future.successful(Status(NO_CONTENT))
-            }
-          case None =>
-            Logger("application").info(
-              s"[CalculationController][getCalculationDetailsTYS] " +
-                s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint."
-            )
-            val fallbackUrl: String = getFallbackUrlTYS(taxYearRange = taxYearRange)
-            defaultValues.getDefaultRequestHandler(url = fallbackUrl)
-        }
-        .recoverWith {
-          case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
-        }
+      withDelay(700.milliseconds) {
+        Logger("application").info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
+        val id = s"/income-tax/view/calculations/liability/$taxYearRange/$nino/${calculationId.toLowerCase()}"
+        dataRepository
+          .find(equal("_id", id), equal("method", GET))
+          .flatMap {
+            case stubData@Some(dataModel: DataModel) =>
+              dataModel.response match {
+                case Some(_: JsValue) =>
+                  Future(Status(stubData.head.status)(stubData.head.response.get))
+                case None =>
+                  Logger("application").info(
+                    s"[CalculationController][getCalculationDetailsTYS] " +
+                      s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint."
+                  )
+                  Future.successful(Status(NO_CONTENT))
+              }
+            case None =>
+              Logger("application").info(
+                s"[CalculationController][getCalculationDetailsTYS] " +
+                  s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint."
+              )
+              val fallbackUrl: String = getFallbackUrlTYS(taxYearRange = taxYearRange)
+              defaultValues.getDefaultRequestHandler(url = fallbackUrl)
+          }
+          .recoverWith {
+            case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
+          }
+      }
     }
 
   def getCalculationDetailsHip(nino: String, calculationId: String, taxYearRange: String): Action[AnyContent] = {
     Action.async { _ =>
-      Logger("application").info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
-      val id = s"/itsa/income-tax/v1/$taxYearRange/view/calculations/liability/$nino/$calculationId"
-      dataRepository
-        .find(equal("_id", id), equal("method", GET))
-        .flatMap {
-          case stubData @ Some(dataModel: DataModel) =>
-            dataModel.response match {
-              case Some(_: JsValue) => Future(Status(stubData.head.status)(stubData.head.response.get))
-              case None =>
-                Logger("application").info(
-                  s"[CalculationController][getCalculationDataHip] " +
-                    s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint."
-                )
-                Future.successful(Status(NO_CONTENT))
-            }
-          case None =>
-            Logger("application").info(
-              s"[CalculationController][getCalculationData] " +
-                s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint."
-            )
-            val fallbackUrl: String = getFallbackUrlCalcDataHip(taxYearRange = taxYearRange)
-            defaultValues.getDefaultRequestHandler(url = fallbackUrl)
-        }
+      withDelay(700.milliseconds) {
+        Logger("application").info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
+        val id = s"/itsa/income-tax/v1/$taxYearRange/view/calculations/liability/$nino/$calculationId"
+        dataRepository
+          .find(equal("_id", id), equal("method", GET))
+          .flatMap {
+            case stubData@Some(dataModel: DataModel) =>
+              dataModel.response match {
+                case Some(_: JsValue) =>
+                  Future(Status(stubData.head.status)(stubData.head.response.get))
+                case None =>
+                  Logger("application").info(
+                    s"[CalculationController][getCalculationDataHip] " +
+                      s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint."
+                  )
+                  Future.successful(Status(NO_CONTENT))
+              }
+            case None =>
+              Logger("application").info(
+                s"[CalculationController][getCalculationData] " +
+                  s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint."
+              )
+              val fallbackUrl: String = getFallbackUrlCalcDataHip(taxYearRange = taxYearRange)
+              defaultValues.getDefaultRequestHandler(url = fallbackUrl)
+          }
+      }
     }
   }
 
@@ -272,32 +287,35 @@ class CalculationController @Inject() (
   // HIP #5191 //
   def generateCalculationList(nino: String, taxYear: Option[Int]): Action[AnyContent] =
     Action.async { _ =>
-      logger.info(s"Generating calculation list for nino: $nino, taxYear: $taxYear")
-      ninoMatchCharacters(nino) match {
-        case "L2" =>
-          Future(
-            InternalServerError(
-              """{"code": "SERVER_ERROR", "reason": "IF is currently experiencing problems that require live service intervention."}"""
-            )
-          )
-        case matchChars if matchChars.startsWith("L") =>
-          Future(
-            NotFound(
-              """{"code": "NOT_FOUND", "reason": "The remote endpoint has indicated that no data can be found."}"""
-            )
-          )
-        case "A1" =>
-          Future(
-            Ok(
-              Json.parse(
-                getCalculationListSuccessResponse(ninoMatchCharacters(nino).toLowerCase, taxYear, crystallised = true)
+      withDelay(500.milliseconds) {
+        logger.info(s"Generating calculation list for nino: $nino, taxYear: $taxYear")
+        ninoMatchCharacters(nino) match {
+          case "L2" =>
+            Future(
+              InternalServerError(
+                """{"code": "SERVER_ERROR", "reason": "IF is currently experiencing problems that require live service intervention."}"""
               )
             )
-          )
-        //S0 is an exception as calculation ID only accepts characters from a-f
-        case "S0" => Future(Ok(Json.parse(getCalculationListSuccessResponse("c9", taxYear, crystallised = true))))
-        case _ =>
-          Future(Ok(Json.parse(getCalculationListSuccessResponse(ninoMatchCharacters(nino).toLowerCase, taxYear))))
+          case matchChars if matchChars.startsWith("L") =>
+            Future(
+              NotFound(
+                """{"code": "NOT_FOUND", "reason": "The remote endpoint has indicated that no data can be found."}"""
+              )
+            )
+          case "A1" =>
+            Future(
+              Ok(
+                Json.parse(
+                  getCalculationListSuccessResponse(ninoMatchCharacters(nino).toLowerCase, taxYear, crystallised = true)
+                )
+              )
+            )
+          //S0 is an exception as calculation ID only accepts characters from a-f
+          case "S0" =>
+            Future(Ok(Json.parse(getCalculationListSuccessResponse("c9", taxYear, crystallised = true))))
+          case _ =>
+            Future(Ok(Json.parse(getCalculationListSuccessResponse(ninoMatchCharacters(nino).toLowerCase, taxYear))))
+        }
       }
     }
 }

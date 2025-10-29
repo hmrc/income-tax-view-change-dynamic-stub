@@ -18,28 +18,30 @@ package controllers
 
 import io.circe._
 import models.HttpMethod._
+import org.apache.pekko.actor.ActorSystem
 import org.mongodb.scala.model.Filters._
-import play.api.Logging
+import play.api.{Configuration, Logging}
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest, Result, WrappedRequest}
 import repositories.{DataRepository, DefaultValues}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import utils.AddDelays
 
 import java.net.URI
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 
-class FinancialDetailsRequestController @Inject() (
-    cc:                       MessagesControllerComponents,
-    dataRepository:           DataRepository,
-    defaultValues:            DefaultValues,
-    requestHandlerController: RequestHandlerController
-  )(
-    implicit val ec: ExecutionContext)
-    extends FrontendController(cc)
-    with Logging {
+class FinancialDetailsRequestController @Inject()(cc: MessagesControllerComponents,
+                                                  dataRepository: DataRepository,
+                                                  defaultValues: DefaultValues,
+                                                  requestHandlerController: RequestHandlerController)
+                                                 (implicit val ec: ExecutionContext,
+                                                  val actorSystem: ActorSystem,
+                                                  val configuration: Configuration
+                                                 ) extends FrontendController(cc) with Logging with AddDelays {
 
   private def addSuffixToRequest(
       key:    String,
@@ -56,12 +58,14 @@ class FinancialDetailsRequestController @Inject() (
 
   def transform(): Action[AnyContent] =
     Action.async { implicit request =>
-      logger.error(s"Calling 1553 override =>")
-      val nino: String = request.queryString.get("idNumber").map(_.head).getOrElse("DefaultNino")
-      if (request.uri.contains("dateFrom")) {
-        callIndividualYears(nino)(addSuffixToRequest("afterPoaAmountAdjusted", "afterPoaAmountAdjusted=true"))
-      } else {
-        requestHandlerController.getRequestHandler(request.uri).apply(request)
+      withDelay(700.milliseconds) {
+        logger.error(s"Calling 1553 override =>")
+        val nino: String = request.queryString.get("idNumber").map(_.head).getOrElse("DefaultNino")
+        if (request.uri.contains("dateFrom")) {
+          callIndividualYears(nino)(addSuffixToRequest("afterPoaAmountAdjusted", "afterPoaAmountAdjusted=true"))
+        } else {
+          requestHandlerController.getRequestHandler(request.uri).apply(request)
+        }
       }
     }
 
