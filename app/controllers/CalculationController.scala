@@ -161,39 +161,6 @@ class CalculationController @Inject()(cc: MessagesControllerComponents,
     }
   }
 
-  def getCalculationDetailsTYS(nino: String, calculationId: String, taxYearRange: String): Action[AnyContent] =
-    Action.async { _ =>
-      withDelay(700.milliseconds) {
-        Logger("application").info(s"Generating calculation details for nino: $nino calculationId: $calculationId")
-        val id = s"/income-tax/view/calculations/liability/$taxYearRange/$nino/${calculationId.toLowerCase()}"
-        dataRepository
-          .find(equal("_id", id), equal("method", GET))
-          .flatMap {
-            case stubData@Some(dataModel: DataModel) =>
-              dataModel.response match {
-                case Some(_: JsValue) =>
-                  Future(Status(stubData.head.status)(stubData.head.response.get))
-                case None =>
-                  Logger("application").info(
-                    s"[CalculationController][getCalculationDetailsTYS] " +
-                      s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint."
-                  )
-                  Future.successful(Status(NO_CONTENT))
-              }
-            case None =>
-              Logger("application").info(
-                s"[CalculationController][getCalculationDetailsTYS] " +
-                  s"Could not find endpoint in Dynamic Stub matching the URI: $id . Calling fallback default endpoint."
-              )
-              val fallbackUrl: String = getFallbackUrlTYS(taxYearRange = taxYearRange)
-              defaultValues.getDefaultRequestHandler(url = fallbackUrl)
-          }
-          .recoverWith {
-            case _ => Future.successful(BadRequest(s"Search operation failed: $id"))
-          }
-      }
-    }
-
   def getCalculationDetailsHip(nino: String, calculationId: String, taxYearRange: String): Action[AnyContent] = {
     Action.async { _ =>
       withDelay(700.milliseconds) {
