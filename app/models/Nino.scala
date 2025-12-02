@@ -28,7 +28,6 @@ case class Nino(nino: String) {
 
   def value = ninoWithoutDescription
 
-  val name = "nino"
 }
 
 object Nino extends (String => Nino) {
