@@ -23,6 +23,9 @@ GET         /income-tax/view/calculations/liability/:taxYearRange/:nino/:calcula
 ### DES #1878 Opt Out Override Route ###
 GET         /income-tax-view-change/itsa-status/:nino/$taxYearRange<[0-9]{2}-[0-9]{2}>/overwrite/:itsaStatus                    controllers.ItsaStatusController.overwriteItsaStatus(nino:String, taxYearRange: String, itsaStatus: String)
 
++ nocsrf
+POST        /income-tax-view-change/override/custom-user/:nino/:mtdid                                                    controllers.CustomUserController.overrideCustomUserData(nino: String, mtdid: String)
+
 ### Mapping to No active Properties UK and Foreign ###
 GET         /etmp/RESTAdapter/itsa/taxpayer/business-details                              controllers.BusinessDetailsRequestController.transform(mtdReference: Option[String])
 

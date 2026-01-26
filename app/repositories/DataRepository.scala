@@ -16,14 +16,14 @@
 
 package repositories
 
-import models.DataModel
+import models.{CustomUserModel, DataModel}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.{Filters, ReplaceOptions}
+import org.mongodb.scala.model.{Filters, ReplaceOptions, UpdateOptions, Updates}
 import org.mongodb.scala.result.{DeleteResult, UpdateResult}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class DataRepository @Inject() (repository: DataRepositoryBase) {
@@ -56,4 +56,17 @@ class DataRepository @Inject() (repository: DataRepositoryBase) {
       .toFuture()
   }
 
+
+  def updateOneById(url: String, userModel: CustomUserModel)(implicit ec: ExecutionContext): Future[UpdateResult] = {
+
+    val filter  = Filters.equal("_id", url)
+
+    val updates = Updates.combine(
+      Updates.set("response.success.taxPayerDisplayResponse.channel", userModel.channel)
+    )
+
+    repository.collection
+      .updateOne(filter, updates)
+      .toFuture()
+  }
 }

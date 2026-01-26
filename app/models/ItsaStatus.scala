@@ -70,5 +70,4 @@ case class ItsaStatus(
       response = Some(makeOverwriteJson)
     )
   }
-
 }
