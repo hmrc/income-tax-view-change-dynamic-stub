@@ -18,7 +18,18 @@ package models
 
 import play.api.libs.json.OFormat
 
-case class CustomUserModel(channel: String)
+case class CustomUserModel(cyMinusOneCrystallisationStatus: String,
+                           cyMinusOneItsaStatus: String,
+                           cyItsaStatus: String,
+                           cyPlusOneItsaStatus: String,
+                           channel: String,
+                           calculationTypeLatest: String,
+                           calculationTypePrevious: String,
+                           numberOfActiveBusinesses: Int,
+                           ukPropertyCheckbox: Boolean,
+                           foreignPropertyCheckbox: Boolean,
+                           numberOfCeasedBusinesses: Int,
+                           latencyCheckbox: Boolean)
 
 object CustomUserModel {
   implicit val format: OFormat[CustomUserModel] = play.api.libs.json.Json.format[CustomUserModel]

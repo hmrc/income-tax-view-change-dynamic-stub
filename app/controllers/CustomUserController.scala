@@ -23,6 +23,7 @@ import play.api.{Configuration, Logging}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.AddDelays
+import utils.CustomUserUtils.convertCustomUserFields
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,6 +41,7 @@ class CustomUserController @Inject()(cc: MessagesControllerComponents,
 
   def overrideCustomUserData(nino: String, mtdid: String): Action[AnyContent] = Action.async { implicit request =>
     println(Console.MAGENTA + s"Received request to override custom user data for NINO=$nino MTDID=$mtdid" + Console.RESET)
+    println(Console.MAGENTA + s"Request body: ${request.body.asJson}" + Console.RESET)
     request.body.asJson.map { json =>
       json.validate[CustomUserModel].fold(
         invalid => {
@@ -48,7 +50,8 @@ class CustomUserController @Inject()(cc: MessagesControllerComponents,
         },
         userModel => {
           println(Console.GREEN + s"Successfully parsed JSON for NINO=$nino MTDID=$mtdid: $userModel" + Console.RESET)
-          val convertedModel = convertChannelField(userModel)
+          val convertedModel = convertCustomUserFields(userModel)
+          println(Console.GREEN + s"Converted model for NINO=$nino MTDID=$mtdid: $convertedModel" + Console.RESET)
 
           dataRepository.updateOneById(overrideBusinessDetailsUrl(mtdid), convertedModel)
 
@@ -60,15 +63,5 @@ class CustomUserController @Inject()(cc: MessagesControllerComponents,
       println(Console.RED + s"Expected JSON data for NINO=$nino MTDID=$mtdid but none found" + Console.RESET)
       Future.successful(BadRequest("Expected JSON data"))
     }
-  }
-
-  def convertChannelField(userModel: CustomUserModel): CustomUserModel = {
-    val convertedChannel = userModel.channel match {
-      case "Customer Led" => "1"
-      case "HMRC Unconfirmed" => "2"
-      case "HMRC Confirmed" => "3"
-    }
-
-    userModel.copy(channel = convertedChannel)
   }
 }
