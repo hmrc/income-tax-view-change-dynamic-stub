@@ -29,6 +29,8 @@ case class CustomUserModel(cyMinusOneCrystallisationStatus: String,
                            ukPropertyCheckbox: Boolean,
                            foreignPropertyCheckbox: Boolean,
                            numberOfCeasedBusinesses: Int,
+                           numberOfCeasedUkProperties: Int,
+                           numberOfCeasedForeignProperties: Int,
                            latencyCheckbox: Boolean)
 
 object CustomUserModel {

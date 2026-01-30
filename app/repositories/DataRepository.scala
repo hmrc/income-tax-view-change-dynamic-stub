@@ -17,10 +17,13 @@
 package repositories
 
 import models.{CustomUserModel, DataModel}
+import org.mongodb.scala.Document
+import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.{Filters, ReplaceOptions, UpdateOptions, Updates}
 import org.mongodb.scala.result.{DeleteResult, UpdateResult}
+import scala.jdk.CollectionConverters._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -56,7 +59,6 @@ class DataRepository @Inject() (repository: DataRepositoryBase) {
       .toFuture()
   }
 
-
   def updateOneById(url: String, userModel: CustomUserModel)(implicit ec: ExecutionContext): Future[UpdateResult] = {
 
     val filter  = Filters.equal("_id", url)
@@ -67,6 +69,17 @@ class DataRepository @Inject() (repository: DataRepositoryBase) {
 
     repository.collection
       .updateOne(filter, updates)
+      .toFuture()
+  }
+
+  def clearAndReplace(url: String, arrayField: String, newArray: Seq[Document]): Future[UpdateResult] = {
+    val filter = Filters.equal("_id", url)
+    val bsonDocs: Seq[BsonDocument] = newArray.map(_.toBsonDocument)
+    val updates = Updates.set(arrayField, bsonDocs)
+
+
+    repository.collection
+      .updateOne(filter, updates, UpdateOptions().upsert(true))
       .toFuture()
   }
 }

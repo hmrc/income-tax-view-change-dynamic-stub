@@ -23,7 +23,7 @@ import play.api.{Configuration, Logging}
 import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.AddDelays
-import utils.CustomUserUtils.convertCustomUserFields
+import utils.CustomUserUtils.{convertCustomUserFields, createBusinessDetailsArray, createCalculationData, createPropertyData}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,6 +37,10 @@ class CustomUserController @Inject()(cc: MessagesControllerComponents,
 
   def overrideBusinessDetailsUrl(mtdid: String): String = {
     s"/etmp/RESTAdapter/itsa/taxpayer/business-details?mtdReference=$mtdid"
+  }
+
+  def overrideCalculationUrl(nino: String): String = {
+    s"/income-tax/25-26/view/$nino/calculations-summary"
   }
 
   def overrideCustomUserData(nino: String, mtdid: String): Action[AnyContent] = Action.async { implicit request =>
@@ -53,7 +57,17 @@ class CustomUserController @Inject()(cc: MessagesControllerComponents,
           val convertedModel = convertCustomUserFields(userModel)
           println(Console.GREEN + s"Converted model for NINO=$nino MTDID=$mtdid: $convertedModel" + Console.RESET)
 
+          val activeSoleTraders = createBusinessDetailsArray(convertedModel.numberOfActiveBusinesses, isCeased = false)
+          val ceasedSoleTraders = createBusinessDetailsArray(convertedModel.numberOfCeasedBusinesses, isCeased = true)
+
+          val propertyData = createPropertyData(convertedModel.ukPropertyCheckbox, convertedModel.foreignPropertyCheckbox, userModel.numberOfCeasedUkProperties, userModel.numberOfCeasedForeignProperties)
+
+          val calculationData = createCalculationData(convertedModel.calculationTypeLatest, convertedModel.calculationTypePrevious)
+
           dataRepository.updateOneById(overrideBusinessDetailsUrl(mtdid), convertedModel)
+          dataRepository.clearAndReplace(overrideBusinessDetailsUrl(mtdid), "response.success.taxPayerDisplayResponse.businessData", activeSoleTraders ++ ceasedSoleTraders)
+          dataRepository.clearAndReplace(overrideBusinessDetailsUrl(mtdid), "response.success.taxPayerDisplayResponse.propertyData", propertyData)
+          dataRepository.clearAndReplace(overrideCalculationUrl(nino), "response.calculationsSummary", calculationData)
 
           println(Console.GREEN + s"Updated custom user data for ${overrideBusinessDetailsUrl(mtdid)}" + Console.RESET)
           Future.successful(Ok("Success"))
