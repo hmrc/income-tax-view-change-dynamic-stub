@@ -17,9 +17,11 @@
 package repositories
 
 import models.DataModel
+import org.mongodb.scala.Document
+import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.{Filters, ReplaceOptions}
+import org.mongodb.scala.model.{Filters, ReplaceOptions, UpdateOptions, Updates}
 import org.mongodb.scala.result.{DeleteResult, UpdateResult}
 
 import javax.inject.{Inject, Singleton}
@@ -56,4 +58,14 @@ class DataRepository @Inject() (repository: DataRepositoryBase) {
       .toFuture()
   }
 
+  def clearAndReplace(url: String, arrayField: String, newArray: Seq[Document]): Future[UpdateResult] = {
+    val filter = Filters.equal("_id", url)
+    val bsonDocs: Seq[BsonDocument] = newArray.map(_.toBsonDocument)
+    val updates = Updates.set(arrayField, bsonDocs)
+
+
+    repository.collection
+      .updateOne(filter, updates, UpdateOptions().upsert(true))
+      .toFuture()
+  }
 }

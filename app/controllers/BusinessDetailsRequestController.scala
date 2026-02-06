@@ -16,24 +16,31 @@
 
 package controllers
 
+import models.BusinessDetailsModel
 import org.apache.pekko.actor.ActorSystem
 import play.api.{Configuration, Logging}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, MessagesRequest}
+import repositories.DataRepository
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import utils.AddDelays
+import utils.{AddDelays, BusinessDataUtils}
 
 import java.net.URI
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.DurationInt
 
 @Singleton
 class BusinessDetailsRequestController @Inject()(cc: MessagesControllerComponents,
-                                                 requestHandlerController: RequestHandlerController)
+                                                 requestHandlerController: RequestHandlerController,
+                                                 dataRepository: DataRepository)
                                                  (implicit val ec: ExecutionContext,
                                                   val actorSystem: ActorSystem,
                                                   val configuration: Configuration)
     extends FrontendController(cc) with Logging with AddDelays {
+
+  def overrideBusinessDetailsUrl(mtdid: String): String = {
+    s"/etmp/RESTAdapter/itsa/taxpayer/business-details?mtdReference=$mtdid"
+  }
 
   private def addSuffixToRequest(key: String, suffix: String)(implicit request: MessagesRequest[AnyContent]) = {
     val testHeader     = request.headers.get("Gov-Test-Scenario")
@@ -46,5 +53,28 @@ class BusinessDetailsRequestController @Inject()(cc: MessagesControllerComponent
   def transform(mtdReference: Option[String]): Action[AnyContent] =
     Action.async { implicit request =>
       addSuffixToRequest("afterIncomeSourceCreated", "afterIncomeSourceCreated=true")
+      addSuffixToRequest("afterMigration", "afterMigration=true")
+    }
+
+  def overwriteBusinessData(mtdid: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      request.body.asJson.map { json =>
+        json.validate[BusinessDetailsModel].fold(
+          _ => {
+            Future.successful(BadRequest("Invalid JSON data"))
+          },
+          userModel => {
+            val businessData = BusinessDataUtils.createBusinessData(userModel.activeSoleTrader, userModel.ceasedBusiness)
+            val propertyData = BusinessDataUtils.createPropertyData(userModel.activeUkProperty, userModel.activeForeignProperty)
+
+            dataRepository.clearAndReplace(overrideBusinessDetailsUrl(mtdid), BusinessDataUtils.businessDataKey, businessData)
+            dataRepository.clearAndReplace(overrideBusinessDetailsUrl(mtdid), BusinessDataUtils.propertyDataKey, propertyData)
+
+            Future.successful(Ok("Success"))
+          }
+        )
+      }.getOrElse {
+        Future.successful(BadRequest("No JSON found - Expected JSON data"))
+      }
     }
 }
