@@ -53,8 +53,27 @@ class BusinessDetailsRequestController @Inject()(cc: MessagesControllerComponent
 
   def transform(mtdReference: Option[String]): Action[AnyContent] =
     Action.async { implicit request =>
-      addSuffixToRequest("afterIncomeSourceCreated", "afterIncomeSourceCreated=true")
-      addSuffixToRequest("afterMigration", "afterMigration=true")
+
+      val testHeader = request.headers.get("Gov-Test-Scenario")
+
+      testHeader match {
+        case Some(header) if header.contains("afterIncomeSourceCreated") =>
+          addSuffixToRequest(
+            "afterIncomeSourceCreated",
+            "afterIncomeSourceCreated=true"
+          )
+
+        case Some(header) if header.contains("afterMigration") =>
+          addSuffixToRequest(
+            "afterMigration",
+            "afterMigration=true"
+          )
+
+        case _ =>
+          requestHandlerController
+            .getRequestHandler(request.uri, Some(450.milliseconds))
+            .apply(request)
+      }
     }
 
   def overwriteBusinessData(mtdid: String): Action[AnyContent] =
