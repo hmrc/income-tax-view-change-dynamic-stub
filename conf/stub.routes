@@ -55,6 +55,9 @@ GET         /itsd/calculations/liability/:nino                                  
 ### HIP #1878 ###
 GET         /itsd/person-itd/itsa-status/:nino                                        controllers.ItsaStatusController.getHIPITSAStatus(nino:String, taxYear: String, futureYears: Boolean, history: Boolean)
 
+### HIP #5234 ###
+GET         /income-tax-view-change/repayments/:nino                                  controllers.RepaymentHistoryController.generateHipRepaymentHistoryByNino(nino: String)
+GET         /income-tax-view-change/repayments/:nino/repaymentId/:repaymentId         controllers.RepaymentHistoryController.generateHipRepaymentHistoryByRepaymentId(nino: String, repaymentId: String)
 
 GET         /*url                                                                     controllers.RequestHandlerController.getRequestHandler(url)
 
