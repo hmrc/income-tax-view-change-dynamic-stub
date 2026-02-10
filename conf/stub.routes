@@ -26,6 +26,9 @@ GET         /income-tax-view-change/itsa-status/:nino/$taxYearRange<[0-9]{2}-[0-
 ### Mapping to No active Properties UK and Foreign ###
 GET         /etmp/RESTAdapter/itsa/taxpayer/business-details                              controllers.BusinessDetailsRequestController.transform(mtdReference: Option[String])
 
++nocsrf
+POST        /income-tax-view-change/override/business-data/:mtdid                     controllers.BusinessDetailsRequestController.overwriteBusinessData(mtdid: String)
+
 ### Intercepting API #1553 after Poa Amount updated
 ###GET         /enterprise/02.00.00/financial-data/NINO/:nino/ITSA                            controllers.FinancialDetailsRequestController.transform(nino: String)
 # API #1553  => #5277 Hip migration
